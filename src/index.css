@@ -7,29 +7,29 @@
   --accent-gold: #d4af37;
   --accent-gold-light: #e6c55a;
   --accent-gold-dark: #b8952e;
-  
+
   --bg-cream: #faf8f0;
   --bg-white: #ffffff;
   --bg-light-green: #f0f7f1;
-  
+
   --text-dark: #1a1a1a;
   --text-gray: #4a4a4a;
   --text-light: #6b6b6b;
   --text-white: #ffffff;
-  
+
   --border-light: #e0e0e0;
   --border-green: #c8ddc9;
-  
+
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
   --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.3);
-  
+
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
-  
+
   --transition: all 0.3s ease;
 }
 
@@ -42,6 +42,7 @@
 
 html {
   scroll-behavior: smooth;
+  zoom: 1.3;
 }
 
 body {
@@ -568,14 +569,14 @@ body {
 }
 
 .policy-number {
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--primary);
   margin-bottom: 8px;
 }
 
 .policy-title {
-  font-size: 15px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--text-dark);
   line-height: 1.5;
@@ -696,46 +697,46 @@ body {
   .menu-toggle {
     display: flex;
   }
-  
+
   .sidebar {
     transform: translateX(-100%);
   }
-  
+
   .sidebar.open {
     transform: translateX(0);
   }
-  
+
   .sidebar-overlay.open {
     display: block;
   }
-  
+
   .main-content {
     margin-left: 0;
     padding: 80px 16px 24px;
   }
-  
+
   .hero {
     padding: 32px 24px;
   }
-  
+
   .hero-title {
     font-size: 24px;
   }
-  
+
   .hero-subtitle {
     font-size: 16px;
   }
-  
+
   .section-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
-  
+
   .equipment-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .department-grid {
     grid-template-columns: 1fr;
   }
@@ -747,6 +748,7 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -757,7 +759,10 @@ body {
   animation: fadeIn 0.5s ease forwards;
 }
 
-.card, .equipment-card, .policy-card, .department-card {
+.card,
+.equipment-card,
+.policy-card,
+.department-card {
   animation: fadeIn 0.3s ease forwards;
 }
 
