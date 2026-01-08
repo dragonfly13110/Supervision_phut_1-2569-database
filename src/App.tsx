@@ -8,7 +8,7 @@ import { SectionBudget } from './components/SectionBudget'
 import { SectionAssets } from './components/SectionAssets'
 import { SectionEquipment } from './components/SectionEquipment'
 import { SectionPolicy } from './components/SectionPolicy'
-import { SectionDepartments } from './components/SectionDepartments'
+import { SectionGroupReports } from './components/SectionGroupReports'
 import { SectionOther } from './components/SectionOther'
 import { Footer } from './components/Footer'
 
@@ -75,9 +75,9 @@ function App() {
                     <SectionPolicy />
                 )}
 
-                {/* Section 3: Departments */}
-                {activeSection === 'section3-groups' && (
-                    <SectionDepartments />
+                {/* Section 3: Group Reports */}
+                {(activeSection === 'section3' || activeSection === 'section3-groups') && (
+                    <SectionGroupReports />
                 )}
 
                 {/* Section 3: Other */}
