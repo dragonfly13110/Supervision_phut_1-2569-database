@@ -1,4 +1,5 @@
-import { FiUsers, FiImage } from 'react-icons/fi'
+import { useState, useEffect } from 'react'
+import { FiUsers, FiImage, FiEdit3, FiCopy, FiCheck, FiUploadCloud, FiSettings } from 'react-icons/fi'
 import { groupReports } from '../data/assetData'
 
 // Helper function to get status color
@@ -14,16 +15,307 @@ const getStatusStyle = (status: string) => {
     }
 }
 
+// Type for responsibility item
+type ResponsibilityItem = {
+    topic: string
+    detail: string
+    status: string
+    images?: { url: string; caption?: string }[]
+    notes?: string
+}
+
+// Type for notes state
+type NotesState = { [groupId: string]: { [topicIdx: number]: string } }
+
+// GitHub config
+const GITHUB_OWNER = 'dragonfly13110'
+const GITHUB_REPO = 'Supervision_phut_1-2569'
+const GITHUB_FILE_PATH = 'src/data/assetData.ts'
+const GITHUB_BRANCH = 'main'
+
 export function SectionGroupReports() {
+    const [notes, setNotes] = useState<NotesState>({})
+    const [copied, setCopied] = useState(false)
+    const [showSettings, setShowSettings] = useState(false)
+    const [githubToken, setGithubToken] = useState('')
+    const [pushing, setPushing] = useState(false)
+    const [pushStatus, setPushStatus] = useState<'idle' | 'success' | 'error'>('idle')
+    const [pushMessage, setPushMessage] = useState('')
+
+    // Load notes and token from localStorage on mount
+    useEffect(() => {
+        const savedNotes = localStorage.getItem('groupReportsNotes')
+        if (savedNotes) {
+            setNotes(JSON.parse(savedNotes))
+        }
+        const savedToken = localStorage.getItem('githubToken')
+        if (savedToken) {
+            setGithubToken(savedToken)
+        }
+    }, [])
+
+    // Save notes to localStorage when changed
+    useEffect(() => {
+        if (Object.keys(notes).length > 0) {
+            localStorage.setItem('groupReportsNotes', JSON.stringify(notes))
+        }
+    }, [notes])
+
+    // Save token to localStorage
+    useEffect(() => {
+        if (githubToken) {
+            localStorage.setItem('githubToken', githubToken)
+        }
+    }, [githubToken])
+
+    const updateNote = (groupId: string, topicIdx: number, value: string) => {
+        setNotes(prev => ({
+            ...prev,
+            [groupId]: {
+                ...prev[groupId],
+                [topicIdx]: value
+            }
+        }))
+    }
+
+    const getNote = (groupId: string, topicIdx: number): string => {
+        return notes[groupId]?.[topicIdx] || ''
+    }
+
+    // Generate updated groupReports data with notes
+    const generateUpdatedData = () => {
+        return groupReports.map(group => ({
+            ...group,
+            responsibilities: group.responsibilities.map((item: ResponsibilityItem, idx: number) => ({
+                ...item,
+                notes: getNote(group.id, idx) || item.notes || ''
+            }))
+        }))
+    }
+
+    // Generate full file content
+    const generateFileContent = async () => {
+        // Fetch current file to get the parts before groupReports
+        const response = await fetch(
+            `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}?ref=${GITHUB_BRANCH}`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${githubToken}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }
+        )
+
+        if (!response.ok) {
+            throw new Error('ไม่สามารถดึงไฟล์จาก GitHub ได้')
+        }
+
+        const data = await response.json()
+        const currentContent = atob(data.content)
+
+        // Find the groupReports section and replace it
+        const groupReportsStart = currentContent.indexOf('export const groupReports = [')
+        if (groupReportsStart === -1) {
+            throw new Error('ไม่พบ groupReports ในไฟล์')
+        }
+
+        // Find the end of groupReports array
+        let bracketCount = 0
+        let groupReportsEnd = groupReportsStart
+        let foundStart = false
+
+        for (let i = groupReportsStart; i < currentContent.length; i++) {
+            if (currentContent[i] === '[') {
+                bracketCount++
+                foundStart = true
+            } else if (currentContent[i] === ']') {
+                bracketCount--
+                if (foundStart && bracketCount === 0) {
+                    groupReportsEnd = i + 1
+                    break
+                }
+            }
+        }
+
+        const beforeGroupReports = currentContent.substring(0, groupReportsStart)
+        const afterGroupReports = currentContent.substring(groupReportsEnd)
+
+        const updatedData = generateUpdatedData()
+        const newGroupReportsContent = `export const groupReports = ${JSON.stringify(updatedData, null, 4)}`
+
+        return {
+            content: beforeGroupReports + newGroupReportsContent + afterGroupReports,
+            sha: data.sha
+        }
+    }
+
+    // Push to GitHub
+    const pushToGitHub = async () => {
+        if (!githubToken) {
+            setPushStatus('error')
+            setPushMessage('กรุณาใส่ GitHub Token ก่อน')
+            setShowSettings(true)
+            return
+        }
+
+        setPushing(true)
+        setPushStatus('idle')
+
+        try {
+            const { content, sha } = await generateFileContent()
+
+            const updateResponse = await fetch(
+                `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${githubToken}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Update notes - ${new Date().toLocaleString('th-TH')}`,
+                        content: btoa(unescape(encodeURIComponent(content))),
+                        sha: sha,
+                        branch: GITHUB_BRANCH
+                    })
+                }
+            )
+
+            if (!updateResponse.ok) {
+                const errorData = await updateResponse.json()
+                throw new Error(errorData.message || 'Push ไม่สำเร็จ')
+            }
+
+            setPushStatus('success')
+            setPushMessage('บันทึกขึ้น GitHub สำเร็จ!')
+            setTimeout(() => setPushStatus('idle'), 3000)
+        } catch (error) {
+            setPushStatus('error')
+            setPushMessage(error instanceof Error ? error.message : 'เกิดข้อผิดพลาด')
+        } finally {
+            setPushing(false)
+        }
+    }
+
+    const copyToClipboard = async () => {
+        const data = generateUpdatedData()
+        await navigator.clipboard.writeText(JSON.stringify(data, null, 2))
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+    }
+
     return (
         <section className="section">
             <div className="section-header">
                 <div className="section-icon"><FiUsers /></div>
-                <div>
+                <div style={{ flex: 1 }}>
                     <h2 className="section-title">ส่วนที่ 3: รายงานจากกลุ่มงาน</h2>
                     <p className="section-subtitle">ผลการดำเนินงานของแต่ละกลุ่มงาน (จากไฟล์ T&V 2568)</p>
                 </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                        onClick={() => setShowSettings(!showSettings)}
+                        title="ตั้งค่า GitHub Token"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '10px',
+                            background: showSettings ? '#374151' : '#f3f4f6',
+                            color: showSettings ? '#fff' : '#374151',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <FiSettings size={18} />
+                    </button>
+                    <button
+                        onClick={copyToClipboard}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '10px 14px',
+                            background: copied ? '#166534' : '#f3f4f6',
+                            color: copied ? '#fff' : '#374151',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontWeight: 500,
+                            fontSize: '14px'
+                        }}
+                    >
+                        {copied ? <><FiCheck /> Copied!</> : <><FiCopy /> Copy</>}
+                    </button>
+                    <button
+                        onClick={pushToGitHub}
+                        disabled={pushing}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '10px 16px',
+                            background: pushing ? '#9ca3af' : pushStatus === 'success' ? '#166534' : pushStatus === 'error' ? '#dc2626' : '#2d7a32',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: pushing ? 'not-allowed' : 'pointer',
+                            fontWeight: 500,
+                            fontSize: '14px'
+                        }}
+                    >
+                        <FiUploadCloud /> {pushing ? 'กำลังบันทึก...' : 'บันทึกขึ้น GitHub'}
+                    </button>
+                </div>
             </div>
+
+            {/* Settings Panel */}
+            {showSettings && (
+                <div style={{
+                    background: '#f3f4f6',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    marginBottom: '20px',
+                    border: '1px solid #e5e7eb'
+                }}>
+                    <div style={{ marginBottom: '12px', fontWeight: 600, color: '#374151' }}>
+                        ⚙️ ตั้งค่า GitHub Personal Access Token
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
+                        สร้าง Token ได้ที่: <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb' }}>github.com/settings/tokens</a>
+                        <br />⚠️ Token จะเก็บใน browser นี้เท่านั้น
+                    </div>
+                    <input
+                        type="password"
+                        value={githubToken}
+                        onChange={(e) => setGithubToken(e.target.value)}
+                        placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                        style={{
+                            width: '100%',
+                            maxWidth: '400px',
+                            padding: '10px 12px',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '8px',
+                            fontSize: '14px'
+                        }}
+                    />
+                </div>
+            )}
+
+            {/* Push Status Message */}
+            {pushStatus !== 'idle' && (
+                <div style={{
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    marginBottom: '20px',
+                    background: pushStatus === 'success' ? '#dcfce7' : '#fee2e2',
+                    color: pushStatus === 'success' ? '#166534' : '#991b1b',
+                    fontWeight: 500
+                }}>
+                    {pushStatus === 'success' ? '✅' : '❌'} {pushMessage}
+                </div>
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 {groupReports.map((group) => (
@@ -65,7 +357,7 @@ export function SectionGroupReports() {
 
                         {/* Responsibilities */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            {group.responsibilities.map((item: { topic: string; detail: string; status: string; images?: { url: string; caption?: string }[] }, idx: number) => (
+                            {group.responsibilities.map((item: ResponsibilityItem, idx: number) => (
                                 <div
                                     key={idx}
                                     style={{
@@ -112,7 +404,7 @@ export function SectionGroupReports() {
                                     </p>
 
                                     {/* Image Gallery for each task */}
-                                    <div style={{ marginTop: '12px' }}>
+                                    <div style={{ marginBottom: '12px' }}>
                                         {item.images && item.images.length > 0 ? (
                                             <div style={{
                                                 display: 'grid',
@@ -174,6 +466,37 @@ export function SectionGroupReports() {
                                                 ))}
                                             </div>
                                         )}
+                                    </div>
+
+                                    {/* Editable Notes Field - BELOW IMAGES */}
+                                    <div>
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            fontSize: '13px',
+                                            color: '#6b7280',
+                                            marginBottom: '6px'
+                                        }}>
+                                            <FiEdit3 size={14} />
+                                            <span>โน้ตเพิ่มเติม (กรอกได้เลย)</span>
+                                        </div>
+                                        <textarea
+                                            value={getNote(group.id, idx)}
+                                            onChange={(e) => updateNote(group.id, idx, e.target.value)}
+                                            placeholder="พิมพ์โน้ตที่นี่... (บันทึกอัตโนมัติใน browser)"
+                                            style={{
+                                                width: '100%',
+                                                minHeight: '60px',
+                                                padding: '10px 12px',
+                                                border: '1px solid #d1d5db',
+                                                borderRadius: '8px',
+                                                fontSize: '14px',
+                                                resize: 'vertical',
+                                                fontFamily: 'inherit',
+                                                background: '#fff'
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             ))}
