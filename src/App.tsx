@@ -10,6 +10,7 @@ import { SectionEquipment } from './components/SectionEquipment'
 import { SectionPolicy } from './components/SectionPolicy'
 import { SectionGroupReports } from './components/SectionGroupReports'
 import { SectionOther } from './components/SectionOther'
+import { SectionBudgetDetailed } from './components/SectionBudgetDetailed'
 import { Footer } from './components/Footer'
 
 function App() {
@@ -82,10 +83,9 @@ function App() {
                     <SectionEquipment />
                 )}
 
-                {/* Section 2: Policy */}
-                {/* Section 2: Policy */}
+                {/* Section 2: Detailed Budget */}
                 {activeSection.startsWith('section2') && (
-                    <SectionPolicy activeSection={activeSection} onNavigateTo={navigateTo} />
+                    <SectionBudgetDetailed activeSection={activeSection} />
                 )}
 
                 {/* Section 3: Group Reports */}
@@ -97,6 +97,7 @@ function App() {
                 {activeSection === 'section3-other' && (
                     <SectionOther />
                 )}
+
 
                 <Footer />
             </main>

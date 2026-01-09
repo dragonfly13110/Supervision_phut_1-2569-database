@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react'
 import { FiDollarSign, FiFileText, FiUsers, FiChevronDown, FiChevronsLeft, FiChevronsRight, FiChevronUp, FiChevronDown as FiScrollDown } from 'react-icons/fi'
-import { policyProjects } from '../data/assetData'
+import { TbReportMoney } from "react-icons/tb";
+import { policyProjects, detailedBudgetProjects } from '../data/assetData'
 
 interface SidebarProps {
     sidebarOpen: boolean
@@ -126,49 +127,34 @@ export function Sidebar({ sidebarOpen, activeSection, expandedNav, onToggleNav, 
                         className={`nav-section-header ${activeSection.startsWith('section2') ? 'active' : ''}`}
                         onClick={() => onToggleNav('section2')}
                     >
-                        <div className="nav-section-icon"><FiFileText /></div>
-                        <div className="nav-section-title">ส่วนที่ 2: นโยบายและโครงการ</div>
+                        <div className="nav-section-icon"><TbReportMoney /></div>
+                        <div className="nav-section-title">ส่วนที่ 2: ข้อมูลโครงการงบประมาณ 69</div>
                         <FiChevronDown className={`nav-section-arrow ${expandedNav === 'section2' ? 'expanded' : ''}`} />
                     </div>
                     <div className={`nav-items ${expandedNav === 'section2' ? 'expanded' : ''}`}>
-                        <div
-                            className={`nav-item ${activeSection === 'section2' ? 'active' : ''}`}
-                            onClick={() => onNavigateTo('section2')}
-                        >
-                            ภาพรวมนโยบาย
-                        </div>
-                        {policyProjects.map(policy => {
-                            const hasContent = policy.projects.length > 0
-                            const isActive = activeSection === `section2-${policy.id}`
-
+                        {detailedBudgetProjects.map(project => {
+                            const isActive = activeSection === `section2-${project.id}`;
                             return (
                                 <div
-                                    key={policy.id}
+                                    key={project.id}
                                     className={`nav-item ${isActive ? 'active' : ''}`}
-                                    onClick={() => onNavigateTo(`section2-${policy.id}`)}
+                                    onClick={() => onNavigateTo(`section2-${project.id}`)}
+                                    title={project.title}
                                     style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '8px',
-                                        color: hasContent ? '#d1fae5' : '#fcd34d',
-                                        fontSize: '13px'
+                                        fontSize: '0.85rem',
+                                        lineHeight: '1.3',
+                                        padding: '8px 12px 8px 12px'
                                     }}
                                 >
                                     <div style={{
-                                        minWidth: '6px',
-                                        height: '6px',
-                                        borderRadius: '50%',
-                                        background: hasContent ? '#34d399' : '#fbbf24'
-                                    }} />
-                                    <span style={{
                                         whiteSpace: 'nowrap',
                                         overflow: 'hidden',
                                         textOverflow: 'ellipsis'
                                     }}>
-                                        {policy.id}. {policy.title}
-                                    </span>
+                                        {project.title}
+                                    </div>
                                 </div>
-                            )
+                            );
                         })}
                     </div>
                 </div>
@@ -198,6 +184,7 @@ export function Sidebar({ sidebarOpen, activeSection, expandedNav, onToggleNav, 
                         </div>
                     </div>
                 </div>
+
             </nav>
 
             {/* Scroll Buttons */}
