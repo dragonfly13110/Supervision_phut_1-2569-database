@@ -503,3 +503,10 @@ export const groupReports = [
         ]
     }
 ]
+
+import detailedBudgetProjectsData from './detailedBudgetProjects.json';
+
+// ข้อมูลโครงการงบประมาณรายจ่ายประจำปี 2569 (รายละเอียด)
+export const detailedBudgetProjects = detailedBudgetProjectsData;
+
+
