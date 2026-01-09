@@ -17,13 +17,18 @@ function App() {
     const [activeSection, setActiveSection] = useState('section1')
     const [expandedNav, setExpandedNav] = useState<string | null>('section1')
 
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+    const [sidebarWidth, setSidebarWidth] = useState(300)
+
     const toggleNav = (section: string) => {
         setExpandedNav(expandedNav === section ? null : section)
     }
 
     const navigateTo = (section: string) => {
         setActiveSection(section)
-        setSidebarOpen(false)
+        if (window.innerWidth <= 768) {
+            setSidebarOpen(false)
+        }
     }
 
     return (
@@ -49,10 +54,17 @@ function App() {
                 expandedNav={expandedNav}
                 onToggleNav={toggleNav}
                 onNavigateTo={navigateTo}
+                isCollapsed={isSidebarCollapsed}
+                onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                width={sidebarWidth}
+                setWidth={setSidebarWidth}
             />
 
             {/* Main Content */}
-            <main className="main-content">
+            <main
+                className={`main-content ${isSidebarCollapsed ? 'collapsed' : ''}`}
+                style={!isSidebarCollapsed ? { marginLeft: sidebarWidth } : {}}
+            >
                 <Hero />
 
                 {/* Section 1: Budget */}
@@ -71,8 +83,9 @@ function App() {
                 )}
 
                 {/* Section 2: Policy */}
-                {activeSection === 'section2' && (
-                    <SectionPolicy />
+                {/* Section 2: Policy */}
+                {activeSection.startsWith('section2') && (
+                    <SectionPolicy activeSection={activeSection} onNavigateTo={navigateTo} />
                 )}
 
                 {/* Section 3: Group Reports */}
