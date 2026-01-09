@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import detailedBudgetProjectsData from '../data/detailedBudgetProjects.json';
-import { FaEdit, FaSave, FaChartLine, FaExclamationTriangle, FaLightbulb, FaGithub, FaCog } from 'react-icons/fa';
+import { FaEdit, FaSave, FaChartLine, FaExclamationTriangle, FaLightbulb, FaGithub, FaCog, FaImage, FaPlus, FaTimes } from 'react-icons/fa';
 
 interface DetailedProject {
     name: string;
@@ -10,6 +10,7 @@ interface DetailedProject {
     result: string;
     problem: string;
     solution: string;
+    images?: { url: string; caption?: string }[];
 }
 
 interface BudgetGroup {
@@ -35,6 +36,11 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
         path: 'src/data/detailedBudgetProjects.json' // path to the file in repo
     });
 
+    // Image Modal State
+    const [imageModal, setImageModal] = useState<{ groupId: string; projectIndex: number } | null>(null);
+    const [newImageUrl, setNewImageUrl] = useState('');
+    const [newImageCaption, setNewImageCaption] = useState('');
+
     // Load from localStorage on mount
     useEffect(() => {
         const savedData = localStorage.getItem('detailedBudgetProjects');
@@ -45,7 +51,8 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
             let hasNewData = false;
 
             detailedBudgetProjectsData.forEach(project => {
-                if (!mergedData.find(p => p.id === project.id)) {
+                const existingGroup = mergedData.find(p => p.id === project.id);
+                if (!existingGroup) {
                     mergedData.push(project);
                     hasNewData = true;
                 }
@@ -63,7 +70,7 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
         groupId: string,
         projectIndex: number,
         field: keyof DetailedProject,
-        value: string
+        value: any
     ) => {
         const newGroups = budgetGroups.map(group => {
             if (group.id !== groupId) return group;
@@ -80,6 +87,31 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
             return { ...group, title: value };
         });
         setBudgetGroups(newGroups);
+    };
+
+    const handleAddImage = () => {
+        if (imageModal && newImageUrl) {
+            const group = budgetGroups.find(g => g.id === imageModal.groupId);
+            if (group) {
+                const project = group.projects[imageModal.projectIndex];
+                const currentImages = project.images || [];
+                const newImages = [...currentImages, { url: newImageUrl, caption: newImageCaption }];
+                handleChange(imageModal.groupId, imageModal.projectIndex, 'images', newImages);
+            }
+            setImageModal(null);
+            setNewImageUrl('');
+            setNewImageCaption('');
+        }
+    };
+
+    const handleRemoveImage = (groupId: string, projectIndex: number, imgIndex: number) => {
+        const group = budgetGroups.find(g => g.id === groupId);
+        if (group) {
+            const project = group.projects[projectIndex];
+            const currentImages = project.images || [];
+            const newImages = currentImages.filter((_, i) => i !== imgIndex);
+            handleChange(groupId, projectIndex, 'images', newImages);
+        }
     };
 
     const handleSaveLocal = () => {
@@ -174,6 +206,56 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
 
     return (
         <div className="section-container fade-in">
+            {/* Image Modal */}
+            {imageModal && (
+                <div className="modal-overlay" style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.5)', zIndex: 1100, display: 'flex', justifyContent: 'center', alignItems: 'center'
+                }}>
+                    <div className="modal-content" style={{ background: 'white', padding: '24px', borderRadius: '12px', width: '90%', maxWidth: '500px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h3 style={{ margin: 0, color: '#1f2937', fontSize: '18px' }}>🖼️ เพิ่มรูปภาพ</h3>
+                            <button onClick={() => setImageModal(null)} style={{ background: '#f3f4f6', border: 'none', borderRadius: '8px', padding: '8px', cursor: 'pointer' }}>
+                                <FaTimes />
+                            </button>
+                        </div>
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{ display: 'block', marginBottom: '6px', color: '#374151', fontWeight: 500 }}>URL รูปภาพ *</label>
+                            <input
+                                type="url"
+                                value={newImageUrl}
+                                onChange={e => setNewImageUrl(e.target.value)}
+                                placeholder="https://example.com/image.jpg"
+                                style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px' }}
+                            />
+                        </div>
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'block', marginBottom: '6px', color: '#374151', fontWeight: 500 }}>คำอธิบาย (ไม่บังคับ)</label>
+                            <input
+                                type="text"
+                                value={newImageCaption}
+                                onChange={e => setNewImageCaption(e.target.value)}
+                                placeholder="เช่น ภาพการประชุม"
+                                style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px' }}
+                            />
+                        </div>
+                        {newImageUrl && (
+                            <div style={{ marginBottom: '20px' }}>
+                                <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>ตัวอย่าง</div>
+                                <div style={{ width: '160px', aspectRatio: '4/3', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e5e7eb' }}>
+                                    <img src={newImageUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                                </div>
+                            </div>
+                        )}
+                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                            <button onClick={() => setImageModal(null)} style={{ padding: '10px 20px', background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 500 }}>ยกเลิก</button>
+                            <button onClick={handleAddImage} disabled={!newImageUrl} style={{ padding: '10px 20px', background: newImageUrl ? '#2d7a32' : '#9ca3af', color: '#fff', border: 'none', borderRadius: '8px', cursor: newImageUrl ? 'pointer' : 'not-allowed', fontWeight: 500 }}>เพิ่มรูป</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* GitHub Settings Modal */}
             {showGithubSettings && (
                 <div className="modal-overlay" style={{
                     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -446,6 +528,53 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                 )}
                                             </div>
                                         </div>
+
+                                        {/* Image Gallery */}
+                                        <div style={{ marginTop: '16px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                                <div className="feedback-label" style={{ marginBottom: 0 }}>
+                                                    <FaImage className="icon" /> รูปภาพประกอบ
+                                                </div>
+                                                {isEditing && (
+                                                    <button
+                                                        onClick={() => setImageModal({ groupId: group.id, projectIndex: index })}
+                                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+                                                    >
+                                                        <FaPlus size={12} /> เพิ่มรูปภาพ
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {project.images && project.images.length > 0 ? (
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px' }}>
+                                                    {project.images.map((img, imgIdx) => (
+                                                        <div key={imgIdx} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                                                            <div style={{ aspectRatio: '4/3', overflow: 'hidden' }}>
+                                                                <img src={img.url} alt={img.caption || 'Project Image'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                            </div>
+                                                            {img.caption && (
+                                                                <div style={{ padding: '6px 8px', fontSize: '12px', color: '#64748b', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+                                                                    {img.caption}
+                                                                </div>
+                                                            )}
+                                                            {isEditing && (
+                                                                <button
+                                                                    onClick={() => handleRemoveImage(group.id, index, imgIdx)}
+                                                                    style={{ position: 'absolute', top: '4px', right: '4px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                                >
+                                                                    <FaTimes size={12} />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div style={{ fontSize: '0.9rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                                                    {isEditing ? 'กด "เพิ่มรูปภาพ" เพื่อใส่รูปประกอบ' : 'ไม่มีรูปภาพประกอบ'}
+                                                </div>
+                                            )}
+                                        </div>
+
                                     </div>
                                 </div>
                             ))}
