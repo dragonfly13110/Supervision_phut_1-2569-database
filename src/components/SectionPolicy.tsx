@@ -17,7 +17,12 @@ interface Policy {
     projects: Project[]
 }
 
-export function SectionPolicy() {
+interface SectionPolicyProps {
+    activeSection?: string
+    onNavigateTo?: (section: string) => void
+}
+
+export function SectionPolicy({ activeSection, onNavigateTo }: SectionPolicyProps) {
     const [edits, setEdits] = useState<Policy[]>(() => {
         const saved = localStorage.getItem('policy_edits')
         return saved ? JSON.parse(saved) : policyProjects
@@ -42,6 +47,18 @@ export function SectionPolicy() {
         const savedToken = localStorage.getItem('githubToken')
         if (savedToken) setGithubToken(savedToken)
     }, [])
+
+    useEffect(() => {
+        if (activeSection && activeSection.startsWith('section2-')) {
+            const policyId = activeSection.replace('section2-', '')
+            const element = document.getElementById(`policy-${policyId}`)
+            if (element) {
+                setTimeout(() => {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }, 100)
+            }
+        }
+    }, [activeSection])
 
     useEffect(() => {
         if (githubToken) localStorage.setItem('githubToken', githubToken)
@@ -258,213 +275,242 @@ export function SectionPolicy() {
             </div>
 
             <div className="policy-grid" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {edits.map((policy) => (
-                    <div className="policy-card" key={policy.id}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div>
-                                <div className="policy-number">{policy.id}</div>
-                                <div className="policy-title">{policy.title}</div>
-                            </div>
-                            <button
-                                onClick={() => handleEdit(policy.id)}
-                                className={`edit-toggle-btn ${editingId === policy.id ? 'active' : ''}`}
-                            >
-                                {editingId === policy.id ? <><FiSave /> บันทึก</> : <><FiEdit2 /> แก้ไข</>}
-                            </button>
-                        </div>
+                {activeSection?.startsWith('section2-') && (
+                    <button
+                        className="btn btn-secondary"
+                        onClick={() => onNavigateTo?.('section2')}
+                        style={{ alignSelf: 'flex-start', marginBottom: '8px' }}
+                    >
+                        ← กลับไปภาพรวมนโยบาย
+                    </button>
+                )}
 
-                        <div style={{ marginTop: '16px' }}>
-                            {policy.projects.map((project, idx) => (
-                                <div
-                                    key={idx}
-                                    style={{
-                                        background: '#f0f7f1',
-                                        borderRadius: '8px',
-                                        padding: '16px',
-                                        marginBottom: '12px',
-                                        borderLeft: '4px solid #2d7a32',
-                                        position: 'relative'
-                                    }}
+                {edits
+                    .filter(policy => {
+                        if (activeSection && activeSection.startsWith('section2-')) {
+                            const targetId = activeSection.replace('section2-', '')
+                            return policy.id === targetId
+                        }
+                        return true
+                    })
+                    .map((policy) => (
+                        <div className="policy-card" key={policy.id} id={`policy-${policy.id}`}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <div>
+                                    <div className="policy-number">{policy.id}</div>
+                                    <div className="policy-title">{policy.title}</div>
+                                </div>
+                                <button
+                                    onClick={() => handleEdit(policy.id)}
+                                    className={`edit-toggle-btn ${editingId === policy.id ? 'active' : ''}`}
                                 >
-                                    {editingId === policy.id ? (
-                                        <div style={{ display: 'grid', gap: '12px' }}>
-                                            <div style={{ position: 'absolute', top: 8, right: 8 }}>
-                                                <button
-                                                    onClick={() => handleRemoveProject(policy.id, idx)}
-                                                    style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}
-                                                >
-                                                    <FiTrash2 />
-                                                </button>
-                                            </div>
-                                            <div>
-                                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#666' }}>ชื่อโครงการ</label>
-                                                <input
-                                                    className="edit-input"
-                                                    value={project.name}
-                                                    onChange={e => handleChange(policy.id, idx, 'name', e.target.value)}
-                                                    style={{ width: '100%', fontWeight: 600, color: '#1a5a22' }}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#666' }}>กิจกรรม</label>
-                                                <textarea
-                                                    className="edit-input"
-                                                    value={project.activity}
-                                                    onChange={e => handleChange(policy.id, idx, 'activity', e.target.value)}
-                                                    style={{ width: '100%', minHeight: '60px' }}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#666' }}>ผลการดำเนินงาน</label>
-                                                <textarea
-                                                    className="edit-input"
-                                                    value={project.result}
-                                                    onChange={e => handleChange(policy.id, idx, 'result', e.target.value)}
-                                                    style={{ width: '100%', minHeight: '60px' }}
-                                                />
-                                            </div>
-                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                    {editingId === policy.id ? <><FiSave /> บันทึก</> : <><FiEdit2 /> แก้ไข</>}
+                                </button>
+                            </div>
+
+                            <div style={{ marginTop: '16px' }}>
+                                {policy.projects.map((project, idx) => (
+                                    <div
+                                        key={idx}
+                                        style={{
+                                            background: '#f0f7f1',
+                                            borderRadius: '8px',
+                                            padding: '16px',
+                                            marginBottom: '12px',
+                                            borderLeft: '4px solid #2d7a32',
+                                            position: 'relative'
+                                        }}
+                                    >
+                                        {editingId === policy.id ? (
+                                            <div style={{ display: 'grid', gap: '12px' }}>
+                                                <div style={{ position: 'absolute', top: 8, right: 8 }}>
+                                                    <button
+                                                        onClick={() => handleRemoveProject(policy.id, idx)}
+                                                        style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}
+                                                    >
+                                                        <FiTrash2 />
+                                                    </button>
+                                                </div>
                                                 <div>
-                                                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#666' }}>ปัญหา</label>
-                                                    <textarea
+                                                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#666' }}>ชื่อโครงการ</label>
+                                                    <input
                                                         className="edit-input"
-                                                        value={project.problem}
-                                                        onChange={e => handleChange(policy.id, idx, 'problem', e.target.value)}
-                                                        style={{ width: '100%', minHeight: '60px', background: '#fffbeb' }}
+                                                        value={project.name}
+                                                        onChange={e => handleChange(policy.id, idx, 'name', e.target.value)}
+                                                        style={{ width: '100%', fontWeight: 600, color: '#1a5a22' }}
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#666' }}>แนวทางแก้ไข</label>
+                                                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#666' }}>กิจกรรม</label>
                                                     <textarea
                                                         className="edit-input"
-                                                        value={project.solution}
-                                                        onChange={e => handleChange(policy.id, idx, 'solution', e.target.value)}
+                                                        value={project.activity}
+                                                        onChange={e => handleChange(policy.id, idx, 'activity', e.target.value)}
                                                         style={{ width: '100%', minHeight: '60px' }}
                                                     />
                                                 </div>
-                                            </div>
+                                                <div>
+                                                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#666' }}>ผลการดำเนินงาน</label>
+                                                    <textarea
+                                                        className="edit-input"
+                                                        value={project.result}
+                                                        onChange={e => handleChange(policy.id, idx, 'result', e.target.value)}
+                                                        style={{ width: '100%', minHeight: '60px' }}
+                                                    />
+                                                </div>
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                                    <div>
+                                                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#666' }}>ปัญหา</label>
+                                                        <textarea
+                                                            className="edit-input"
+                                                            value={project.problem}
+                                                            onChange={e => handleChange(policy.id, idx, 'problem', e.target.value)}
+                                                            style={{ width: '100%', minHeight: '60px', background: '#fffbeb' }}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#666' }}>แนวทางแก้ไข</label>
+                                                        <textarea
+                                                            className="edit-input"
+                                                            value={project.solution}
+                                                            onChange={e => handleChange(policy.id, idx, 'solution', e.target.value)}
+                                                            style={{ width: '100%', minHeight: '60px' }}
+                                                        />
+                                                    </div>
+                                                </div>
 
-                                            {/* Image Management Section */}
-                                            <div>
-                                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#666', display: 'block', marginBottom: '8px' }}>
-                                                    รูปภาพประกอบ (สูงสุด 2 รูป)
-                                                </label>
+                                                {/* Image Management Section */}
+                                                <div>
+                                                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#666', display: 'block', marginBottom: '8px' }}>
+                                                        รูปภาพประกอบ (สูงสุด 2 รูป)
+                                                    </label>
 
-                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px', marginBottom: '12px' }}>
-                                                    {project.images?.map((img, imgIdx) => (
-                                                        <div key={imgIdx} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e5e7eb', aspectRatio: '4/3' }}>
-                                                            <img
-                                                                src={img}
-                                                                alt={`Project ${imgIdx}`}
-                                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px', marginBottom: '12px' }}>
+                                                        {project.images?.map((img, imgIdx) => (
+                                                            <div key={imgIdx} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e5e7eb', aspectRatio: '4/3' }}>
+                                                                <img
+                                                                    src={img}
+                                                                    alt={`Project ${imgIdx}`}
+                                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                                />
+                                                                <button
+                                                                    onClick={() => handleRemoveImage(policy.id, idx, imgIdx)}
+                                                                    style={{
+                                                                        position: 'absolute', top: 4, right: 4,
+                                                                        background: '#dc2626', color: 'white',
+                                                                        border: 'none', borderRadius: '50%',
+                                                                        width: '24px', height: '24px',
+                                                                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                                    }}
+                                                                >
+                                                                    <FiX size={14} />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
+                                                    {(project.images?.length || 0) < 2 && (
+                                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                                            <input
+                                                                className="edit-input"
+                                                                placeholder="URL รูปภาพ..."
+                                                                value={activeImageInput?.policyId === policy.id && activeImageInput?.projectIdx === idx ? newImageUrl : ''}
+                                                                onChange={e => {
+                                                                    setActiveImageInput({ policyId: policy.id, projectIdx: idx })
+                                                                    setNewImageUrl(e.target.value)
+                                                                }}
+                                                                style={{ flex: 1 }}
                                                             />
                                                             <button
-                                                                onClick={() => handleRemoveImage(policy.id, idx, imgIdx)}
-                                                                style={{
-                                                                    position: 'absolute', top: 4, right: 4,
-                                                                    background: '#dc2626', color: 'white',
-                                                                    border: 'none', borderRadius: '50%',
-                                                                    width: '24px', height: '24px',
-                                                                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                                                }}
+                                                                className="btn btn-secondary"
+                                                                onClick={() => handleAddImage(policy.id, idx)}
+                                                                disabled={!newImageUrl || (activeImageInput?.policyId !== policy.id || activeImageInput?.projectIdx !== idx)}
                                                             >
-                                                                <FiX size={14} />
+                                                                <FiPlus /> เพิ่มรูป
                                                             </button>
                                                         </div>
-                                                    ))}
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div style={{ fontWeight: 600, color: '#1a5a22', marginBottom: '12px', fontSize: '15px' }}>
+                                                    📌 {project.name}
                                                 </div>
 
-                                                {(project.images?.length || 0) < 2 && (
-                                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                                        <input
-                                                            className="edit-input"
-                                                            placeholder="URL รูปภาพ..."
-                                                            value={activeImageInput?.policyId === policy.id && activeImageInput?.projectIdx === idx ? newImageUrl : ''}
-                                                            onChange={e => {
-                                                                setActiveImageInput({ policyId: policy.id, projectIdx: idx })
-                                                                setNewImageUrl(e.target.value)
-                                                            }}
-                                                            style={{ flex: 1 }}
-                                                        />
-                                                        <button
-                                                            className="btn btn-secondary"
-                                                            onClick={() => handleAddImage(policy.id, idx)}
-                                                            disabled={!newImageUrl || (activeImageInput?.policyId !== policy.id || activeImageInput?.projectIdx !== idx)}
-                                                        >
-                                                            <FiPlus /> เพิ่มรูป
-                                                        </button>
+                                                {/* Display Images in Read Mode */}
+                                                {project.images && project.images.length > 0 && (
+                                                    <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                                                        {project.images.map((img, imgIdx) => (
+                                                            <div key={imgIdx} style={{
+                                                                width: '200px',
+                                                                aspectRatio: '4/3',
+                                                                borderRadius: '8px',
+                                                                overflow: 'hidden',
+                                                                border: '1px solid #e5e7eb',
+                                                                boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                                            }}>
+                                                                <img
+                                                                    src={img}
+                                                                    alt={`Project Image ${imgIdx}`}
+                                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                                />
+                                                            </div>
+                                                        ))}
                                                     </div>
                                                 )}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <div style={{ fontWeight: 600, color: '#1a5a22', marginBottom: '12px', fontSize: '15px' }}>
-                                                📌 {project.name}
-                                            </div>
-
-                                            {/* Display Images in Read Mode */}
-                                            {project.images && project.images.length > 0 && (
-                                                <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                                                    {project.images.map((img, imgIdx) => (
-                                                        <div key={imgIdx} style={{
-                                                            width: '200px',
-                                                            aspectRatio: '4/3',
-                                                            borderRadius: '8px',
-                                                            overflow: 'hidden',
-                                                            border: '1px solid #e5e7eb',
-                                                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                                                        }}>
-                                                            <img
-                                                                src={img}
-                                                                alt={`Project Image ${imgIdx}`}
-                                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                                            />
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                            <div style={{ display: 'grid', gap: '8px', fontSize: '14px' }}>
-                                                <div>
-                                                    <span style={{ color: '#666', fontWeight: 500 }}>กิจกรรม:</span>{' '}
-                                                    <span style={{ color: '#333' }}>{project.activity}</span>
-                                                </div>
-                                                <div>
-                                                    <span style={{ color: '#166534', fontWeight: 500 }}>✓ ผลการดำเนินงาน:</span>{' '}
-                                                    <span style={{ color: '#166534' }}>{project.result}</span>
-                                                </div>
-                                                {(project.problem !== '-' || project.solution !== '-') && (
+                                                <div style={{ display: 'grid', gap: '8px', fontSize: '14px' }}>
+                                                    <div>
+                                                        <span style={{ color: '#666', fontWeight: 500 }}>กิจกรรม:</span>{' '}
+                                                        <span style={{ color: '#333' }}>{project.activity}</span>
+                                                    </div>
                                                     <div style={{
-                                                        background: '#fef3c7',
-                                                        padding: '8px 12px',
+                                                        background: '#f0fdf4',
+                                                        padding: '10px',
                                                         borderRadius: '6px',
-                                                        marginTop: '4px'
+                                                        marginTop: '8px',
+                                                        marginBottom: '8px',
+                                                        borderLeft: '4px solid #166534'
                                                     }}>
-                                                        <div style={{ color: '#92400e', marginBottom: '4px' }}>
-                                                            <strong>⚠ ปัญหา:</strong> {project.problem}
+                                                        <div style={{ color: '#166534', fontWeight: 600, marginBottom: '6px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            📈 ผลการดำเนินงาน
                                                         </div>
-                                                        <div style={{ color: '#166534' }}>
-                                                            <strong>💡 แนวทางแก้ไข:</strong> {project.solution}
+                                                        <div style={{ color: '#333', fontSize: '14px' }}>
+                                                            {project.result || '-'}
                                                         </div>
                                                     </div>
-                                                )}
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            ))}
+                                                    {(project.problem !== '-' || project.solution !== '-') && (
+                                                        <div style={{
+                                                            background: '#fef3c7',
+                                                            padding: '8px 12px',
+                                                            borderRadius: '6px',
+                                                            marginTop: '4px'
+                                                        }}>
+                                                            <div style={{ color: '#92400e', marginBottom: '4px' }}>
+                                                                <strong>⚠ ปัญหา:</strong> {project.problem}
+                                                            </div>
+                                                            <div style={{ color: '#166534' }}>
+                                                                <strong>💡 แนวทางแก้ไข:</strong> {project.solution}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                ))}
 
-                            {editingId === policy.id && (
-                                <button
-                                    onClick={() => handleAddProject(policy.id)}
-                                    className="add-project-btn"
-                                >
-                                    <FiPlus /> เพิ่มโครงการ
-                                </button>
-                            )}
+                                {editingId === policy.id && (
+                                    <button
+                                        onClick={() => handleAddProject(policy.id)}
+                                        className="add-project-btn"
+                                    >
+                                        <FiPlus /> เพิ่มโครงการ
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
             </div>
         </section>
     )
