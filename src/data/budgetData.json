@@ -1,22 +1,22 @@
 {
     "construction": {
-        "budget": "555555",
+        "budget": "0",
         "disbursed": "-"
     },
     "utilities": {
-        "budget": "-",
-        "disbursed": "-"
+        "budget": "10000",
+        "disbursed": "5323"
     },
     "officeSupplies": {
-        "budget": "-",
-        "disbursed": "-"
+        "budget": "20000",
+        "disbursed": "20000"
     },
     "service": {
-        "budget": "-",
-        "disbursed": "-"
+        "budget": "12000",
+        "disbursed": "6000"
     },
     "travel": {
-        "budget": "-",
-        "disbursed": "-"
+        "budget": "21000",
+        "disbursed": "21000"
     }
 }
