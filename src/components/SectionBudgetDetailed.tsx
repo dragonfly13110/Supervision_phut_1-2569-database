@@ -5,6 +5,7 @@ import { FaEdit, FaSave, FaChartLine, FaExclamationTriangle, FaLightbulb, FaGith
 interface DetailedProject {
     name: string;
     subActivity: string;
+    relevantPolicies?: string;
     target: string;
     budget: string;
     result: string;
@@ -443,6 +444,11 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                     <div className="sub-activity">
                                                         <strong>กิจกรรมย่อย:</strong> {project.subActivity}
                                                     </div>
+                                                    {project.relevantPolicies && project.relevantPolicies !== '-' && (
+                                                        <div className="relevant-policies-box">
+                                                            {project.relevantPolicies}
+                                                        </div>
+                                                    )}
                                                 </>
                                             )}
                                         </div>
@@ -637,6 +643,16 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                     color: #475569;
                     font-size: 0.95rem;
                     line-height: 1.5;
+                }
+                .relevant-policies-box {
+                    margin-top: 10px;
+                    padding: 10px 14px;
+                    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+                    border-left: 4px solid #10b981;
+                    border-radius: 0 8px 8px 0;
+                    font-size: 0.9rem;
+                    color: #065f46;
+                    line-height: 1.6;
                 }
                 .project-metrics {
                     display: flex;
