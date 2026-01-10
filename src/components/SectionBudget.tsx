@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { FiDollarSign, FiTrendingUp, FiPackage, FiEdit2, FiSave } from 'react-icons/fi'
+import { FiDollarSign, FiTrendingUp, FiPackage, FiEdit2, FiSave, FiBriefcase, FiPlus, FiTrash2 } from 'react-icons/fi'
 import { FaGithub, FaCog } from 'react-icons/fa'
 import budgetDataJson from '../data/budgetData.json'
 
@@ -8,12 +8,25 @@ interface BudgetItem {
     disbursed: string
 }
 
+interface ProjectItem {
+    name: string
+    budget: string
+    disbursed: string
+}
+
 interface BudgetData {
-    construction: BudgetItem
-    utilities: BudgetItem
-    officeSupplies: BudgetItem
-    service: BudgetItem
-    travel: BudgetItem
+    investment: {
+        construction: BudgetItem
+    }
+    operation: {
+        utilities: BudgetItem
+        officeSupplies: BudgetItem
+        service: BudgetItem
+        travel: BudgetItem
+    }
+    project: {
+        [key: string]: ProjectItem
+    }
 }
 
 // Helper function to format number with commas
@@ -33,12 +46,19 @@ const calculatePercentage = (disbursed: string, budget: string): string => {
     return ((d / b) * 100).toFixed(1) + '%'
 }
 
+// Parse number from string
+const parseNum = (value: string): number => {
+    if (!value || value === '-') return 0
+    const num = parseFloat(value.replace(/,/g, ''))
+    return isNaN(num) ? 0 : num
+}
+
 export function SectionBudget() {
     const [isEditing, setIsEditing] = useState(false)
     const [showGithubSettings, setShowGithubSettings] = useState(false)
     const [showAdvanced, setShowAdvanced] = useState(false)
     const [data, setData] = useState<BudgetData>(() => {
-        const saved = localStorage.getItem('budget_data')
+        const saved = localStorage.getItem('budget_data_v2')
         return saved ? JSON.parse(saved) : budgetDataJson
     })
 
@@ -50,21 +70,73 @@ export function SectionBudget() {
     })
 
     useEffect(() => {
-        localStorage.setItem('budget_data', JSON.stringify(data))
+        localStorage.setItem('budget_data_v2', JSON.stringify(data))
     }, [data])
 
-    const handleChange = (field: keyof BudgetData, subField: keyof BudgetItem, value: string) => {
+    const handleInvestmentChange = (subField: keyof BudgetItem, value: string) => {
         setData(prev => ({
             ...prev,
-            [field]: {
-                ...prev[field],
-                [subField]: value
+            investment: {
+                ...prev.investment,
+                construction: {
+                    ...prev.investment.construction,
+                    [subField]: value
+                }
             }
         }))
     }
 
+    const handleOperationChange = (field: keyof BudgetData['operation'], subField: keyof BudgetItem, value: string) => {
+        setData(prev => ({
+            ...prev,
+            operation: {
+                ...prev.operation,
+                [field]: {
+                    ...prev.operation[field],
+                    [subField]: value
+                }
+            }
+        }))
+    }
+
+    const handleProjectChange = (projectKey: string, field: keyof ProjectItem, value: string) => {
+        setData(prev => ({
+            ...prev,
+            project: {
+                ...prev.project,
+                [projectKey]: {
+                    ...prev.project[projectKey],
+                    [field]: value
+                }
+            }
+        }))
+    }
+
+    const addProject = () => {
+        const newKey = `project${Date.now()}`
+        setData(prev => ({
+            ...prev,
+            project: {
+                ...prev.project,
+                [newKey]: {
+                    name: 'โครงการใหม่',
+                    budget: '-',
+                    disbursed: '-'
+                }
+            }
+        }))
+    }
+
+    const removeProject = (projectKey: string) => {
+        setData(prev => {
+            const newProject = { ...prev.project }
+            delete newProject[projectKey]
+            return { ...prev, project: newProject }
+        })
+    }
+
     const handleSaveLocal = () => {
-        localStorage.setItem('budget_data', JSON.stringify(data))
+        localStorage.setItem('budget_data_v2', JSON.stringify(data))
         setIsEditing(false)
         alert('บันทึกข้อมูลลงเครื่องเรียบร้อยแล้ว')
     }
@@ -132,33 +204,128 @@ export function SectionBudget() {
         setShowGithubSettings(false)
     }
 
-    const budgetItems = [
-        { key: 'utilities' as keyof BudgetData, title: 'ค่าสาธารณูปโภค', sub: 'ค่าน้ำ/ค่าไฟ' },
-        { key: 'officeSupplies' as keyof BudgetData, title: 'ค่าวัสดุสำนักงาน', sub: '' },
-        { key: 'service' as keyof BudgetData, title: 'ค่าจ้างเหมาบริการ', sub: '' },
-        { key: 'travel' as keyof BudgetData, title: 'เบี้ยเลี้ยง/ค่าเดินทาง', sub: '' },
+    const operationItems = [
+        { key: 'utilities' as keyof BudgetData['operation'], title: 'ค่าสาธารณูปโภค', sub: 'ค่าน้ำ/ค่าไฟ' },
+        { key: 'officeSupplies' as keyof BudgetData['operation'], title: 'ค่าวัสดุสำนักงาน', sub: '' },
+        { key: 'service' as keyof BudgetData['operation'], title: 'ค่าจ้างเหมาบริการ', sub: '' },
+        { key: 'travel' as keyof BudgetData['operation'], title: 'เบี้ยเลี้ยง/ค่าเดินทาง', sub: '' },
     ]
 
-    // Calculate totals
-    const calculateTotals = () => {
-        let totalBudget = 0
-        let totalDisbursed = 0
-
-        Object.values(data).forEach((item: BudgetItem) => {
-            if (item.budget && item.budget !== '-') {
-                const b = parseFloat(item.budget.replace(/,/g, ''))
-                if (!isNaN(b)) totalBudget += b
-            }
-            if (item.disbursed && item.disbursed !== '-') {
-                const d = parseFloat(item.disbursed.replace(/,/g, ''))
-                if (!isNaN(d)) totalDisbursed += d
-            }
-        })
-
-        return { totalBudget, totalDisbursed }
+    // Calculate section totals
+    const investmentTotal = {
+        budget: parseNum(data.investment.construction.budget),
+        disbursed: parseNum(data.investment.construction.disbursed)
     }
 
-    const totals = calculateTotals()
+    const operationTotal = Object.values(data.operation).reduce((acc, item) => ({
+        budget: acc.budget + parseNum(item.budget),
+        disbursed: acc.disbursed + parseNum(item.disbursed)
+    }), { budget: 0, disbursed: 0 })
+
+    const projectTotal = Object.values(data.project).reduce((acc, item) => ({
+        budget: acc.budget + parseNum(item.budget),
+        disbursed: acc.disbursed + parseNum(item.disbursed)
+    }), { budget: 0, disbursed: 0 })
+
+    const grandTotal = {
+        budget: investmentTotal.budget + operationTotal.budget + projectTotal.budget,
+        disbursed: investmentTotal.disbursed + operationTotal.disbursed + projectTotal.disbursed
+    }
+
+    // Summary Card Component
+    const SummaryCard = ({ title, budget, disbursed, color }: { title: string, budget: number, disbursed: number, color: string }) => (
+        <div style={{ background: color, padding: '12px 16px', borderRadius: '8px', color: 'white', minWidth: '180px' }}>
+            <div style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '4px' }}>{title}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '12px' }}>
+                <div>
+                    <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>งบประมาณ</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>{budget.toLocaleString('th-TH')}</div>
+                </div>
+                <div>
+                    <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>เบิกจ่าย</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>{disbursed.toLocaleString('th-TH')}</div>
+                </div>
+                <div>
+                    <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>%</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>{budget > 0 ? ((disbursed / budget) * 100).toFixed(1) : '0'}%</div>
+                </div>
+            </div>
+        </div>
+    )
+
+    // Budget Input Row Component
+    const BudgetInputRow = ({ budget, disbursed, onBudgetChange, onDisbursedChange }: {
+        budget: string,
+        disbursed: string,
+        onBudgetChange: (v: string) => void,
+        onDisbursedChange: (v: string) => void
+    }) => (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '12px' }}>
+            <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                <div style={{ fontSize: '0.8rem', color: '#166534', marginBottom: '4px' }}>งบประมาณ (บาท)</div>
+                {isEditing ? (
+                    <input
+                        type="text"
+                        value={budget}
+                        onChange={e => onBudgetChange(e.target.value)}
+                        style={{ width: '100%', padding: '8px', border: '1px solid #bbf7d0', borderRadius: '6px', fontSize: '1rem', fontWeight: 600 }}
+                        placeholder="0"
+                    />
+                ) : (
+                    <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#15803d' }}>{formatNumber(budget)}</div>
+                )}
+            </div>
+            <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '8px', border: '1px solid #fcd34d' }}>
+                <div style={{ fontSize: '0.8rem', color: '#92400e', marginBottom: '4px' }}>เบิกจ่ายแล้ว (บาท)</div>
+                {isEditing ? (
+                    <input
+                        type="text"
+                        value={disbursed}
+                        onChange={e => onDisbursedChange(e.target.value)}
+                        style={{ width: '100%', padding: '8px', border: '1px solid #fcd34d', borderRadius: '6px', fontSize: '1rem', fontWeight: 600 }}
+                        placeholder="0"
+                    />
+                ) : (
+                    <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#b45309' }}>{formatNumber(disbursed)}</div>
+                )}
+            </div>
+            <div style={{ background: '#ede9fe', padding: '12px', borderRadius: '8px', border: '1px solid #c4b5fd' }}>
+                <div style={{ fontSize: '0.8rem', color: '#5b21b6', marginBottom: '4px' }}>ร้อยละ</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#7c3aed' }}>
+                    {calculatePercentage(disbursed, budget)}
+                </div>
+            </div>
+        </div>
+    )
+
+    // Section Summary Component
+    const SectionSummary = ({ budget, disbursed }: { budget: number, disbursed: number }) => (
+        <div style={{
+            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+            padding: '16px',
+            borderRadius: '8px',
+            marginTop: '16px',
+            border: '2px solid #e2e8f0',
+            display: 'flex',
+            justifyContent: 'space-around',
+            alignItems: 'center'
+        }}>
+            <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '4px' }}>รวมงบประมาณ</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#15803d' }}>{budget.toLocaleString('th-TH')} บาท</div>
+            </div>
+            <div style={{ width: '1px', height: '40px', background: '#cbd5e1' }}></div>
+            <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '4px' }}>รวมเบิกจ่าย</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#b45309' }}>{disbursed.toLocaleString('th-TH')} บาท</div>
+            </div>
+            <div style={{ width: '1px', height: '40px', background: '#cbd5e1' }}></div>
+            <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '4px' }}>ร้อยละ</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#7c3aed' }}>{budget > 0 ? ((disbursed / budget) * 100).toFixed(1) : '0'}%</div>
+            </div>
+        </div>
+    )
 
     return (
         <section className="section">
@@ -258,28 +425,44 @@ export function SectionBudget() {
                 </div>
             </div>
 
-            {/* Summary Card */}
-            <div className="card" style={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', color: 'white', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-around', padding: '20px', textAlign: 'center' }}>
-                    <div>
-                        <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '4px' }}>งบประมาณรวม</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{totals.totalBudget.toLocaleString('th-TH')} บาท</div>
+            {/* Grand Summary */}
+            <div style={{
+                background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                padding: '20px',
+                borderRadius: '12px',
+                marginBottom: '20px',
+                color: 'white'
+            }}>
+                <div style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '16px', opacity: 0.9 }}>📊 สรุปภาพรวมทั้งหมด</div>
+                <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '16px' }}>
+                    <SummaryCard title="1.1 งบลงทุน" budget={investmentTotal.budget} disbursed={investmentTotal.disbursed} color="rgba(255,255,255,0.15)" />
+                    <SummaryCard title="1.2 งบดำเนินงาน" budget={operationTotal.budget} disbursed={operationTotal.disbursed} color="rgba(255,255,255,0.15)" />
+                    <SummaryCard title="1.3 งบโครงการฯ" budget={projectTotal.budget} disbursed={projectTotal.disbursed} color="rgba(255,255,255,0.15)" />
+                </div>
+                <div style={{
+                    marginTop: '16px',
+                    paddingTop: '16px',
+                    borderTop: '1px solid rgba(255,255,255,0.3)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: '40px'
+                }}>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>รวมงบประมาณทั้งหมด</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{grandTotal.budget.toLocaleString('th-TH')} บาท</div>
                     </div>
-                    <div style={{ width: '1px', background: 'rgba(255,255,255,0.3)' }}></div>
-                    <div>
-                        <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '4px' }}>เบิกจ่ายแล้ว</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{totals.totalDisbursed.toLocaleString('th-TH')} บาท</div>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>รวมเบิกจ่ายทั้งหมด</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{grandTotal.disbursed.toLocaleString('th-TH')} บาท</div>
                     </div>
-                    <div style={{ width: '1px', background: 'rgba(255,255,255,0.3)' }}></div>
-                    <div>
-                        <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '4px' }}>เบิกจ่าย</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>
-                            {totals.totalBudget > 0 ? ((totals.totalDisbursed / totals.totalBudget) * 100).toFixed(1) : '0'}%
-                        </div>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>ร้อยละรวม</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{grandTotal.budget > 0 ? ((grandTotal.disbursed / grandTotal.budget) * 100).toFixed(1) : '0'}%</div>
                     </div>
                 </div>
             </div>
 
+            {/* 1.1 งบลงทุน */}
             <div className="card">
                 <div className="card-header">
                     <div className="card-icon"><FiTrendingUp /></div>
@@ -292,48 +475,20 @@ export function SectionBudget() {
                             <div className="list-item-number">1</div>
                             <div className="list-item-content" style={{ flex: 1 }}>
                                 <div className="list-item-title">จำนวน / งบประมาณ</div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '12px' }}>
-                                    <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
-                                        <div style={{ fontSize: '0.8rem', color: '#166534', marginBottom: '4px' }}>งบประมาณ (บาท)</div>
-                                        {isEditing ? (
-                                            <input
-                                                type="text"
-                                                value={data.construction.budget}
-                                                onChange={e => handleChange('construction', 'budget', e.target.value)}
-                                                style={{ width: '100%', padding: '8px', border: '1px solid #bbf7d0', borderRadius: '6px', fontSize: '1rem', fontWeight: 600 }}
-                                                placeholder="0"
-                                            />
-                                        ) : (
-                                            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#15803d' }}>{formatNumber(data.construction.budget)}</div>
-                                        )}
-                                    </div>
-                                    <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '8px', border: '1px solid #fcd34d' }}>
-                                        <div style={{ fontSize: '0.8rem', color: '#92400e', marginBottom: '4px' }}>เบิกจ่ายแล้ว (บาท)</div>
-                                        {isEditing ? (
-                                            <input
-                                                type="text"
-                                                value={data.construction.disbursed}
-                                                onChange={e => handleChange('construction', 'disbursed', e.target.value)}
-                                                style={{ width: '100%', padding: '8px', border: '1px solid #fcd34d', borderRadius: '6px', fontSize: '1rem', fontWeight: 600 }}
-                                                placeholder="0"
-                                            />
-                                        ) : (
-                                            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#b45309' }}>{formatNumber(data.construction.disbursed)}</div>
-                                        )}
-                                    </div>
-                                    <div style={{ background: '#ede9fe', padding: '12px', borderRadius: '8px', border: '1px solid #c4b5fd' }}>
-                                        <div style={{ fontSize: '0.8rem', color: '#5b21b6', marginBottom: '4px' }}>ร้อยละ</div>
-                                        <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#7c3aed' }}>
-                                            {calculatePercentage(data.construction.disbursed, data.construction.budget)}
-                                        </div>
-                                    </div>
-                                </div>
+                                <BudgetInputRow
+                                    budget={data.investment.construction.budget}
+                                    disbursed={data.investment.construction.disbursed}
+                                    onBudgetChange={(v) => handleInvestmentChange('budget', v)}
+                                    onDisbursedChange={(v) => handleInvestmentChange('disbursed', v)}
+                                />
                             </div>
                         </div>
                     </div>
+                    <SectionSummary budget={investmentTotal.budget} disbursed={investmentTotal.disbursed} />
                 </div>
             </div>
 
+            {/* 1.2 งบดำเนินงาน */}
             <div className="card">
                 <div className="card-header">
                     <div className="card-icon"><FiPackage /></div>
@@ -341,53 +496,94 @@ export function SectionBudget() {
                 </div>
                 <div className="card-content">
                     <div className="list-group">
-                        {budgetItems.map((item, idx) => (
+                        {operationItems.map((item, idx) => (
                             <div className="list-item" key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
                                 <div className="list-item-number">{idx + 1}</div>
                                 <div className="list-item-content" style={{ flex: 1 }}>
                                     <div className="list-item-title">
                                         {item.title} {item.sub && <span style={{ fontSize: '12px', color: '#666', fontWeight: 400 }}>({item.sub})</span>}
                                     </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '12px' }}>
-                                        <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
-                                            <div style={{ fontSize: '0.8rem', color: '#166534', marginBottom: '4px' }}>งบประมาณ (บาท)</div>
-                                            {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    value={data[item.key].budget}
-                                                    onChange={e => handleChange(item.key, 'budget', e.target.value)}
-                                                    style={{ width: '100%', padding: '8px', border: '1px solid #bbf7d0', borderRadius: '6px', fontSize: '1rem', fontWeight: 600 }}
-                                                    placeholder="0"
-                                                />
-                                            ) : (
-                                                <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#15803d' }}>{formatNumber(data[item.key].budget)}</div>
-                                            )}
-                                        </div>
-                                        <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '8px', border: '1px solid #fcd34d' }}>
-                                            <div style={{ fontSize: '0.8rem', color: '#92400e', marginBottom: '4px' }}>เบิกจ่ายแล้ว (บาท)</div>
-                                            {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    value={data[item.key].disbursed}
-                                                    onChange={e => handleChange(item.key, 'disbursed', e.target.value)}
-                                                    style={{ width: '100%', padding: '8px', border: '1px solid #fcd34d', borderRadius: '6px', fontSize: '1rem', fontWeight: 600 }}
-                                                    placeholder="0"
-                                                />
-                                            ) : (
-                                                <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#b45309' }}>{formatNumber(data[item.key].disbursed)}</div>
-                                            )}
-                                        </div>
-                                        <div style={{ background: '#ede9fe', padding: '12px', borderRadius: '8px', border: '1px solid #c4b5fd' }}>
-                                            <div style={{ fontSize: '0.8rem', color: '#5b21b6', marginBottom: '4px' }}>ร้อยละ</div>
-                                            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#7c3aed' }}>
-                                                {calculatePercentage(data[item.key].disbursed, data[item.key].budget)}
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <BudgetInputRow
+                                        budget={data.operation[item.key].budget}
+                                        disbursed={data.operation[item.key].disbursed}
+                                        onBudgetChange={(v) => handleOperationChange(item.key, 'budget', v)}
+                                        onDisbursedChange={(v) => handleOperationChange(item.key, 'disbursed', v)}
+                                    />
                                 </div>
                             </div>
                         ))}
                     </div>
+                    <SectionSummary budget={operationTotal.budget} disbursed={operationTotal.disbursed} />
+                </div>
+            </div>
+
+            {/* 1.3 งบโครงการฯ */}
+            <div className="card">
+                <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div className="card-icon"><FiBriefcase /></div>
+                        <h3 className="card-title">1.3 งบโครงการฯ</h3>
+                    </div>
+                    {isEditing && (
+                        <button
+                            onClick={addProject}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '6px',
+                                padding: '8px 16px', background: '#ecfdf5', color: '#059669',
+                                border: '1px solid #a7f3d0', borderRadius: '8px', cursor: 'pointer',
+                                fontSize: '0.9rem', fontWeight: 500
+                            }}
+                        >
+                            <FiPlus /> เพิ่มโครงการ
+                        </button>
+                    )}
+                </div>
+                <div className="card-content">
+                    <div className="list-group">
+                        {Object.entries(data.project).map(([key, project], idx) => (
+                            <div className="list-item" key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+                                <div className="list-item-number">{idx + 1}</div>
+                                <div className="list-item-content" style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={project.name}
+                                                onChange={e => handleProjectChange(key, 'name', e.target.value)}
+                                                style={{
+                                                    flex: 1, padding: '8px 12px', border: '1px solid #cbd5e1',
+                                                    borderRadius: '6px', fontSize: '1rem', fontWeight: 600
+                                                }}
+                                                placeholder="ชื่อโครงการ"
+                                            />
+                                        ) : (
+                                            <div className="list-item-title">{project.name}</div>
+                                        )}
+                                        {isEditing && (
+                                            <button
+                                                onClick={() => removeProject(key)}
+                                                style={{
+                                                    marginLeft: '12px', padding: '6px 10px',
+                                                    background: '#fef2f2', color: '#dc2626',
+                                                    border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer'
+                                                }}
+                                                title="ลบโครงการ"
+                                            >
+                                                <FiTrash2 />
+                                            </button>
+                                        )}
+                                    </div>
+                                    <BudgetInputRow
+                                        budget={project.budget}
+                                        disbursed={project.disbursed}
+                                        onBudgetChange={(v) => handleProjectChange(key, 'budget', v)}
+                                        onDisbursedChange={(v) => handleProjectChange(key, 'disbursed', v)}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <SectionSummary budget={projectTotal.budget} disbursed={projectTotal.disbursed} />
                 </div>
             </div>
         </section>
