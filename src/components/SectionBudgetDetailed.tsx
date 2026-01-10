@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import detailedBudgetProjectsData from '../data/detailedBudgetProjects.json';
-import { FaEdit, FaSave, FaChartLine, FaExclamationTriangle, FaLightbulb, FaGithub, FaCog, FaImage, FaPlus, FaTimes, FaChevronDown, FaChevronRight } from 'react-icons/fa';
+import { FaEdit, FaSave, FaChartLine, FaExclamationTriangle, FaLightbulb, FaGithub, FaCog, FaImage, FaPlus, FaTimes, FaChevronDown, FaChevronRight, FaTrash } from 'react-icons/fa';
 
 interface DetailedProject {
     name: string;
@@ -142,6 +142,36 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
             const currentImages = project.images || [];
             const newImages = currentImages.filter((_, i) => i !== imgIndex);
             handleChange(groupId, projectIndex, 'images', newImages);
+        }
+    };
+
+    const handleAddProject = (groupId: string) => {
+        const newGroups = budgetGroups.map(group => {
+            if (group.id !== groupId) return group;
+            const newProject: DetailedProject = {
+                name: 'กิจกรรม: (รอระบุ)',
+                subActivity: '-',
+                relevantPolicies: '-',
+                target: '-',
+                budget: '-',
+                result: '-',
+                problem: '-',
+                solution: '-',
+                images: []
+            };
+            return { ...group, projects: [...group.projects, newProject] };
+        });
+        setBudgetGroups(newGroups);
+    };
+
+    const handleRemoveProject = (groupId: string, projectIndex: number) => {
+        if (confirm('ต้องการลบกิจกรรมนี้หรือไม่?')) {
+            const newGroups = budgetGroups.map(group => {
+                if (group.id !== groupId) return group;
+                const newProjects = group.projects.filter((_, i) => i !== projectIndex);
+                return { ...group, projects: newProjects };
+            });
+            setBudgetGroups(newGroups);
         }
     };
 
@@ -449,7 +479,22 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                 const isExpanded = isProjectExpanded(group.id, index);
                                 const hasMultipleProjects = group.projects.length > 1;
                                 return (
-                                    <div key={index} className="project-item">
+                                    <div key={index} className="project-item" style={{ position: 'relative' }}>
+                                        {/* Delete Project Button */}
+                                        {isEditing && (
+                                            <button
+                                                onClick={() => handleRemoveProject(group.id, index)}
+                                                style={{
+                                                    position: 'absolute', top: '10px', right: '10px',
+                                                    padding: '6px 10px', background: '#fef2f2', color: '#dc2626',
+                                                    border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer',
+                                                    fontSize: '12px', zIndex: 10, display: 'flex', alignItems: 'center', gap: '4px'
+                                                }}
+                                                title="ลบกิจกรรม"
+                                            >
+                                                <FaTrash size={10} /> ลบ
+                                            </button>
+                                        )}
                                         {/* Collapsible Header */}
                                         {hasMultipleProjects && (
                                             <div
@@ -672,6 +717,22 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                     </div>
                                 )
                             })}
+
+                            {/* Add Project Button */}
+                            {isEditing && (
+                                <button
+                                    onClick={() => handleAddProject(group.id)}
+                                    style={{
+                                        width: '100%', padding: '14px', marginTop: '16px',
+                                        background: '#ecfdf5', color: '#059669', border: '2px dashed #a7f3d0',
+                                        borderRadius: '8px', cursor: 'pointer', fontSize: '0.95rem',
+                                        fontWeight: 500, display: 'flex', alignItems: 'center',
+                                        justifyContent: 'center', gap: '8px'
+                                    }}
+                                >
+                                    <FaPlus /> เพิ่มกิจกรรม
+                                </button>
+                            )}
                         </div>
                     </div>
                 ))}
