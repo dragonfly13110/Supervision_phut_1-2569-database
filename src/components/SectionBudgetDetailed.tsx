@@ -571,7 +571,7 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                             <div className="project-feedback">
                                                 <div className="feedback-item">
                                                     <div className="feedback-label">
-                                                        <FaChartLine className="icon" /> ผลการดำเนินงาน
+                                                        <FaChartLine className="icon" /> แผนการดำเนินงาน/ผลการดำเนินงาน
                                                     </div>
                                                     {isEditing ? (
                                                         <textarea
