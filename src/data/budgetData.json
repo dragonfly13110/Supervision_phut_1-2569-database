@@ -1,7 +1,22 @@
 {
-    "construction": "555555",
-    "utilities": "-",
-    "houseRent": "-",
-    "service": "-",
-    "travel": "-"
+    "construction": {
+        "budget": "555555",
+        "disbursed": "-"
+    },
+    "utilities": {
+        "budget": "-",
+        "disbursed": "-"
+    },
+    "officeSupplies": {
+        "budget": "-",
+        "disbursed": "-"
+    },
+    "service": {
+        "budget": "-",
+        "disbursed": "-"
+    },
+    "travel": {
+        "budget": "-",
+        "disbursed": "-"
+    }
 }
