@@ -25,7 +25,7 @@ export function SectionAssets() {
 
     const [githubConfig, setGithubConfig] = useState({
         owner: localStorage.getItem('gh_owner') || 'dragonfly13110',
-        repo: localStorage.getItem('gh_repo') || 'tv-system-phutthamonthon',
+        repo: localStorage.getItem('gh_repo') || 'Supervision_phut_1-2569',
         token: localStorage.getItem('gh_token') || '',
         path: 'src/data/generalAssets.json'
     })

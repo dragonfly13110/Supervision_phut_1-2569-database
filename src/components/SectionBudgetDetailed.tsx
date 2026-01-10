@@ -42,7 +42,7 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [githubConfig, setGithubConfig] = useState({
         owner: localStorage.getItem('gh_owner') || 'dragonfly13110',
-        repo: localStorage.getItem('gh_repo') || 'tv-system-phutthamonthon',
+        repo: localStorage.getItem('gh_repo') || 'Supervision_phut_1-2569',
         token: localStorage.getItem('gh_token') || '',
         path: 'src/data/detailedBudgetProjects.json' // path to the file in repo
     });
@@ -340,7 +340,7 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                         style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}
                                         value={githubConfig.repo}
                                         onChange={e => setGithubConfig({ ...githubConfig, repo: e.target.value })}
-                                        placeholder="tv-system-phutthamonthon"
+                                        placeholder="Supervision_phut_1-2569"
                                     />
                                 </div>
                             </div>
