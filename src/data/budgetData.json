@@ -25,19 +25,9 @@
     },
     "project": {
         "project1": {
-            "name": "โครงการ 1",
-            "budget": "-",
-            "disbursed": "-"
-        },
-        "project2": {
-            "name": "โครงการ 2",
-            "budget": "-",
-            "disbursed": "-"
-        },
-        "project3": {
-            "name": "โครงการ 3",
-            "budget": "-",
-            "disbursed": "-"
+            "name": "โครงการฯ",
+            "budget": "61212",
+            "disbursed": "11150"
         }
     }
 }
