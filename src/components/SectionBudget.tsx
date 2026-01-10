@@ -3,12 +3,34 @@ import { FiDollarSign, FiTrendingUp, FiPackage, FiEdit2, FiSave } from 'react-ic
 import { FaGithub, FaCog } from 'react-icons/fa'
 import budgetDataJson from '../data/budgetData.json'
 
+interface BudgetItem {
+    budget: string
+    disbursed: string
+}
+
 interface BudgetData {
-    construction: string
-    utilities: string
-    houseRent: string
-    service: string
-    travel: string
+    construction: BudgetItem
+    utilities: BudgetItem
+    officeSupplies: BudgetItem
+    service: BudgetItem
+    travel: BudgetItem
+}
+
+// Helper function to format number with commas
+const formatNumber = (value: string): string => {
+    if (!value || value === '-') return value
+    const num = parseFloat(value.replace(/,/g, ''))
+    if (isNaN(num)) return value
+    return num.toLocaleString('th-TH')
+}
+
+// Calculate percentage
+const calculatePercentage = (disbursed: string, budget: string): string => {
+    if (!disbursed || disbursed === '-' || !budget || budget === '-') return '-'
+    const d = parseFloat(disbursed.replace(/,/g, ''))
+    const b = parseFloat(budget.replace(/,/g, ''))
+    if (isNaN(d) || isNaN(b) || b === 0) return '-'
+    return ((d / b) * 100).toFixed(1) + '%'
 }
 
 export function SectionBudget() {
@@ -31,8 +53,14 @@ export function SectionBudget() {
         localStorage.setItem('budget_data', JSON.stringify(data))
     }, [data])
 
-    const handleChange = (field: keyof BudgetData, value: string) => {
-        setData(prev => ({ ...prev, [field]: value }))
+    const handleChange = (field: keyof BudgetData, subField: keyof BudgetItem, value: string) => {
+        setData(prev => ({
+            ...prev,
+            [field]: {
+                ...prev[field],
+                [subField]: value
+            }
+        }))
     }
 
     const handleSaveLocal = () => {
@@ -103,6 +131,34 @@ export function SectionBudget() {
         localStorage.setItem('gh_token', githubConfig.token)
         setShowGithubSettings(false)
     }
+
+    const budgetItems = [
+        { key: 'utilities' as keyof BudgetData, title: 'ค่าสาธารณูปโภค', sub: 'ค่าน้ำ/ค่าไฟ' },
+        { key: 'officeSupplies' as keyof BudgetData, title: 'ค่าวัสดุสำนักงาน', sub: '' },
+        { key: 'service' as keyof BudgetData, title: 'ค่าจ้างเหมาบริการ', sub: '' },
+        { key: 'travel' as keyof BudgetData, title: 'เบี้ยเลี้ยง/ค่าเดินทาง', sub: '' },
+    ]
+
+    // Calculate totals
+    const calculateTotals = () => {
+        let totalBudget = 0
+        let totalDisbursed = 0
+
+        Object.values(data).forEach((item: BudgetItem) => {
+            if (item.budget && item.budget !== '-') {
+                const b = parseFloat(item.budget.replace(/,/g, ''))
+                if (!isNaN(b)) totalBudget += b
+            }
+            if (item.disbursed && item.disbursed !== '-') {
+                const d = parseFloat(item.disbursed.replace(/,/g, ''))
+                if (!isNaN(d)) totalDisbursed += d
+            }
+        })
+
+        return { totalBudget, totalDisbursed }
+    }
+
+    const totals = calculateTotals()
 
     return (
         <section className="section">
@@ -202,6 +258,28 @@ export function SectionBudget() {
                 </div>
             </div>
 
+            {/* Summary Card */}
+            <div className="card" style={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', color: 'white', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-around', padding: '20px', textAlign: 'center' }}>
+                    <div>
+                        <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '4px' }}>งบประมาณรวม</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{totals.totalBudget.toLocaleString('th-TH')} บาท</div>
+                    </div>
+                    <div style={{ width: '1px', background: 'rgba(255,255,255,0.3)' }}></div>
+                    <div>
+                        <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '4px' }}>เบิกจ่ายแล้ว</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{totals.totalDisbursed.toLocaleString('th-TH')} บาท</div>
+                    </div>
+                    <div style={{ width: '1px', background: 'rgba(255,255,255,0.3)' }}></div>
+                    <div>
+                        <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '4px' }}>เบิกจ่าย</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+                            {totals.totalBudget > 0 ? ((totals.totalDisbursed / totals.totalBudget) * 100).toFixed(1) : '0'}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div className="card">
                 <div className="card-header">
                     <div className="card-icon"><FiTrendingUp /></div>
@@ -210,21 +288,45 @@ export function SectionBudget() {
                 <div className="card-content">
                     <div className="list-group">
                         <div className="list-group-title">การก่อสร้าง</div>
-                        <div className="list-item">
+                        <div className="list-item" style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
                             <div className="list-item-number">1</div>
-                            <div className="list-item-content">
+                            <div className="list-item-content" style={{ flex: 1 }}>
                                 <div className="list-item-title">จำนวน / งบประมาณ</div>
-                                <div className="list-item-desc">
-                                    {isEditing ? (
-                                        <textarea
-                                            className="edit-input"
-                                            value={data.construction}
-                                            onChange={e => handleChange('construction', e.target.value)}
-                                            style={{ width: '100%', minHeight: '60px' }}
-                                        />
-                                    ) : (
-                                        data.construction
-                                    )}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '12px' }}>
+                                    <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                                        <div style={{ fontSize: '0.8rem', color: '#166534', marginBottom: '4px' }}>งบประมาณ (บาท)</div>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={data.construction.budget}
+                                                onChange={e => handleChange('construction', 'budget', e.target.value)}
+                                                style={{ width: '100%', padding: '8px', border: '1px solid #bbf7d0', borderRadius: '6px', fontSize: '1rem', fontWeight: 600 }}
+                                                placeholder="0"
+                                            />
+                                        ) : (
+                                            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#15803d' }}>{formatNumber(data.construction.budget)}</div>
+                                        )}
+                                    </div>
+                                    <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '8px', border: '1px solid #fcd34d' }}>
+                                        <div style={{ fontSize: '0.8rem', color: '#92400e', marginBottom: '4px' }}>เบิกจ่ายแล้ว (บาท)</div>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                value={data.construction.disbursed}
+                                                onChange={e => handleChange('construction', 'disbursed', e.target.value)}
+                                                style={{ width: '100%', padding: '8px', border: '1px solid #fcd34d', borderRadius: '6px', fontSize: '1rem', fontWeight: 600 }}
+                                                placeholder="0"
+                                            />
+                                        ) : (
+                                            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#b45309' }}>{formatNumber(data.construction.disbursed)}</div>
+                                        )}
+                                    </div>
+                                    <div style={{ background: '#ede9fe', padding: '12px', borderRadius: '8px', border: '1px solid #c4b5fd' }}>
+                                        <div style={{ fontSize: '0.8rem', color: '#5b21b6', marginBottom: '4px' }}>ร้อยละ</div>
+                                        <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#7c3aed' }}>
+                                            {calculatePercentage(data.construction.disbursed, data.construction.budget)}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -239,29 +341,48 @@ export function SectionBudget() {
                 </div>
                 <div className="card-content">
                     <div className="list-group">
-                        {[
-                            { key: 'utilities', title: 'ค่าสาธารณูปโภค', sub: 'ค่าน้ำ/ค่าไฟ' },
-                            { key: 'houseRent', title: 'ค่าเช่าบ้าน', sub: '' },
-                            { key: 'service', title: 'ค่าจ้างเหมาบริการ', sub: '' },
-                            { key: 'travel', title: 'เบี้ยเลี้ยง/ค่าเดินทาง', sub: '' },
-                        ].map((item, idx) => (
-                            <div className="list-item" key={idx}>
+                        {budgetItems.map((item, idx) => (
+                            <div className="list-item" key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
                                 <div className="list-item-number">{idx + 1}</div>
-                                <div className="list-item-content">
+                                <div className="list-item-content" style={{ flex: 1 }}>
                                     <div className="list-item-title">
                                         {item.title} {item.sub && <span style={{ fontSize: '12px', color: '#666', fontWeight: 400 }}>({item.sub})</span>}
                                     </div>
-                                    <div className="list-item-desc">
-                                        {isEditing ? (
-                                            <textarea
-                                                className="edit-input"
-                                                value={data[item.key as keyof BudgetData]}
-                                                onChange={e => handleChange(item.key as keyof BudgetData, e.target.value)}
-                                                style={{ width: '100%', minHeight: '60px' }}
-                                            />
-                                        ) : (
-                                            data[item.key as keyof BudgetData]
-                                        )}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '12px' }}>
+                                        <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                                            <div style={{ fontSize: '0.8rem', color: '#166534', marginBottom: '4px' }}>งบประมาณ (บาท)</div>
+                                            {isEditing ? (
+                                                <input
+                                                    type="text"
+                                                    value={data[item.key].budget}
+                                                    onChange={e => handleChange(item.key, 'budget', e.target.value)}
+                                                    style={{ width: '100%', padding: '8px', border: '1px solid #bbf7d0', borderRadius: '6px', fontSize: '1rem', fontWeight: 600 }}
+                                                    placeholder="0"
+                                                />
+                                            ) : (
+                                                <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#15803d' }}>{formatNumber(data[item.key].budget)}</div>
+                                            )}
+                                        </div>
+                                        <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '8px', border: '1px solid #fcd34d' }}>
+                                            <div style={{ fontSize: '0.8rem', color: '#92400e', marginBottom: '4px' }}>เบิกจ่ายแล้ว (บาท)</div>
+                                            {isEditing ? (
+                                                <input
+                                                    type="text"
+                                                    value={data[item.key].disbursed}
+                                                    onChange={e => handleChange(item.key, 'disbursed', e.target.value)}
+                                                    style={{ width: '100%', padding: '8px', border: '1px solid #fcd34d', borderRadius: '6px', fontSize: '1rem', fontWeight: 600 }}
+                                                    placeholder="0"
+                                                />
+                                            ) : (
+                                                <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#b45309' }}>{formatNumber(data[item.key].disbursed)}</div>
+                                            )}
+                                        </div>
+                                        <div style={{ background: '#ede9fe', padding: '12px', borderRadius: '8px', border: '1px solid #c4b5fd' }}>
+                                            <div style={{ fontSize: '0.8rem', color: '#5b21b6', marginBottom: '4px' }}>ร้อยละ</div>
+                                            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#7c3aed' }}>
+                                                {calculatePercentage(data[item.key].disbursed, data[item.key].budget)}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
