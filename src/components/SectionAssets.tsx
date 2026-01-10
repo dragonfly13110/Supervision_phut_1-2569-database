@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { FiPackage, FiHome, FiEdit2, FiSave } from 'react-icons/fi'
+import { FiPackage, FiHome, FiEdit2, FiSave, FiPlus, FiTrash2 } from 'react-icons/fi'
 import { FaGithub, FaCog } from 'react-icons/fa'
 import generalAssetsJson from '../data/generalAssets.json'
 
@@ -37,6 +37,37 @@ export function SectionAssets() {
     const handleChange = (id: number, field: keyof Asset, value: string) => {
         setAssets(prev => prev.map(asset =>
             asset.id === id ? { ...asset, [field]: value } : asset
+        ))
+    }
+
+    const addAsset = () => {
+        const newId = Math.max(...assets.map(a => a.id), 0) + 1
+        setAssets(prev => [...prev, {
+            id: newId,
+            name: 'รายการใหม่',
+            amount: '-',
+            details: '-',
+            status: 'good',
+            statusText: 'ใช้งานปกติ',
+            problem: '-',
+            solution: '-'
+        }])
+    }
+
+    const removeAsset = (id: number) => {
+        if (confirm('ต้องการลบรายการนี้หรือไม่?')) {
+            setAssets(prev => prev.filter(a => a.id !== id))
+        }
+    }
+
+    const handleStatusChange = (id: number, status: string) => {
+        const statusTextMap: Record<string, string> = {
+            'good': 'ใช้งานปกติ',
+            'warning': 'ไม่ได้ใช้งาน',
+            'danger': 'ชำรุด'
+        }
+        setAssets(prev => prev.map(asset =>
+            asset.id === id ? { ...asset, status, statusText: statusTextMap[status] } : asset
         ))
     }
 
@@ -208,25 +239,54 @@ export function SectionAssets() {
             </div>
 
             <div className="card">
-                <div className="card-header">
-                    <div className="card-icon"><FiHome /></div>
-                    <h3 className="card-title">สินทรัพย์ทั่วไป ({assets.length} รายการ)</h3>
+                <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div className="card-icon"><FiHome /></div>
+                        <h3 className="card-title">สินทรัพย์ทั่วไป ({assets.length} รายการ)</h3>
+                    </div>
+                    {isEditing && (
+                        <button
+                            onClick={addAsset}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '6px',
+                                padding: '8px 16px', background: '#ecfdf5', color: '#059669',
+                                border: '1px solid #a7f3d0', borderRadius: '8px', cursor: 'pointer',
+                                fontSize: '0.9rem', fontWeight: 500
+                            }}
+                        >
+                            <FiPlus /> เพิ่มรายการ
+                        </button>
+                    )}
                 </div>
                 <div className="card-content">
                     <div className="equipment-grid">
-                        {assets.map((asset) => (
+                        {assets.map((asset, idx) => (
                             <div className="equipment-card" key={asset.id} style={{ flexDirection: 'column', gap: '12px' }}>
                                 <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                                    <div className="equipment-number">{asset.id}</div>
+                                    <div className="equipment-number">{idx + 1}</div>
                                     <div className="equipment-info" style={{ flex: 1 }}>
                                         {isEditing ? (
-                                            <input
-                                                type="text"
-                                                className="edit-input"
-                                                value={asset.name}
-                                                onChange={e => handleChange(asset.id, 'name', e.target.value)}
-                                                style={{ width: '100%', marginBottom: '8px', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
-                                            />
+                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                                                <input
+                                                    type="text"
+                                                    className="edit-input"
+                                                    value={asset.name}
+                                                    onChange={e => handleChange(asset.id, 'name', e.target.value)}
+                                                    style={{ flex: 1, padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                                                    placeholder="ชื่อสินทรัพย์"
+                                                />
+                                                <button
+                                                    onClick={() => removeAsset(asset.id)}
+                                                    style={{
+                                                        padding: '6px 10px',
+                                                        background: '#fef2f2', color: '#dc2626',
+                                                        border: '1px solid #fecaca', borderRadius: '6px', cursor: 'pointer'
+                                                    }}
+                                                    title="ลบรายการ"
+                                                >
+                                                    <FiTrash2 />
+                                                </button>
+                                            </div>
                                         ) : (
                                             <div className="equipment-name">{asset.name}</div>
                                         )}
@@ -256,7 +316,7 @@ export function SectionAssets() {
                                             {isEditing ? (
                                                 <select
                                                     value={asset.status}
-                                                    onChange={e => handleChange(asset.id, 'status', e.target.value)}
+                                                    onChange={e => handleStatusChange(asset.id, e.target.value)}
                                                     style={{ padding: '4px 8px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
                                                 >
                                                     <option value="good">ใช้งานปกติ</option>
