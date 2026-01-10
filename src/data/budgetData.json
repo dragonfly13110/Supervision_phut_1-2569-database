@@ -1,22 +1,43 @@
 {
-    "construction": {
-        "budget": "0",
-        "disbursed": "-"
+    "investment": {
+        "construction": {
+            "budget": "0",
+            "disbursed": "-"
+        }
     },
-    "utilities": {
-        "budget": "10000",
-        "disbursed": "5323"
+    "operation": {
+        "utilities": {
+            "budget": "10000",
+            "disbursed": "5323"
+        },
+        "officeSupplies": {
+            "budget": "20000",
+            "disbursed": "20000"
+        },
+        "service": {
+            "budget": "12000",
+            "disbursed": "6000"
+        },
+        "travel": {
+            "budget": "21000",
+            "disbursed": "21000"
+        }
     },
-    "officeSupplies": {
-        "budget": "20000",
-        "disbursed": "20000"
-    },
-    "service": {
-        "budget": "12000",
-        "disbursed": "6000"
-    },
-    "travel": {
-        "budget": "21000",
-        "disbursed": "21000"
+    "project": {
+        "project1": {
+            "name": "โครงการ 1",
+            "budget": "-",
+            "disbursed": "-"
+        },
+        "project2": {
+            "name": "โครงการ 2",
+            "budget": "-",
+            "disbursed": "-"
+        },
+        "project3": {
+            "name": "โครงการ 3",
+            "budget": "-",
+            "disbursed": "-"
+        }
     }
 }
