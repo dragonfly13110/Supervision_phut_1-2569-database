@@ -42,7 +42,7 @@
 
 html {
   scroll-behavior: smooth;
-  zoom: 1.6;
+  zoom: 1.28;
 }
 
 body {
@@ -1005,4 +1005,277 @@ body {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(45, 122, 50, 0.1);
+}
+
+/* ===== Presentation-Ready Styles ===== */
+
+/* Enhanced Typography for Presentations */
+.section-container h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.section-container h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 12px;
+}
+
+.section-container h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* Section Container Enhanced */
+.section-container {
+  background: var(--bg-white);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  margin-bottom: 32px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
+}
+
+/* Enhanced Header for Sections */
+.section-header .header-content h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 8px;
+}
+
+.section-header .subtitle {
+  font-size: 1.1rem;
+  color: var(--text-gray);
+  line-height: 1.5;
+}
+
+/* Presentation Cards - Larger & Clearer */
+.plain-card {
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-light);
+  transition: var(--transition);
+}
+
+.plain-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Key Metrics - Larger & More Visible */
+.project-metrics .metric .value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.project-metrics .metric .label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-gray);
+}
+
+/* Budget/Stats Highlight Boxes */
+.stat-highlight {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-left: 4px solid var(--primary);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 16px 20px;
+  margin: 12px 0;
+}
+
+.stat-highlight .stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+
+.stat-highlight .stat-label {
+  font-size: 0.95rem;
+  color: var(--text-gray);
+  margin-top: 4px;
+}
+
+/* Enhanced Policy Cards for Presentation */
+.policy-card .policy-title {
+  font-size: 1.25rem;
+  line-height: 1.6;
+}
+
+.policy-card .policy-content {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--text-gray);
+}
+
+/* Feedback/Status Sections - More Visual */
+.feedback-item .feedback-label {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.feedback-item .feedback-content {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text-gray);
+}
+
+/* Status Badges - Larger */
+.status-badge {
+  font-size: 0.85rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+/* Group Report Cards Enhancement */
+.group-report-card {
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  border-left: 4px solid var(--primary);
+}
+
+.group-report-card .report-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 16px;
+}
+
+/* Image Gallery Enhancement */
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.image-gallery img {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.image-gallery img:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-md);
+}
+
+/* Key Numbers/Stats Display */
+.key-stat {
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border-radius: var(--radius-md);
+}
+
+.key-stat .number {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.key-stat .unit {
+  font-size: 1rem;
+  color: var(--primary-dark);
+  margin-left: 4px;
+}
+
+.key-stat .description {
+  font-size: 0.9rem;
+  color: var(--text-gray);
+  margin-top: 8px;
+}
+
+/* Relevant Policies Box Enhancement */
+.relevant-policies-box {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-left: 4px solid #10b981;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 14px 18px;
+  font-size: 0.95rem;
+  color: #065f46;
+  line-height: 1.7;
+  margin: 12px 0;
+}
+
+/* Strategic Issues Box Enhancement */
+.strategic-issues-box {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 2px solid #86efac;
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+}
+
+/* Fade-in Animation */
+.fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Project Info Enhancement */
+.project-info h4 {
+  font-size: 1.3rem;
+  color: var(--text-dark);
+  font-weight: 700;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.project-info .sub-activity {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-gray);
+}
+
+/* Hero Section Enhancement */
+.hero {
+  padding: 56px;
+}
+
+.hero-title {
+  font-size: 2.2rem;
+  letter-spacing: -0.5px;
+}
+
+.hero-subtitle {
+  font-size: 1.3rem;
+}
+
+.hero-badge {
+  font-size: 0.95rem;
+  padding: 10px 20px;
+}
+
+/* Print-Friendly Tweaks */
+@media print {
+
+  .sidebar,
+  .edit-toggle-btn,
+  .menu-toggle {
+    display: none !important;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+    padding: 20px !important;
+  }
+
+  .section-container {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import detailedBudgetProjectsData from '../data/detailedBudgetProjects.json';
-import { FaEdit, FaSave, FaChartLine, FaExclamationTriangle, FaLightbulb, FaGithub, FaCog, FaImage, FaPlus, FaTimes } from 'react-icons/fa';
+import { FaEdit, FaSave, FaChartLine, FaExclamationTriangle, FaLightbulb, FaGithub, FaCog, FaImage, FaPlus, FaTimes, FaChevronDown, FaChevronRight } from 'react-icons/fa';
 
 interface DetailedProject {
     name: string;
@@ -25,6 +25,16 @@ interface SectionBudgetDetailedProps {
     activeSection?: string;
 }
 
+// Helper: strip leading numbers like "1.1)" or "1.2 " or "1) " from text
+const stripLeadingNumber = (text: string): string => {
+    return text.replace(/^[\d.]+\)\s*/, '').replace(/^[\d.]+\s+/, '');
+};
+
+// Helper: strip number after "กิจกรรม:" like "กิจกรรม: 1.1 กิจกรรม..." -> "กิจกรรม: กิจกรรม..."
+const stripActivityNumber = (name: string): string => {
+    return name.replace(/(กิจกรรม:\s*)[\d.]+\s*/i, '$1');
+};
+
 export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedProps) {
     const [budgetGroups, setBudgetGroups] = useState<BudgetGroup[]>(detailedBudgetProjectsData);
     const [isEditing, setIsEditing] = useState(false);
@@ -36,6 +46,26 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
         token: localStorage.getItem('gh_token') || '',
         path: 'src/data/detailedBudgetProjects.json' // path to the file in repo
     });
+
+    // Collapsed Projects State (key: groupId-projectIndex) - Default: all collapsed
+    const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+
+    const toggleProjectCollapse = (groupId: string, projectIndex: number) => {
+        const key = `${groupId}-${projectIndex}`;
+        setExpandedProjects(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(key)) {
+                newSet.delete(key);
+            } else {
+                newSet.add(key);
+            }
+            return newSet;
+        });
+    };
+
+    const isProjectExpanded = (groupId: string, projectIndex: number) => {
+        return expandedProjects.has(`${groupId}-${projectIndex}`);
+    };
 
     // Image Modal State
     const [imageModal, setImageModal] = useState<{ groupId: string; projectIndex: number } | null>(null);
@@ -207,6 +237,7 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
 
     return (
         <div className="section-container fade-in">
+
             {/* Image Modal */}
             {imageModal && (
                 <div className="modal-overlay" style={{
@@ -325,8 +356,8 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
 
             <div className="section-header">
                 <div className="header-content">
-                    <h2>ข้อมูลโครงการงบประมาณรายจ่ายประจำปี 2569 (รายละเอียด)</h2>
-                    <p className="subtitle">
+                    <h2 style={{ fontSize: '1.4rem' }}>ข้อมูลโครงการงบประมาณรายจ่ายประจำปี 2569 (รายละเอียด)</h2>
+                    <p className="subtitle" style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1e293b', marginTop: '8px' }}>
                         {displayedGroups.length === 1
                             ? displayedGroups[0].title
                             : 'ติดตามผลการดำเนินงาน ปัญหา และข้อเสนอแนะ'}
@@ -369,7 +400,8 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                 style={{ width: '100%', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '10px', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
                             />
                         ) : (
-                            <h3 className="group-title">{group.title}</h3>
+                            // Hide group title when only 1 group is displayed (already shown in subtitle)
+                            displayedGroups.length > 1 && <h3 className="group-title">{group.title}</h3>
                         )}
 
                         {/* Strategic Issues Box */}
@@ -413,177 +445,233 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                         )}
 
                         <div className="projects-list">
-                            {group.projects.map((project, index) => (
-                                <div key={index} className="project-item">
-                                    <div className="project-header">
-                                        <div className="project-info">
-                                            {isEditing ? (
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
-                                                    <div>
-                                                        <label style={{ fontSize: '0.85rem', color: '#64748b', display: 'block', marginBottom: '2px' }}>ชื่อโครงการ/กิจกรรม:</label>
-                                                        <input
-                                                            type="text"
-                                                            value={project.name}
-                                                            onChange={(e) => handleChange(group.id, index, 'name', e.target.value)}
-                                                            style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
-                                                        />
+                            {group.projects.map((project, index) => {
+                                const isExpanded = isProjectExpanded(group.id, index);
+                                const hasMultipleProjects = group.projects.length > 1;
+                                return (
+                                    <div key={index} className="project-item">
+                                        {/* Collapsible Header */}
+                                        {hasMultipleProjects && (
+                                            <div
+                                                className="project-collapse-header"
+                                                onClick={() => toggleProjectCollapse(group.id, index)}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '10px',
+                                                    padding: '12px 16px',
+                                                    background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
+                                                    borderRadius: '8px',
+                                                    marginBottom: isExpanded ? '16px' : '0',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s ease',
+                                                    border: '1px solid #d1fae5'
+                                                }}
+                                            >
+                                                <span style={{ color: '#059669', fontSize: '14px' }}>
+                                                    {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
+                                                </span>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{
+                                                        fontWeight: 600,
+                                                        color: '#065f46',
+                                                        fontSize: '1rem',
+                                                        marginBottom: '4px'
+                                                    }}>
+                                                        กิจกรรมที่ {index + 1}: {stripActivityNumber(project.name)}
                                                     </div>
-                                                    <div>
-                                                        <label style={{ fontSize: '0.85rem', color: '#64748b', display: 'block', marginBottom: '2px' }}>กิจกรรมย่อย:</label>
-                                                        <textarea
-                                                            value={project.subActivity}
-                                                            onChange={(e) => handleChange(group.id, index, 'subActivity', e.target.value)}
-                                                            style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', resize: 'vertical' }}
-                                                            rows={2}
-                                                        />
+                                                    <div style={{
+                                                        fontSize: '0.85rem',
+                                                        color: '#475569',
+                                                        fontWeight: 400
+                                                    }}>
+                                                        📋 {stripLeadingNumber(project.subActivity)}
                                                     </div>
                                                 </div>
-                                            ) : (
-                                                <>
-                                                    <h4>{project.name}</h4>
-                                                    <div className="sub-activity">
-                                                        <strong>กิจกรรมย่อย:</strong> {project.subActivity}
-                                                    </div>
-                                                    {project.relevantPolicies && project.relevantPolicies !== '-' && (
-                                                        <div className="relevant-policies-box">
-                                                            {project.relevantPolicies}
-                                                        </div>
-                                                    )}
-                                                </>
-                                            )}
-                                        </div>
-                                        <div className="project-metrics">
-                                            <div className="metric">
-                                                <span className="label">เป้าหมาย:</span>
-                                                {isEditing ? (
-                                                    <input
-                                                        type="text"
-                                                        value={project.target}
-                                                        onChange={(e) => handleChange(group.id, index, 'target', e.target.value)}
-                                                        style={{ width: '100px', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
-                                                    />
-                                                ) : (
-                                                    <span className="value">{project.target}</span>
-                                                )}
+                                                <span style={{
+                                                    fontSize: '0.85rem',
+                                                    color: '#10b981',
+                                                    fontWeight: 500,
+                                                    whiteSpace: 'nowrap'
+                                                }}>
+                                                    {project.budget}
+                                                </span>
                                             </div>
-                                            <div className="metric">
-                                                <span className="label">งบประมาณ:</span>
-                                                {isEditing ? (
-                                                    <input
-                                                        type="text"
-                                                        value={project.budget}
-                                                        onChange={(e) => handleChange(group.id, index, 'budget', e.target.value)}
-                                                        style={{ width: '100px', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
-                                                    />
-                                                ) : (
-                                                    <span className="value">{project.budget}</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
+                                        )}
 
-                                    <div className="project-feedback">
-                                        <div className="feedback-item">
-                                            <div className="feedback-label">
-                                                <FaChartLine className="icon" /> ผลการดำเนินงาน
-                                            </div>
-                                            {isEditing ? (
-                                                <textarea
-                                                    className="edit-textarea"
-                                                    value={project.result}
-                                                    onChange={(e) => handleChange(group.id, index, 'result', e.target.value)}
-                                                    rows={3}
-                                                    placeholder="ระบุผลการดำเนินงาน..."
-                                                />
-                                            ) : (
-                                                <div className="feedback-content">{project.result}</div>
-                                            )}
-                                        </div>
-
-                                        <div className="feedback-row">
-                                            <div className="feedback-item half">
-                                                <div className="feedback-label error">
-                                                    <FaExclamationTriangle className="icon" /> ปัญหา/อุปสรรค
-                                                </div>
-                                                {isEditing ? (
-                                                    <textarea
-                                                        className="edit-textarea"
-                                                        value={project.problem}
-                                                        onChange={(e) => handleChange(group.id, index, 'problem', e.target.value)}
-                                                        rows={2}
-                                                        placeholder="ระบุปัญหา..."
-                                                    />
-                                                ) : (
-                                                    <div className="feedback-content">{project.problem}</div>
-                                                )}
-                                            </div>
-                                            <div className="feedback-item half">
-                                                <div className="feedback-label success">
-                                                    <FaLightbulb className="icon" /> ข้อเสนอแนะ
-                                                </div>
-                                                {isEditing ? (
-                                                    <textarea
-                                                        className="edit-textarea"
-                                                        value={project.solution}
-                                                        onChange={(e) => handleChange(group.id, index, 'solution', e.target.value)}
-                                                        rows={2}
-                                                        placeholder="ระบุข้อเสนอแนะ..."
-                                                    />
-                                                ) : (
-                                                    <div className="feedback-content">{project.solution}</div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Image Gallery */}
-                                        <div style={{ marginTop: '16px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                                <div className="feedback-label" style={{ marginBottom: 0 }}>
-                                                    <FaImage className="icon" /> รูปภาพประกอบ
-                                                </div>
-                                                {isEditing && (
-                                                    <button
-                                                        onClick={() => setImageModal({ groupId: group.id, projectIndex: index })}
-                                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
-                                                    >
-                                                        <FaPlus size={12} /> เพิ่มรูปภาพ
-                                                    </button>
-                                                )}
-                                            </div>
-
-                                            {project.images && project.images.length > 0 ? (
-                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px' }}>
-                                                    {project.images.map((img, imgIdx) => (
-                                                        <div key={imgIdx} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-                                                            <div style={{ aspectRatio: '4/3', overflow: 'hidden' }}>
-                                                                <img src={img.url} alt={img.caption || 'Project Image'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        {/* Collapsible Content */}
+                                        <div style={{ display: (hasMultipleProjects && !isExpanded) ? 'none' : 'block' }}>
+                                            <div className="project-header">
+                                                <div className="project-info">
+                                                    {isEditing ? (
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+                                                            <div>
+                                                                <label style={{ fontSize: '0.85rem', color: '#64748b', display: 'block', marginBottom: '2px' }}>ชื่อโครงการ/กิจกรรม:</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={project.name}
+                                                                    onChange={(e) => handleChange(group.id, index, 'name', e.target.value)}
+                                                                    style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                                                                />
                                                             </div>
-                                                            {img.caption && (
-                                                                <div style={{ padding: '6px 8px', fontSize: '12px', color: '#64748b', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
-                                                                    {img.caption}
+                                                            <div>
+                                                                <label style={{ fontSize: '0.85rem', color: '#64748b', display: 'block', marginBottom: '2px' }}>กิจกรรมย่อย:</label>
+                                                                <textarea
+                                                                    value={project.subActivity}
+                                                                    onChange={(e) => handleChange(group.id, index, 'subActivity', e.target.value)}
+                                                                    style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', resize: 'vertical' }}
+                                                                    rows={2}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <h4>{stripActivityNumber(project.name)}</h4>
+                                                            <div className="sub-activity">
+                                                                <strong>กิจกรรมย่อย:</strong> {stripLeadingNumber(project.subActivity)}
+                                                            </div>
+                                                            {project.relevantPolicies && project.relevantPolicies !== '-' && (
+                                                                <div className="relevant-policies-box">
+                                                                    {project.relevantPolicies}
                                                                 </div>
                                                             )}
-                                                            {isEditing && (
-                                                                <button
-                                                                    onClick={() => handleRemoveImage(group.id, index, imgIdx)}
-                                                                    style={{ position: 'absolute', top: '4px', right: '4px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                                                                >
-                                                                    <FaTimes size={12} />
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    ))}
+                                                        </>
+                                                    )}
                                                 </div>
-                                            ) : (
-                                                <div style={{ fontSize: '0.9rem', color: '#94a3b8', fontStyle: 'italic' }}>
-                                                    {isEditing ? 'กด "เพิ่มรูปภาพ" เพื่อใส่รูปประกอบ' : 'ไม่มีรูปภาพประกอบ'}
+                                                <div className="project-metrics">
+                                                    <div className="metric">
+                                                        <span className="label">เป้าหมาย:</span>
+                                                        {isEditing ? (
+                                                            <input
+                                                                type="text"
+                                                                value={project.target}
+                                                                onChange={(e) => handleChange(group.id, index, 'target', e.target.value)}
+                                                                style={{ width: '100px', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                                                            />
+                                                        ) : (
+                                                            <span className="value">{project.target}</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="metric">
+                                                        <span className="label">งบประมาณ:</span>
+                                                        {isEditing ? (
+                                                            <input
+                                                                type="text"
+                                                                value={project.budget}
+                                                                onChange={(e) => handleChange(group.id, index, 'budget', e.target.value)}
+                                                                style={{ width: '100px', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                                                            />
+                                                        ) : (
+                                                            <span className="value">{project.budget}</span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            )}
-                                        </div>
+                                            </div>
 
+                                            <div className="project-feedback">
+                                                <div className="feedback-item">
+                                                    <div className="feedback-label">
+                                                        <FaChartLine className="icon" /> ผลการดำเนินงาน
+                                                    </div>
+                                                    {isEditing ? (
+                                                        <textarea
+                                                            className="edit-textarea"
+                                                            value={project.result}
+                                                            onChange={(e) => handleChange(group.id, index, 'result', e.target.value)}
+                                                            rows={3}
+                                                            placeholder="ระบุผลการดำเนินงาน..."
+                                                        />
+                                                    ) : (
+                                                        <div className="feedback-content">{project.result}</div>
+                                                    )}
+                                                </div>
+
+                                                <div className="feedback-row">
+                                                    <div className="feedback-item half">
+                                                        <div className="feedback-label error">
+                                                            <FaExclamationTriangle className="icon" /> ปัญหา/อุปสรรค
+                                                        </div>
+                                                        {isEditing ? (
+                                                            <textarea
+                                                                className="edit-textarea"
+                                                                value={project.problem}
+                                                                onChange={(e) => handleChange(group.id, index, 'problem', e.target.value)}
+                                                                rows={2}
+                                                                placeholder="ระบุปัญหา..."
+                                                            />
+                                                        ) : (
+                                                            <div className="feedback-content">{project.problem}</div>
+                                                        )}
+                                                    </div>
+                                                    <div className="feedback-item half">
+                                                        <div className="feedback-label success">
+                                                            <FaLightbulb className="icon" /> ข้อเสนอแนะ
+                                                        </div>
+                                                        {isEditing ? (
+                                                            <textarea
+                                                                className="edit-textarea"
+                                                                value={project.solution}
+                                                                onChange={(e) => handleChange(group.id, index, 'solution', e.target.value)}
+                                                                rows={2}
+                                                                placeholder="ระบุข้อเสนอแนะ..."
+                                                            />
+                                                        ) : (
+                                                            <div className="feedback-content">{project.solution}</div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Image Gallery */}
+                                                <div style={{ marginTop: '16px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                                        <div className="feedback-label" style={{ marginBottom: 0 }}>
+                                                            <FaImage className="icon" /> รูปภาพประกอบ
+                                                        </div>
+                                                        {isEditing && (
+                                                            <button
+                                                                onClick={() => setImageModal({ groupId: group.id, projectIndex: index })}
+                                                                style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+                                                            >
+                                                                <FaPlus size={12} /> เพิ่มรูปภาพ
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    {project.images && project.images.length > 0 ? (
+                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px' }}>
+                                                            {project.images.map((img, imgIdx) => (
+                                                                <div key={imgIdx} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                                                                    <div style={{ aspectRatio: '4/3', overflow: 'hidden' }}>
+                                                                        <img src={img.url} alt={img.caption || 'Project Image'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                                    </div>
+                                                                    {img.caption && (
+                                                                        <div style={{ padding: '6px 8px', fontSize: '12px', color: '#64748b', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+                                                                            {img.caption}
+                                                                        </div>
+                                                                    )}
+                                                                    {isEditing && (
+                                                                        <button
+                                                                            onClick={() => handleRemoveImage(group.id, index, imgIdx)}
+                                                                            style={{ position: 'absolute', top: '4px', right: '4px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                                        >
+                                                                            <FaTimes size={12} />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ fontSize: '0.9rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                                                            {isEditing ? 'กด "เพิ่มรูปภาพ" เพื่อใส่รูปประกอบ' : 'ไม่มีรูปภาพประกอบ'}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     </div>
                 ))}
@@ -633,11 +721,11 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                     min-width: 300px;
                 }
                 .project-info h4 {
-                    font-size: 1.1rem;
+                    font-size: 1.35rem;
                     color: #1e293b;
                     margin-bottom: 8px;
                     line-height: 1.5;
-                    font-weight: 600;
+                    font-weight: 700;
                 }
                 .sub-activity {
                     color: #475569;
@@ -746,6 +834,6 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
                 }
             `}</style>
-        </div>
+        </div >
     );
 }
