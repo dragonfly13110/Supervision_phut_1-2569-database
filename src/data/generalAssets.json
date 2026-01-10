@@ -38,5 +38,25 @@
         "statusText": "ใช้งานปกติ",
         "problem": "-",
         "solution": "-"
+    },
+    {
+        "id": 5,
+        "name": "รั้วคอนกรีตเสริมเหล็ก",
+        "amount": "15.75 เมตร",
+        "details": "-",
+        "status": "good",
+        "statusText": "ใช้งานปกติ",
+        "problem": "-",
+        "solution": "-"
+    },
+    {
+        "id": 6,
+        "name": "ครุภัณฑ์และสิ่งก่อสร้างต่าง ๆ ",
+        "amount": "93 รายการ",
+        "details": "อยู่ระหว่างจะหน่าย 34 รายการ",
+        "status": "good",
+        "statusText": "ใช้งานปกติ",
+        "problem": "-",
+        "solution": "-"
     }
 ]
