@@ -1,0 +1,42 @@
+[
+    {
+        "id": 1,
+        "name": "รถยนต์ราชการ",
+        "amount": "1 คัน",
+        "details": "ทะเบียน กษ 2516 นครปฐม",
+        "status": "good",
+        "statusText": "ใช้งานปกติ",
+        "problem": "-",
+        "solution": "-"
+    },
+    {
+        "id": 2,
+        "name": "ที่ดิน",
+        "amount": "1 แปลง",
+        "details": "เนื้อที่ 200 ตร.ว.",
+        "status": "good",
+        "statusText": "ใช้งานปกติ",
+        "problem": "-",
+        "solution": "-"
+    },
+    {
+        "id": 3,
+        "name": "อาคารสำนักงาน",
+        "amount": "1 ยูนิต",
+        "details": "พื้นที่ 200 ตร.ว.",
+        "status": "good",
+        "statusText": "ใช้งานปกติ",
+        "problem": "-",
+        "solution": "-"
+    },
+    {
+        "id": 4,
+        "name": "บ้านพักราชการ",
+        "amount": "2 ยูนิต",
+        "details": "บ้านแฝด 2 ชั้น",
+        "status": "good",
+        "statusText": "ใช้งานปกติ",
+        "problem": "-",
+        "solution": "-"
+    }
+]

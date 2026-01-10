@@ -1,33 +1,300 @@
-import { FiTool } from 'react-icons/fi'
-import { projectAssets } from '../data/assetData'
+import { useState, useEffect } from 'react'
+import { FiTool, FiEdit2, FiSave } from 'react-icons/fi'
+import { FaGithub, FaCog } from 'react-icons/fa'
+import projectAssetsJson from '../data/projectAssets.json'
+
+interface ProjectAsset {
+    id: number
+    formOrder: number
+    name: string
+    amount: string
+    status: string
+    statusText: string
+    problem: string
+    solution: string
+}
 
 export function SectionEquipment() {
+    const [isEditing, setIsEditing] = useState(false)
+    const [showGithubSettings, setShowGithubSettings] = useState(false)
+    const [showAdvanced, setShowAdvanced] = useState(false)
+    const [assets, setAssets] = useState<ProjectAsset[]>(() => {
+        const saved = localStorage.getItem('project_assets')
+        return saved ? JSON.parse(saved) : projectAssetsJson
+    })
+
+    const [githubConfig, setGithubConfig] = useState({
+        owner: localStorage.getItem('gh_owner') || 'dragonfly13110',
+        repo: localStorage.getItem('gh_repo') || 'tv-system-phutthamonthon',
+        token: localStorage.getItem('gh_token') || '',
+        path: 'src/data/projectAssets.json'
+    })
+
+    useEffect(() => {
+        localStorage.setItem('project_assets', JSON.stringify(assets))
+    }, [assets])
+
+    const handleChange = (id: number, field: keyof ProjectAsset, value: string | number) => {
+        setAssets(prev => prev.map(asset =>
+            asset.id === id ? { ...asset, [field]: value } : asset
+        ))
+    }
+
+    const handleSaveLocal = () => {
+        localStorage.setItem('project_assets', JSON.stringify(assets))
+        setIsEditing(false)
+        alert('บันทึกข้อมูลลงเครื่องเรียบร้อยแล้ว')
+    }
+
+    const handleSaveToGitHub = async () => {
+        if (!githubConfig.owner || !githubConfig.repo || !githubConfig.token) {
+            setShowGithubSettings(true)
+            return
+        }
+
+        try {
+            const apiUrl = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.path}`
+            const getRes = await fetch(apiUrl, {
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            })
+
+            let sha = undefined
+            if (getRes.status === 200) {
+                const fileData = await getRes.json()
+                sha = fileData.sha
+            } else if (getRes.status === 401) {
+                throw new Error('Token ไม่ถูกต้อง (401 Unauthorized)')
+            } else if (getRes.status !== 404) {
+                throw new Error(`ดึงข้อมูลไฟล์ไม่สำเร็จ (${getRes.status})`)
+            }
+
+            const jsonString = JSON.stringify(assets, null, 4)
+            const content = btoa(unescape(encodeURIComponent(jsonString)))
+
+            const body: any = {
+                message: 'Update project assets data via App',
+                content: content
+            }
+            if (sha) body.sha = sha
+
+            const putRes = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body)
+            })
+
+            if (!putRes.ok) {
+                throw new Error(`บันทึกไม่สำเร็จ (${putRes.status})`)
+            }
+
+            alert('บันทึกข้อมูลไปยัง GitHub เรียบร้อยแล้ว!')
+            setIsEditing(false)
+        } catch (error) {
+            console.error(error)
+            alert('เกิดข้อผิดพลาด: ' + error)
+        }
+    }
+
+    const saveGithubConfig = () => {
+        localStorage.setItem('gh_owner', githubConfig.owner)
+        localStorage.setItem('gh_repo', githubConfig.repo)
+        localStorage.setItem('gh_token', githubConfig.token)
+        setShowGithubSettings(false)
+    }
+
     return (
         <section className="section">
+            {/* GitHub Settings Modal */}
+            {showGithubSettings && (
+                <div className="modal-overlay" style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center'
+                }}>
+                    <div className="modal-content" style={{ background: 'white', padding: '24px', borderRadius: '12px', width: '400px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+                        <h3 style={{ marginBottom: '16px', color: '#1e293b', fontSize: '1.25rem' }}>ตั้งค่า GitHub</h3>
+
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.95rem', fontWeight: '500', color: '#334155' }}>
+                                Personal Access Token <span style={{ color: 'red' }}>*</span>
+                            </label>
+                            <input
+                                type="password"
+                                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '1rem' }}
+                                value={githubConfig.token}
+                                onChange={e => setGithubConfig({ ...githubConfig, token: e.target.value })}
+                                placeholder="ghp_xxxxxxxxxxxx"
+                            />
+                        </div>
+
+                        <div style={{ marginBottom: '16px' }}>
+                            <button
+                                onClick={() => setShowAdvanced(!showAdvanced)}
+                                style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}
+                            >
+                                {showAdvanced ? '▼ ซ่อนตั้งค่าขั้นสูง' : '▶ แสดงตั้งค่าขั้นสูง'}
+                            </button>
+                        </div>
+
+                        {showAdvanced && (
+                            <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+                                <div style={{ marginBottom: '10px' }}>
+                                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', color: '#475569' }}>Owner:</label>
+                                    <input
+                                        type="text"
+                                        style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                                        value={githubConfig.owner}
+                                        onChange={e => setGithubConfig({ ...githubConfig, owner: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', color: '#475569' }}>Repo:</label>
+                                    <input
+                                        type="text"
+                                        style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                                        value={githubConfig.repo}
+                                        onChange={e => setGithubConfig({ ...githubConfig, repo: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                            <button onClick={() => setShowGithubSettings(false)} style={{ background: '#f1f5f9', color: '#475569', padding: '10px 20px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>ยกเลิก</button>
+                            <button onClick={saveGithubConfig} style={{ background: '#16a34a', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>บันทึก</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="section-header">
-                <div className="section-icon"><FiTool /></div>
-                <div>
-                    <h2 className="section-title">ครุภัณฑ์โครงการงบยุทธศาสตร์การพัฒนาจังหวัด</h2>
-                    <p className="section-subtitle">รายการที่มีจริง 11 รายการ (จากแบบฟอร์ม 19 รายการ)</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                    <div className="section-icon"><FiTool /></div>
+                    <div>
+                        <h2 className="section-title">ครุภัณฑ์โครงการงบยุทธศาสตร์การพัฒนาจังหวัด</h2>
+                        <p className="section-subtitle">รายการที่มีจริง {assets.length} รายการ (จากแบบฟอร์ม 19 รายการ)</p>
+                    </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                        className="edit-toggle-btn"
+                        style={{ background: '#475569' }}
+                        onClick={() => setShowGithubSettings(true)}
+                        title="ตั้งค่า GitHub"
+                    >
+                        <FaCog />
+                    </button>
+                    {isEditing ? (
+                        <>
+                            <button className="edit-toggle-btn" onClick={handleSaveLocal} style={{ background: '#3b82f6' }}>
+                                <FiSave /> บันทึก (Local)
+                            </button>
+                            <button className="edit-toggle-btn" style={{ background: '#24292e' }} onClick={handleSaveToGitHub}>
+                                <FaGithub /> บันทึกขึ้น GitHub
+                            </button>
+                        </>
+                    ) : (
+                        <button className="edit-toggle-btn" onClick={() => setIsEditing(true)}>
+                            <FiEdit2 /> แก้ไขข้อมูล
+                        </button>
+                    )}
                 </div>
             </div>
 
             <div className="equipment-grid">
-                {projectAssets.map((item) => (
+                {assets.map((item) => (
                     <div className="equipment-card" key={item.id} style={{ flexDirection: 'column', gap: '12px' }}>
                         <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                            <div className="equipment-number">{item.formOrder}</div>
-                            <div className="equipment-info">
-                                <div className="equipment-name">{item.name}</div>
+                            <div className="equipment-number">
+                                {isEditing ? (
+                                    <input
+                                        type="number"
+                                        value={item.formOrder}
+                                        onChange={e => handleChange(item.id, 'formOrder', parseInt(e.target.value) || 0)}
+                                        style={{ width: '40px', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px', textAlign: 'center' }}
+                                    />
+                                ) : (
+                                    item.formOrder
+                                )}
+                            </div>
+                            <div className="equipment-info" style={{ flex: 1 }}>
+                                {isEditing ? (
+                                    <input
+                                        type="text"
+                                        value={item.name}
+                                        onChange={e => handleChange(item.id, 'name', e.target.value)}
+                                        style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '8px' }}
+                                    />
+                                ) : (
+                                    <div className="equipment-name">{item.name}</div>
+                                )}
                                 <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
-                                    จำนวน: <strong>{item.amount}</strong>
+                                    จำนวน: {isEditing ? (
+                                        <input
+                                            type="text"
+                                            value={item.amount}
+                                            onChange={e => handleChange(item.id, 'amount', e.target.value)}
+                                            style={{ width: '100px', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                                        />
+                                    ) : (
+                                        <strong>{item.amount}</strong>
+                                    )}
                                 </div>
                             </div>
                         </div>
                         <div className="equipment-status" style={{ marginLeft: '44px' }}>
-                            <span className={`status-badge ${item.status}`}>{item.statusText}</span>
+                            {isEditing ? (
+                                <select
+                                    value={item.status}
+                                    onChange={e => {
+                                        const newStatus = e.target.value
+                                        const statusTextMap: Record<string, string> = {
+                                            'good': 'ใช้งานปกติ',
+                                            'warning': 'ไม่ได้ใช้งาน',
+                                            'danger': 'ชำรุด'
+                                        }
+                                        handleChange(item.id, 'status', newStatus)
+                                        handleChange(item.id, 'statusText', statusTextMap[newStatus] || newStatus)
+                                    }}
+                                    style={{ padding: '4px 8px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                                >
+                                    <option value="good">ใช้งานปกติ</option>
+                                    <option value="warning">ไม่ได้ใช้งาน</option>
+                                    <option value="danger">ชำรุด</option>
+                                </select>
+                            ) : (
+                                <span className={`status-badge ${item.status}`}>{item.statusText}</span>
+                            )}
                         </div>
-                        {item.problem !== '-' && (
+                        {isEditing && (
+                            <div style={{ marginLeft: '44px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div>
+                                    <label style={{ fontSize: '12px', color: '#666' }}>ปัญหา:</label>
+                                    <input
+                                        type="text"
+                                        value={item.problem}
+                                        onChange={e => handleChange(item.id, 'problem', e.target.value)}
+                                        style={{ width: '100%', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '12px', color: '#666' }}>แนวทางแก้ไข:</label>
+                                    <input
+                                        type="text"
+                                        value={item.solution}
+                                        onChange={e => handleChange(item.id, 'solution', e.target.value)}
+                                        style={{ width: '100%', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                        {!isEditing && item.problem !== '-' && (
                             <div style={{ marginLeft: '44px', fontSize: '13px', background: '#fef3c7', padding: '8px 12px', borderRadius: '6px', borderLeft: '3px solid #f59e0b' }}>
                                 <div style={{ color: '#92400e', marginBottom: '4px' }}><strong>ปัญหา:</strong> {item.problem}</div>
                                 <div style={{ color: '#166534' }}><strong>แนวทางแก้ไข:</strong> {item.solution}</div>
