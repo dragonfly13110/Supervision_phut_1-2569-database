@@ -1,0 +1,397 @@
+import { FiTrendingUp, FiCheckCircle, FiClock, FiCalendar, FiBarChart2, FiDollarSign, FiSettings, FiEdit2, FiActivity } from 'react-icons/fi';
+import detailedBudgetProjectsData from '../data/detailedBudgetProjects.json';
+import budgetDataJson from '../data/budgetData.json';
+
+interface DetailedProject {
+    name: string;
+    subActivity: string;
+    relevantPolicies?: string;
+    target: string;
+    budget: string;
+    result: string;
+    problem: string;
+    solution: string;
+    status?: 'pending' | 'scheduled' | 'in_progress' | 'completed';
+    images?: { url: string; caption?: string }[];
+}
+
+interface BudgetGroup {
+    id: string;
+    title: string;
+    strategicIssues?: string[];
+    projects: DetailedProject[];
+}
+
+// Parse budget string to number
+function parseBudget(budget: string): number {
+    if (!budget || budget === '-') return 0;
+    return parseFloat(budget.replace(/[^0-9.-]/g, '')) || 0;
+}
+
+// Format number with commas
+function formatNumber(num: number): string {
+    return num.toLocaleString('th-TH');
+}
+
+export function SectionDashboard() {
+    const budgetGroups = detailedBudgetProjectsData as unknown as BudgetGroup[];
+
+    // Calculate statistics
+    const stats = (() => {
+        let totalProjects = 0;
+        let completed = 0;
+        let inProgress = 0;
+        let scheduled = 0;
+        let pending = 0;
+        let totalBudget = 0;
+
+        budgetGroups.forEach(group => {
+            group.projects.forEach(project => {
+                totalProjects++;
+                totalBudget += parseBudget(project.budget);
+
+                switch (project.status) {
+                    case 'completed':
+                        completed++;
+                        break;
+                    case 'in_progress':
+                        inProgress++;
+                        break;
+                    case 'scheduled':
+                        scheduled++;
+                        break;
+                    default:
+                        pending++;
+                }
+            });
+        });
+
+        // Budget from budgetData.json
+        const operationBudget =
+            parseFloat(budgetDataJson.operation.utilities.budget) +
+            parseFloat(budgetDataJson.operation.officeSupplies.budget) +
+            parseFloat(budgetDataJson.operation.service.budget) +
+            parseFloat(budgetDataJson.operation.travel.budget);
+
+        const operationDisbursed =
+            parseFloat(budgetDataJson.operation.utilities.disbursed) +
+            parseFloat(budgetDataJson.operation.officeSupplies.disbursed) +
+            parseFloat(budgetDataJson.operation.service.disbursed) +
+            parseFloat(budgetDataJson.operation.travel.disbursed);
+
+        // Project budget (งบโครงการฯ)
+        const projectBudget = parseFloat(budgetDataJson.project.project1.budget);
+        const projectDisbursed = parseFloat(budgetDataJson.project.project1.disbursed);
+        const projectPercent = projectBudget > 0 ? Math.round((projectDisbursed / projectBudget) * 100 * 10) / 10 : 0;
+
+        return {
+            totalProjects,
+            completed,
+            inProgress,
+            scheduled,
+            pending,
+            totalBudget,
+            operationBudget,
+            operationDisbursed,
+            projectBudget,
+            projectDisbursed,
+            projectPercent,
+            completionRate: totalProjects > 0 ? Math.round((completed / totalProjects) * 100) : 0
+        };
+    })();
+
+    // Recent activities (projects with results)
+    const recentActivities = budgetGroups
+        .flatMap(group => group.projects.map(p => ({ ...p, groupTitle: group.title })))
+        .filter(p => p.result && p.result !== '-' && p.result.trim() !== '')
+        .slice(0, 5);
+
+    // Get status color
+    const getStatusColor = (status?: string) => {
+        switch (status) {
+            case 'completed': return '#10b981';
+            case 'in_progress': return '#3b82f6';
+            case 'scheduled': return '#f59e0b';
+            default: return '#6b7280';
+        }
+    };
+
+    const getStatusLabel = (status?: string) => {
+        switch (status) {
+            case 'completed': return 'เสร็จสิ้น';
+            case 'in_progress': return 'กำลังดำเนินการ';
+            case 'scheduled': return 'กำหนดวันแล้ว';
+            default: return 'รอดำเนินการ';
+        }
+    };
+
+    return (
+        <section className="section section-container">
+            <div className="section-header" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div className="section-icon" style={{ background: '#10b981', color: 'white', padding: '10px', borderRadius: '12px' }}>
+                        <FiDollarSign size={24} />
+                    </div>
+                    <div>
+                        <h2 className="section-title" style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>หัวข้อที่ 1: การเบิกจ่ายงบประมาณ</h2>
+                        <p className="section-subtitle" style={{ color: '#6b7280' }}>ตัดยอดตามความก้าวหน้าปัจจุบัน</p>
+                    </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button style={{
+                        background: '#e5e7eb',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '36px',
+                        height: '36px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#4b5563',
+                        cursor: 'pointer'
+                    }}>
+                        <FiSettings size={18} />
+                    </button>
+                    <button style={{
+                        background: '#1f2937',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '20px',
+                        padding: '6px 16px',
+                        fontSize: '0.9rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                    }}>
+                        <FiEdit2 size={14} /> แก้ไขข้อมูล
+                    </button>
+                </div>
+            </div>
+
+            {/* Budget Overview Section - Matching user request */}
+            <div className="card budget-overview-card" style={{
+                background: 'white',
+                backgroundColor: 'white',
+                backgroundImage: 'none',
+                border: '2px solid #10b981',
+                borderRadius: '16px',
+                color: '#1f2937',
+                marginBottom: '24px',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)'
+            }}>
+                <div className="card-header" style={{ borderBottom: 'none', paddingBottom: '0' }}>
+                    <div className="card-icon" style={{ background: '#ecfdf5', color: '#10b981' }}><FiBarChart2 /></div>
+                    <h3 className="card-title" style={{ color: '#1f2937' }}>สรุปภาพรวมทั้งหมด</h3>
+                </div>
+
+                <div className="budget-summary-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gap: '16px',
+                    padding: '20px'
+                }}>
+                    {/* 1.1 Investment */}
+                    <div className="budget-mini-card">
+                        <div className="budget-mini-header">1.1 งบลงทุน</div>
+                        <div className="budget-mini-labels">
+                            <span>งบประมาณ</span>
+                            <span>เบิกจ่าย</span>
+                            <span>%</span>
+                        </div>
+                        <div className="budget-mini-values">
+                            <span className="val-budget">0</span>
+                            <span className="val-disbursed">0</span>
+                            <span className="val-percent">0%</span>
+                        </div>
+                    </div>
+
+                    {/* 1.2 Operation */}
+                    <div className="budget-mini-card">
+                        <div className="budget-mini-header">1.2 งบดำเนินงาน</div>
+                        <div className="budget-mini-labels">
+                            <span>งบประมาณ</span>
+                            <span>เบิกจ่าย</span>
+                            <span>%</span>
+                        </div>
+                        <div className="budget-mini-values">
+                            <span className="val-budget">{formatNumber(stats.operationBudget)}</span>
+                            <span className="val-disbursed">{formatNumber(stats.operationDisbursed)}</span>
+                            <span className="val-percent">
+                                {stats.operationBudget > 0 ? ((stats.operationDisbursed / stats.operationBudget) * 100).toFixed(1) : '0'}%
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* 1.3 Project */}
+                    <div className="budget-mini-card">
+                        <div className="budget-mini-header">1.3 งบโครงการฯ</div>
+                        <div className="budget-mini-labels">
+                            <span>งบประมาณ</span>
+                            <span>เบิกจ่าย</span>
+                            <span>%</span>
+                        </div>
+                        <div className="budget-mini-values">
+                            <span className="val-budget">{formatNumber(stats.projectBudget)}</span>
+                            <span className="val-disbursed">{formatNumber(stats.projectDisbursed)}</span>
+                            <span className="val-percent">{stats.projectPercent}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Total Footer */}
+                <div className="budget-total-footer" style={{
+                    borderTop: '1px solid #e5e7eb',
+                    padding: '20px',
+                    display: 'flex',
+                    justifyContent: 'space-around',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '20px'
+                }}>
+                    <div className="total-item">
+                        <div className="total-label">รวมงบประมาณทั้งหมด</div>
+                        <div className="total-value">{formatNumber(stats.operationBudget + stats.projectBudget)} บาท</div>
+                    </div>
+                    <div className="total-item">
+                        <div className="total-label">รวมเบิกจ่ายทั้งหมด</div>
+                        <div className="total-value">{formatNumber(stats.operationDisbursed + stats.projectDisbursed)} บาท</div>
+                    </div>
+                    <div className="total-item">
+                        <div className="total-label">ร้อยละรวม</div>
+                        <div className="total-value">
+                            {((stats.operationDisbursed + stats.projectDisbursed) / (stats.operationBudget + stats.projectBudget) * 100).toFixed(1)}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Original Summary Cards (Secondary) */}
+            <div className="dashboard-summary-grid">
+                <div className="dashboard-card dashboard-card-success">
+                    <div className="dashboard-card-icon">
+                        <FiCheckCircle />
+                    </div>
+                    <div className="dashboard-card-content">
+                        <span className="dashboard-card-label">โครงการเสร็จสิ้น</span>
+                        <span className="dashboard-card-value">{stats.completed} / {stats.totalProjects}</span>
+                        <span className="dashboard-card-sub">{stats.completionRate}% complete</span>
+                    </div>
+                </div>
+
+                <div className="dashboard-card dashboard-card-info">
+                    <div className="dashboard-card-icon">
+                        <FiClock />
+                    </div>
+                    <div className="dashboard-card-content">
+                        <span className="dashboard-card-label">กำลังดำเนินการ</span>
+                        <span className="dashboard-card-value">{stats.inProgress}</span>
+                        <span className="dashboard-card-sub">กิจกรรม</span>
+                    </div>
+                </div>
+
+                <div className="dashboard-card dashboard-card-warning">
+                    <div className="dashboard-card-icon">
+                        <FiCalendar />
+                    </div>
+                    <div className="dashboard-card-content">
+                        <span className="dashboard-card-label">กำหนดวันแล้ว</span>
+                        <span className="dashboard-card-value">{stats.scheduled}</span>
+                        <span className="dashboard-card-sub">รอดำเนินการ</span>
+                    </div>
+                </div>
+
+                <div className="dashboard-card dashboard-card-secondary" style={{ borderLeft: '4px solid #9ca3af', background: '#f9fafb' }}>
+                    <div className="dashboard-card-icon" style={{ background: '#e5e7eb', color: '#4b5563' }}>
+                        <FiClock />
+                    </div>
+                    <div className="dashboard-card-content">
+                        <span className="dashboard-card-label" style={{ color: '#4b5563' }}>รอดำเนินการ</span>
+                        <span className="dashboard-card-value" style={{ color: '#1f2937' }}>{stats.pending}</span>
+                        <span className="dashboard-card-sub" style={{ color: '#6b7280' }}>กิจกรรม</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Charts Row */}
+            <div className="dashboard-charts-row" style={{ display: 'flex', justifyContent: 'center' }}>
+                {/* Status Pie Chart */}
+                <div className="card dashboard-chart-card" style={{ maxWidth: '500px', width: '100%' }}>
+                    <div className="card-header">
+                        <div className="card-icon"><FiTrendingUp /></div>
+                        <h3 className="card-title">สถานะโครงการ</h3>
+                    </div>
+                    <div className="dashboard-pie-container">
+                        <div className="dashboard-pie" style={{
+                            background: `conic-gradient(
+                                #10b981 0deg ${(stats.completed / stats.totalProjects) * 360}deg,
+                                #3b82f6 ${(stats.completed / stats.totalProjects) * 360}deg ${((stats.completed + stats.inProgress) / stats.totalProjects) * 360}deg,
+                                #f59e0b ${((stats.completed + stats.inProgress) / stats.totalProjects) * 360}deg ${((stats.completed + stats.inProgress + stats.scheduled) / stats.totalProjects) * 360}deg,
+                                #6b7280 ${((stats.completed + stats.inProgress + stats.scheduled) / stats.totalProjects) * 360}deg 360deg
+                            )`
+                        }}>
+                            <div className="dashboard-pie-center">
+                                <span className="dashboard-pie-value">{stats.totalProjects}</span>
+                                <span className="dashboard-pie-label">กิจกรรม</span>
+                            </div>
+                        </div>
+                        <div className="dashboard-legend">
+                            <div className="dashboard-legend-item">
+                                <span className="dashboard-legend-color" style={{ background: '#10b981' }}></span>
+                                <span>เสร็จสิ้น ({stats.completed})</span>
+                            </div>
+                            <div className="dashboard-legend-item">
+                                <span className="dashboard-legend-color" style={{ background: '#3b82f6' }}></span>
+                                <span>กำลังดำเนินการ ({stats.inProgress})</span>
+                            </div>
+                            <div className="dashboard-legend-item">
+                                <span className="dashboard-legend-color" style={{ background: '#f59e0b' }}></span>
+                                <span>กำหนดวันแล้ว ({stats.scheduled})</span>
+                            </div>
+                            <div className="dashboard-legend-item">
+                                <span className="dashboard-legend-color" style={{ background: '#6b7280' }}></span>
+                                <span>รอดำเนินการ ({stats.pending})</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Recent Activities */}
+            <div className="card">
+                <div className="card-header">
+                    <div className="card-icon"><FiActivity /></div>
+                    <h3 className="card-title">กิจกรรมล่าสุด</h3>
+                </div>
+                <div className="dashboard-activities">
+                    {recentActivities.length > 0 ? (
+                        recentActivities.map((activity, index) => (
+                            <div key={index} className="dashboard-activity-item">
+                                <div
+                                    className="dashboard-activity-status"
+                                    style={{ background: getStatusColor(activity.status) }}
+                                    title={getStatusLabel(activity.status)}
+                                ></div>
+                                <div className="dashboard-activity-content">
+                                    <div className="dashboard-activity-title">{activity.subActivity || activity.name}</div>
+                                    <div className="dashboard-activity-desc">{activity.result}</div>
+                                    <div className="dashboard-activity-meta">
+                                        <span className="status-badge" style={{
+                                            background: `${getStatusColor(activity.status)}20`,
+                                            color: getStatusColor(activity.status)
+                                        }}>
+                                            {getStatusLabel(activity.status)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <p style={{ color: 'var(--text-light)', fontStyle: 'italic' }}>ยังไม่มีกิจกรรมที่มีผลลัพธ์</p>
+                    )}
+                </div>
+            </div>
+        </section>
+    );
+}

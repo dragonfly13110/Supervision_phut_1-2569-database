@@ -7,11 +7,13 @@ import { Sidebar } from './components/Sidebar'
 import { SectionBudget } from './components/SectionBudget'
 import { SectionAssets } from './components/SectionAssets'
 import { SectionEquipment } from './components/SectionEquipment'
-// import { SectionPolicy } from './components/SectionPolicy' // Unused
 import { SectionGroupReports } from './components/SectionGroupReports'
 import { SectionOther } from './components/SectionOther'
 import { SectionBudgetDetailed } from './components/SectionBudgetDetailed'
 import { SectionStatusSummary } from './components/SectionStatusSummary'
+import { SectionDashboard } from './components/SectionDashboard'
+import { SectionCalendar } from './components/SectionCalendar'
+import { SearchFilter } from './components/SearchFilter'
 import { Footer } from './components/Footer'
 
 function App() {
@@ -67,7 +69,22 @@ function App() {
                 className={`main-content ${isSidebarCollapsed ? 'collapsed' : ''}`}
                 style={!isSidebarCollapsed ? { marginLeft: sidebarWidth } : {}}
             >
+                {/* Search Bar */}
+                <div className="main-search-wrapper">
+                    <SearchFilter onNavigate={navigateTo} />
+                </div>
+
                 <Hero />
+
+                {/* Dashboard */}
+                {activeSection === 'dashboard' && (
+                    <SectionDashboard />
+                )}
+
+                {/* Calendar */}
+                {activeSection === 'calendar' && (
+                    <SectionCalendar />
+                )}
 
                 {/* Section 1: Budget */}
                 {(activeSection === 'section1' || activeSection === 'section1-budget') && (

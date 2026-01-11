@@ -1,8 +1,9 @@
 import { useRef, useEffect, useState } from 'react'
-import { FiDollarSign, FiUsers, FiChevronDown, FiChevronsLeft, FiChevronsRight, FiChevronUp, FiChevronDown as FiScrollDown, FiEdit2, FiX } from 'react-icons/fi'
+import { FiDollarSign, FiUsers, FiChevronDown, FiChevronsLeft, FiChevronsRight, FiChevronUp, FiChevronDown as FiScrollDown, FiEdit2, FiX, FiHome, FiCalendar, FiSearch } from 'react-icons/fi'
 import { FaGithub } from 'react-icons/fa'
 import { TbReportMoney } from "react-icons/tb";
 import { detailedBudgetProjects } from '../data/assetData'
+import { ThemeToggle } from './ThemeToggle'
 
 interface SidebarProps {
     sidebarOpen: boolean
@@ -194,7 +195,33 @@ export function Sidebar({ sidebarOpen, activeSection, expandedNav, onToggleNav, 
                 </div>
             </div>
 
-            <nav className="sidebar-nav" ref={navRef} style={{ height: 'calc(100vh - 120px)', overflowY: 'auto' }}>
+            <nav className="sidebar-nav" ref={navRef} style={{ height: 'calc(100vh - 220px)', overflowY: 'auto', paddingBottom: '16px' }}>
+                {/* Quick Access - Dashboard & Calendar */}
+                <div className="nav-section">
+                    <div
+                        className={`nav-section-header ${activeSection === 'dashboard' || activeSection === 'calendar' ? 'active' : ''}`}
+                        onClick={() => onToggleNav('quickaccess')}
+                    >
+                        <div className="nav-section-icon"><FiHome /></div>
+                        <div className="nav-section-title">ภาพรวมและปฏิทิน</div>
+                        <FiChevronDown className={`nav-section-arrow ${expandedNav === 'quickaccess' ? 'expanded' : ''}`} />
+                    </div>
+                    <div className={`nav-items ${expandedNav === 'quickaccess' ? 'expanded' : ''}`}>
+                        <div
+                            className={`nav-item ${activeSection === 'dashboard' ? 'active' : ''}`}
+                            onClick={() => onNavigateTo('dashboard')}
+                        >
+                            <FiHome style={{ marginRight: '8px' }} /> Dashboard
+                        </div>
+                        <div
+                            className={`nav-item ${activeSection === 'calendar' ? 'active' : ''}`}
+                            onClick={() => onNavigateTo('calendar')}
+                        >
+                            <FiCalendar style={{ marginRight: '8px' }} /> ปฏิทินกิจกรรม
+                        </div>
+                    </div>
+                </div>
+
                 {/* Section 1 */}
                 <div className="nav-section">
                     <div
@@ -365,56 +392,60 @@ export function Sidebar({ sidebarOpen, activeSection, expandedNav, onToggleNav, 
             </nav>
 
             {/* Scroll Buttons */}
-            {!isCollapsed && showScrollUp && (
-                <button
-                    className="scroll-btn up"
-                    onClick={() => scrollNav('up')}
-                    style={{
-                        position: 'absolute', top: '130px', left: '50%', transform: 'translateX(-50%)',
-                        zIndex: 20
-                    }}
-                >
-                    <FiChevronUp />
-                </button>
+            {
+                !isCollapsed && showScrollUp && (
+                    <button
+                        className="scroll-btn up"
+                        onClick={() => scrollNav('up')}
+                        style={{
+                            position: 'absolute', top: '130px', left: '50%', transform: 'translateX(-50%)',
+                            zIndex: 20
+                        }}
+                    >
+                        <FiChevronUp />
+                    </button>
+                )
+            }
+
+            {
+                !isCollapsed && showScrollDown && (
+                    <button
+                        className="scroll-btn down"
+                        onClick={() => scrollNav('down')}
+                        style={{
+                            position: 'absolute', bottom: '60px', left: '50%', transform: 'translateX(-50%)',
+                            zIndex: 20
+                        }}
+                    >
+                        <FiScrollDown />
+                    </button>
+                )
+            }
+
+            {/* Sidebar Footer - Theme Toggle & Collapse (only when expanded) */}
+            {!isCollapsed && (
+                <div className="sidebar-footer">
+                    <ThemeToggle />
+                    <button
+                        className="sidebar-collapse-btn"
+                        onClick={onToggleCollapse}
+                        title="ย่อ Sidebar"
+                    >
+                        <FiChevronsLeft />
+                    </button>
+                </div>
             )}
 
-            {!isCollapsed && showScrollDown && (
+            {/* Floating expand button when collapsed */}
+            {isCollapsed && (
                 <button
-                    className="scroll-btn down"
-                    onClick={() => scrollNav('down')}
-                    style={{
-                        position: 'absolute', bottom: '60px', left: '50%', transform: 'translateX(-50%)',
-                        zIndex: 20
-                    }}
+                    className="sidebar-expand-btn"
+                    onClick={onToggleCollapse}
+                    title="ขยาย Sidebar"
                 >
-                    <FiScrollDown />
+                    <FiChevronsRight />
                 </button>
             )}
-
-            {/* Collapse Toggle */}
-            <button
-                className="sidebar-collapse-btn"
-                onClick={onToggleCollapse}
-                style={{
-                    position: 'absolute',
-                    bottom: '20px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    background: 'rgba(255,255,255,0.1)',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '32px',
-                    height: '32px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    cursor: 'pointer',
-                    zIndex: 20
-                }}
-            >
-                {isCollapsed ? <FiChevronsRight /> : <FiChevronsLeft />}
-            </button>
 
             {/* Resize Handle */}
             {!isCollapsed && (

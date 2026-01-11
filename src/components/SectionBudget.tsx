@@ -391,73 +391,89 @@ export function SectionBudget() {
                 </div>
             )}
 
-            <div className="section-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-                    <div className="section-icon"><FiDollarSign /></div>
+            <div className="section-header" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+                    <div className="section-icon" style={{ background: '#10b981', color: 'white', padding: '10px', borderRadius: '12px' }}>
+                        <FiDollarSign size={24} />
+                    </div>
                     <div>
-                        <h2 className="section-title">หัวข้อที่ 1: การเบิกจ่ายงบประมาณ</h2>
-                        <p className="section-subtitle">ตัดยอดตามความก้าวหน้าปัจจุบัน</p>
+                        <h2 className="section-title" style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>หัวข้อที่ 1: การเบิกจ่ายงบประมาณ</h2>
+                        <p className="section-subtitle" style={{ color: '#6b7280' }}>ตัดยอดตามความก้าวหน้าปัจจุบัน</p>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                     <button
                         className="edit-toggle-btn"
-                        style={{ background: '#475569' }}
+                        style={{
+                            background: '#e5e7eb',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '36px',
+                            height: '36px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#4b5563',
+                            cursor: 'pointer'
+                        }}
                         onClick={() => setShowGithubSettings(true)}
                         title="ตั้งค่า GitHub"
                     >
-                        <FaCog />
+                        <FaCog size={18} />
                     </button>
                     {isEditing ? (
                         <>
-                            <button className="edit-toggle-btn" onClick={handleSaveLocal} style={{ background: '#3b82f6' }}>
+                            <button className="edit-toggle-btn" onClick={handleSaveLocal} style={{ background: '#3b82f6', color: 'white', border: 'none', borderRadius: '20px', padding: '6px 16px', fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <FiSave /> บันทึก (Local)
                             </button>
-                            <button className="edit-toggle-btn" style={{ background: '#24292e' }} onClick={handleSaveToGitHub}>
+                            <button className="edit-toggle-btn" style={{ background: '#24292e', color: 'white', border: 'none', borderRadius: '20px', padding: '6px 16px', fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={handleSaveToGitHub}>
                                 <FaGithub /> บันทึกขึ้น GitHub
                             </button>
                         </>
                     ) : (
-                        <button className="edit-toggle-btn" onClick={() => setIsEditing(true)}>
-                            <FiEdit2 /> แก้ไขข้อมูล
+                        <button className="edit-toggle-btn" onClick={() => setIsEditing(true)} style={{ background: '#1f2937', color: 'white', border: 'none', borderRadius: '20px', padding: '6px 16px', fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <FiEdit2 size={14} /> แก้ไขข้อมูล
                         </button>
                     )}
                 </div>
             </div>
 
             {/* Grand Summary */}
+            {/* Grand Summary */}
             <div style={{
-                background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-                padding: '28px',
+                backgroundColor: '#ffffff',
+                border: '2px solid #10b981',
                 borderRadius: '16px',
+                padding: '28px',
                 marginBottom: '28px',
-                color: 'white'
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)',
+                color: '#1f2937'
             }}>
-                <div style={{ fontSize: '1.4rem', fontWeight: 600, marginBottom: '24px', opacity: 0.95 }}>📊 สรุปภาพรวมทั้งหมด</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 600, marginBottom: '24px', opacity: 1, color: '#1f2937' }}>📊 สรุปภาพรวมทั้งหมด</div>
                 <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '24px' }}>
-                    <SummaryCard title="1.1 งบลงทุน" budget={investmentTotal.budget} disbursed={investmentTotal.disbursed} color="rgba(255,255,255,0.95)" />
-                    <SummaryCard title="1.2 งบดำเนินงาน" budget={operationTotal.budget} disbursed={operationTotal.disbursed} color="rgba(255,255,255,0.95)" />
-                    <SummaryCard title="1.3 งบโครงการฯ" budget={projectTotal.budget} disbursed={projectTotal.disbursed} color="rgba(255,255,255,0.95)" />
+                    <SummaryCard title="1.1 งบลงทุน" budget={investmentTotal.budget} disbursed={investmentTotal.disbursed} color="#f9fafb" />
+                    <SummaryCard title="1.2 งบดำเนินงาน" budget={operationTotal.budget} disbursed={operationTotal.disbursed} color="#f9fafb" />
+                    <SummaryCard title="1.3 งบโครงการฯ" budget={projectTotal.budget} disbursed={projectTotal.disbursed} color="#f9fafb" />
                 </div>
                 <div style={{
                     marginTop: '24px',
                     paddingTop: '24px',
-                    borderTop: '2px solid rgba(255,255,255,0.3)',
+                    borderTop: '1px solid #e2e8f0',
                     display: 'flex',
                     justifyContent: 'center',
                     gap: '60px'
                 }}>
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '1.15rem', opacity: 0.95 }}>รวมงบประมาณทั้งหมด</div>
-                        <div style={{ fontSize: '2.2rem', fontWeight: 700 }}>{grandTotal.budget.toLocaleString('th-TH')} บาท</div>
+                        <div style={{ fontSize: '1.15rem', opacity: 0.95, color: '#64748b' }}>รวมงบประมาณทั้งหมด</div>
+                        <div style={{ fontSize: '2.2rem', fontWeight: 700, color: '#10b981' }}>{grandTotal.budget.toLocaleString('th-TH')} บาท</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '1.15rem', opacity: 0.95 }}>รวมเบิกจ่ายทั้งหมด</div>
-                        <div style={{ fontSize: '2.2rem', fontWeight: 700 }}>{grandTotal.disbursed.toLocaleString('th-TH')} บาท</div>
+                        <div style={{ fontSize: '1.15rem', opacity: 0.95, color: '#64748b' }}>รวมเบิกจ่ายทั้งหมด</div>
+                        <div style={{ fontSize: '2.2rem', fontWeight: 700, color: '#b45309' }}>{grandTotal.disbursed.toLocaleString('th-TH')} บาท</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '1.15rem', opacity: 0.95 }}>ร้อยละรวม</div>
-                        <div style={{ fontSize: '2.2rem', fontWeight: 700 }}>{grandTotal.budget > 0 ? ((grandTotal.disbursed / grandTotal.budget) * 100).toFixed(1) : '0'}%</div>
+                        <div style={{ fontSize: '1.15rem', opacity: 0.95, color: '#64748b' }}>ร้อยละรวม</div>
+                        <div style={{ fontSize: '2.2rem', fontWeight: 700, color: '#7c3aed' }}>{grandTotal.budget > 0 ? ((grandTotal.disbursed / grandTotal.budget) * 100).toFixed(1) : '0'}%</div>
                     </div>
                 </div>
             </div>
