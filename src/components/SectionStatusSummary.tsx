@@ -220,6 +220,11 @@ export function SectionStatusSummary() {
                                     <div style={{ fontWeight: 500, color: '#1e293b', fontSize: '0.95rem' }}>
                                         {stripActivityNumber(project.name)}
                                     </div>
+                                    {project.subActivity && (
+                                        <div style={{ fontSize: '0.85rem', color: '#6366f1', marginTop: '4px', fontWeight: 400 }}>
+                                            กิจกรรมย่อย: {project.subActivity}
+                                        </div>
+                                    )}
                                 </td>
                                 <td style={{ padding: '12px 16px', color: '#475569', fontSize: '0.9rem' }}>
                                     {project.budget}
