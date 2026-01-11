@@ -320,6 +320,19 @@ export function Sidebar({ sidebarOpen, activeSection, expandedNav, onToggleNav, 
                                 </div>
                             );
                         })}
+                        {/* Status Summary - ในส่วนที่ 2 */}
+                        <div
+                            className={`nav-item ${activeSection === 'section2-status' ? 'active' : ''}`}
+                            onClick={() => onNavigateTo('section2-status')}
+                            style={{
+                                marginTop: '8px',
+                                paddingTop: '8px',
+                                borderTop: '1px solid rgba(255,255,255,0.1)',
+                                background: activeSection === 'section2-status' ? 'rgba(16, 185, 129, 0.2)' : 'transparent'
+                            }}
+                        >
+                            📊 สรุปสถานะกิจกรรม
+                        </div>
                     </div>
                 </div>
 

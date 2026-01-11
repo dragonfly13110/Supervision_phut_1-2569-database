@@ -11,6 +11,7 @@ import { SectionEquipment } from './components/SectionEquipment'
 import { SectionGroupReports } from './components/SectionGroupReports'
 import { SectionOther } from './components/SectionOther'
 import { SectionBudgetDetailed } from './components/SectionBudgetDetailed'
+import { SectionStatusSummary } from './components/SectionStatusSummary'
 import { Footer } from './components/Footer'
 
 function App() {
@@ -96,6 +97,11 @@ function App() {
                 {/* Section 3: Other */}
                 {activeSection === 'section3-other' && (
                     <SectionOther />
+                )}
+
+                {/* Status Summary - ใน Section 2 */}
+                {activeSection === 'section2-status' && (
+                    <SectionStatusSummary />
                 )}
 
 

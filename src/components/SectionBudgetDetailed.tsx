@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import detailedBudgetProjectsData from '../data/detailedBudgetProjects.json';
-import { FaEdit, FaSave, FaChartLine, FaExclamationTriangle, FaLightbulb, FaGithub, FaCog, FaImage, FaPlus, FaTimes, FaChevronDown, FaChevronRight, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaSave, FaChartLine, FaExclamationTriangle, FaLightbulb, FaGithub, FaCog, FaImage, FaPlus, FaTimes, FaChevronDown, FaChevronRight, FaTrash, FaCheck, FaClock, FaCircle } from 'react-icons/fa';
 
 interface DetailedProject {
     name: string;
@@ -11,6 +11,7 @@ interface DetailedProject {
     result: string;
     problem: string;
     solution: string;
+    status?: 'pending' | 'in_progress' | 'completed';
     images?: { url: string; caption?: string }[];
 }
 
@@ -502,11 +503,11 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                             style={{
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                                gap: '10px',
-                                                padding: '12px 16px',
+                                                gap: '8px',
+                                                padding: '10px 12px',
                                                 background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
-                                                borderRadius: '8px',
-                                                marginBottom: isExpanded ? '16px' : '0',
+                                                borderRadius: '6px',
+                                                marginBottom: isExpanded ? '10px' : '0',
                                                 cursor: 'pointer',
                                                 transition: 'all 0.2s ease',
                                                 border: '1px solid #d1fae5'
@@ -519,17 +520,39 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                 <div style={{
                                                     fontWeight: 600,
                                                     color: '#065f46',
-                                                    fontSize: '1rem',
-                                                    marginBottom: '4px'
+                                                    fontSize: '1.15rem',
+                                                    marginBottom: '6px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '10px',
+                                                    flexWrap: 'wrap'
                                                 }}>
                                                     กิจกรรมที่ {index + 1}: {stripActivityNumber(project.name)}
+                                                    {/* Status Badge */}
+                                                    <span style={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                        padding: '2px 8px',
+                                                        borderRadius: '12px',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: 500,
+                                                        background: project.status === 'completed' ? '#dcfce7' : project.status === 'in_progress' ? '#fef9c3' : '#f1f5f9',
+                                                        color: project.status === 'completed' ? '#166534' : project.status === 'in_progress' ? '#a16207' : '#64748b',
+                                                        border: `1px solid ${project.status === 'completed' ? '#bbf7d0' : project.status === 'in_progress' ? '#fde047' : '#e2e8f0'}`
+                                                    }}>
+                                                        {project.status === 'completed' ? <><FaCheck size={10} /> เสร็จแล้ว</> :
+                                                            project.status === 'in_progress' ? <><FaClock size={10} /> กำลังดำเนินการ</> :
+                                                                <><FaCircle size={8} /> ยังไม่เริ่ม</>}
+                                                    </span>
                                                 </div>
                                                 <div style={{
-                                                    fontSize: '0.85rem',
+                                                    fontSize: '1rem',
                                                     color: '#475569',
-                                                    fontWeight: 400
+                                                    fontWeight: 400,
+                                                    lineHeight: '1.5'
                                                 }}>
-                                                    📋 {stripLeadingNumber(project.subActivity)}
+                                                    📋 <strong>กิจกรรมย่อย:</strong> {stripLeadingNumber(project.subActivity)}
                                                 </div>
                                             </div>
                                             <span style={{
@@ -566,13 +589,30 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                                     rows={2}
                                                                 />
                                                             </div>
+                                                            <div>
+                                                                <label style={{ fontSize: '0.85rem', color: '#64748b', display: 'block', marginBottom: '2px' }}>สถานะ:</label>
+                                                                <select
+                                                                    value={project.status || 'pending'}
+                                                                    onChange={(e) => handleChange(group.id, index, 'status', e.target.value)}
+                                                                    style={{
+                                                                        width: '200px',
+                                                                        padding: '8px 12px',
+                                                                        border: '1px solid #cbd5e1',
+                                                                        borderRadius: '6px',
+                                                                        fontSize: '0.9rem',
+                                                                        background: project.status === 'completed' ? '#dcfce7' : project.status === 'in_progress' ? '#fef9c3' : '#f8fafc',
+                                                                        color: project.status === 'completed' ? '#166534' : project.status === 'in_progress' ? '#a16207' : '#475569',
+                                                                        cursor: 'pointer'
+                                                                    }}
+                                                                >
+                                                                    <option value="pending">⚪ ยังไม่เริ่ม</option>
+                                                                    <option value="in_progress">🟡 กำลังดำเนินการ</option>
+                                                                    <option value="completed">🟢 เสร็จแล้ว</option>
+                                                                </select>
+                                                            </div>
                                                         </div>
                                                     ) : (
                                                         <>
-                                                            <h4>{stripActivityNumber(project.name)}</h4>
-                                                            <div className="sub-activity">
-                                                                <strong>กิจกรรมย่อย:</strong> {stripLeadingNumber(project.subActivity)}
-                                                            </div>
                                                             {project.relevantPolicies && project.relevantPolicies !== '-' && (
                                                                 <div className="relevant-policies-box">
                                                                     {project.relevantPolicies}
@@ -740,14 +780,14 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                 .budget-detailed-list {
                     display: flex;
                     flex-direction: column;
-                    gap: 24px;
+                    gap: 16px;
                 }
                 .budget-group-card {
                     background: #ffffff;
                     border: 1px solid #e2e8f0;
-                    border-radius: 12px;
-                    padding: 24px;
-                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                    border-radius: 10px;
+                    padding: 16px;
+                    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05);
                 }
                 .group-title {
                     color: #059669;
@@ -759,9 +799,9 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                 }
                 .project-item {
                     background: #f8fafc;
-                    border-radius: 10px;
-                    padding: 20px;
-                    margin-bottom: 20px;
+                    border-radius: 8px;
+                    padding: 12px;
+                    margin-bottom: 12px;
                     border: 1px solid #e2e8f0;
                 }
                 .project-item:last-child {
@@ -771,8 +811,8 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                     display: flex;
                     justify-content: space-between;
                     align-items: flex-start;
-                    margin-bottom: 16px;
-                    gap: 20px;
+                    margin-bottom: 12px;
+                    gap: 16px;
                     flex-wrap: wrap;
                 }
                 .project-info {

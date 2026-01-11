@@ -136,7 +136,7 @@ body {
 .main-content {
   flex: 1;
   margin-left: 300px;
-  padding: 32px;
+  padding: 16px;
   background: var(--bg-cream);
   min-height: 100vh;
 }
@@ -1034,10 +1034,10 @@ body {
 /* Section Container Enhanced */
 .section-container {
   background: var(--bg-white);
-  border-radius: var(--radius-xl);
-  padding: 32px;
-  margin-bottom: 32px;
-  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-light);
 }
 
@@ -1055,13 +1055,13 @@ body {
   line-height: 1.5;
 }
 
-/* Presentation Cards - Larger & Clearer */
+/* Presentation Cards - Compact */
 .plain-card {
   background: var(--bg-white);
-  border-radius: var(--radius-lg);
-  padding: 28px;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1px solid var(--border-light);
   transition: var(--transition);
 }
