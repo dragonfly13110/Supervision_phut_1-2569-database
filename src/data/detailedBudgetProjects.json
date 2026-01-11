@@ -136,7 +136,17 @@
                 "result": "ดำเนินการอบรบเสร็จสิ้นแล้ว จำนวน 10 ราย ในวันที่ 19 ธ.ค.2568 ",
                 "problem": "-",
                 "solution": "-",
-                "status": "completed"
+                "status": "completed",
+                "images": [
+                    {
+                        "url": "https://res.cloudinary.com/djkxflrbw/image/upload/v1768118138/600282108_846084841397262_113791717431116155_n_i0wh94.jpg",
+                        "caption": ""
+                    },
+                    {
+                        "url": "https://res.cloudinary.com/djkxflrbw/image/upload/v1768118147/601346073_846084934730586_8380142300928899672_n_c27vt8.jpg",
+                        "caption": ""
+                    }
+                ]
             }
         ]
     },
@@ -153,7 +163,17 @@
                 "result": "ดำเนินการจัดเวทีเสร็จสิ้นแล้ว ในวันที่ 26 ธ.ค. 2568  จำนวน 31 ราย ณ แปลงใหญ่ผัก ต.คลองโยง",
                 "problem": "-",
                 "solution": "-",
-                "status": "completed"
+                "status": "completed",
+                "images": [
+                    {
+                        "url": "https://res.cloudinary.com/djkxflrbw/image/upload/v1768118021/603916770_851315074207572_702741577666618481_n_l907u6.jpg",
+                        "caption": ""
+                    },
+                    {
+                        "url": "https://res.cloudinary.com/djkxflrbw/image/upload/v1768118007/603783729_851315110874235_2108177156320191245_n_oms1g5.jpg",
+                        "caption": ""
+                    }
+                ]
             },
             {
                 "name": "กิจกรรม: 4.1 กิจกรรมระบบส่งเสริมเกษตรแบบแปลงใหญ่เพื่อปรับเพิ่มผลิตภาพการผลิต",
