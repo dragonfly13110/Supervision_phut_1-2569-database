@@ -11,7 +11,7 @@ interface DetailedProject {
     result: string;
     problem: string;
     solution: string;
-    status?: 'pending' | 'in_progress' | 'completed';
+    status?: 'pending' | 'scheduled' | 'in_progress' | 'completed';
     images?: { url: string; caption?: string }[];
 }
 
