@@ -234,20 +234,20 @@ export function SectionBudget() {
 
     // Summary Card Component
     const SummaryCard = ({ title, budget, disbursed, color }: { title: string, budget: number, disbursed: number, color: string }) => (
-        <div style={{ background: color, padding: '12px 16px', borderRadius: '8px', minWidth: '180px', border: '1px solid rgba(0,0,0,0.1)' }}>
-            <div style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '8px', color: '#1e293b' }}>{title}</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '12px' }}>
+        <div style={{ background: color, padding: '18px 22px', borderRadius: '12px', minWidth: '220px', border: '1px solid rgba(0,0,0,0.1)' }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '12px', color: '#1e293b' }}>{title}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '18px' }}>
                 <div>
-                    <div style={{ fontSize: '0.75rem', color: '#475569' }}>งบประมาณ</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0f172a' }}>{budget.toLocaleString('th-TH')}</div>
+                    <div style={{ fontSize: '1rem', color: '#475569' }}>งบประมาณ</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#0f172a' }}>{budget.toLocaleString('th-TH')}</div>
                 </div>
                 <div>
-                    <div style={{ fontSize: '0.75rem', color: '#475569' }}>เบิกจ่าย</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0f172a' }}>{disbursed.toLocaleString('th-TH')}</div>
+                    <div style={{ fontSize: '1rem', color: '#475569' }}>เบิกจ่าย</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#0f172a' }}>{disbursed.toLocaleString('th-TH')}</div>
                 </div>
                 <div>
-                    <div style={{ fontSize: '0.75rem', color: '#475569' }}>%</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0f172a' }}>{budget > 0 ? ((disbursed / budget) * 100).toFixed(1) : '0'}%</div>
+                    <div style={{ fontSize: '1rem', color: '#475569' }}>%</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#0f172a' }}>{budget > 0 ? ((disbursed / budget) * 100).toFixed(1) : '0'}%</div>
                 </div>
             </div>
         </div>
@@ -260,38 +260,38 @@ export function SectionBudget() {
         onBudgetChange: (v: string) => void,
         onDisbursedChange: (v: string) => void
     }) => (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '12px' }}>
-            <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
-                <div style={{ fontSize: '0.8rem', color: '#166534', marginBottom: '4px' }}>งบประมาณ (บาท)</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '10px' }}>
+            <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
+                <div style={{ fontSize: '0.85rem', color: '#166534', marginBottom: '4px' }}>งบประมาณ (บาท)</div>
                 {isEditing ? (
                     <input
                         type="text"
                         value={budget}
                         onChange={e => onBudgetChange(e.target.value)}
-                        style={{ width: '100%', padding: '8px', border: '1px solid #bbf7d0', borderRadius: '6px', fontSize: '1rem', fontWeight: 600 }}
+                        style={{ width: '100%', padding: '8px', border: '1px solid #bbf7d0', borderRadius: '6px', fontSize: '1.3rem', fontWeight: 600 }}
                         placeholder="0"
                     />
                 ) : (
-                    <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#15803d' }}>{formatNumber(budget)}</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#15803d' }}>{formatNumber(budget)}</div>
                 )}
             </div>
-            <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '8px', border: '1px solid #fcd34d' }}>
-                <div style={{ fontSize: '0.8rem', color: '#92400e', marginBottom: '4px' }}>เบิกจ่ายแล้ว (บาท)</div>
+            <div style={{ background: '#fef3c7', padding: '12px', borderRadius: '10px', border: '1px solid #fcd34d' }}>
+                <div style={{ fontSize: '0.85rem', color: '#92400e', marginBottom: '4px' }}>เบิกจ่ายแล้ว (บาท)</div>
                 {isEditing ? (
                     <input
                         type="text"
                         value={disbursed}
                         onChange={e => onDisbursedChange(e.target.value)}
-                        style={{ width: '100%', padding: '8px', border: '1px solid #fcd34d', borderRadius: '6px', fontSize: '1rem', fontWeight: 600 }}
+                        style={{ width: '100%', padding: '8px', border: '1px solid #fcd34d', borderRadius: '6px', fontSize: '1.3rem', fontWeight: 600 }}
                         placeholder="0"
                     />
                 ) : (
-                    <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#b45309' }}>{formatNumber(disbursed)}</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#b45309' }}>{formatNumber(disbursed)}</div>
                 )}
             </div>
-            <div style={{ background: '#ede9fe', padding: '12px', borderRadius: '8px', border: '1px solid #c4b5fd' }}>
-                <div style={{ fontSize: '0.8rem', color: '#5b21b6', marginBottom: '4px' }}>ร้อยละ</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#7c3aed' }}>
+            <div style={{ background: '#ede9fe', padding: '12px', borderRadius: '10px', border: '1px solid #c4b5fd' }}>
+                <div style={{ fontSize: '0.85rem', color: '#5b21b6', marginBottom: '4px' }}>ร้อยละ</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#7c3aed' }}>
                     {calculatePercentage(disbursed, budget)}
                 </div>
             </div>
@@ -302,27 +302,27 @@ export function SectionBudget() {
     const SectionSummary = ({ budget, disbursed }: { budget: number, disbursed: number }) => (
         <div style={{
             background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-            padding: '16px',
-            borderRadius: '8px',
-            marginTop: '16px',
+            padding: '14px 20px',
+            borderRadius: '10px',
+            marginTop: '14px',
             border: '2px solid #e2e8f0',
             display: 'flex',
             justifyContent: 'space-around',
             alignItems: 'center'
         }}>
             <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '4px' }}>รวมงบประมาณ</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#15803d' }}>{budget.toLocaleString('th-TH')} บาท</div>
+                <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '4px' }}>รวมงบประมาณ</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#15803d' }}>{budget.toLocaleString('th-TH')} บาท</div>
             </div>
-            <div style={{ width: '1px', height: '40px', background: '#cbd5e1' }}></div>
+            <div style={{ width: '2px', height: '45px', background: '#cbd5e1' }}></div>
             <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '4px' }}>รวมเบิกจ่าย</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#b45309' }}>{disbursed.toLocaleString('th-TH')} บาท</div>
+                <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '4px' }}>รวมเบิกจ่าย</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#b45309' }}>{disbursed.toLocaleString('th-TH')} บาท</div>
             </div>
-            <div style={{ width: '1px', height: '40px', background: '#cbd5e1' }}></div>
+            <div style={{ width: '2px', height: '45px', background: '#cbd5e1' }}></div>
             <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '4px' }}>ร้อยละ</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#7c3aed' }}>{budget > 0 ? ((disbursed / budget) * 100).toFixed(1) : '0'}%</div>
+                <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '4px' }}>ร้อยละ</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#7c3aed' }}>{budget > 0 ? ((disbursed / budget) * 100).toFixed(1) : '0'}%</div>
             </div>
         </div>
     )
@@ -428,36 +428,36 @@ export function SectionBudget() {
             {/* Grand Summary */}
             <div style={{
                 background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-                padding: '20px',
-                borderRadius: '12px',
-                marginBottom: '20px',
+                padding: '28px',
+                borderRadius: '16px',
+                marginBottom: '28px',
                 color: 'white'
             }}>
-                <div style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '16px', opacity: 0.9 }}>📊 สรุปภาพรวมทั้งหมด</div>
-                <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '16px' }}>
-                    <SummaryCard title="1.1 งบลงทุน" budget={investmentTotal.budget} disbursed={investmentTotal.disbursed} color="rgba(255,255,255,0.9)" />
-                    <SummaryCard title="1.2 งบดำเนินงาน" budget={operationTotal.budget} disbursed={operationTotal.disbursed} color="rgba(255,255,255,0.9)" />
-                    <SummaryCard title="1.3 งบโครงการฯ" budget={projectTotal.budget} disbursed={projectTotal.disbursed} color="rgba(255,255,255,0.9)" />
+                <div style={{ fontSize: '1.4rem', fontWeight: 600, marginBottom: '24px', opacity: 0.95 }}>📊 สรุปภาพรวมทั้งหมด</div>
+                <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '24px' }}>
+                    <SummaryCard title="1.1 งบลงทุน" budget={investmentTotal.budget} disbursed={investmentTotal.disbursed} color="rgba(255,255,255,0.95)" />
+                    <SummaryCard title="1.2 งบดำเนินงาน" budget={operationTotal.budget} disbursed={operationTotal.disbursed} color="rgba(255,255,255,0.95)" />
+                    <SummaryCard title="1.3 งบโครงการฯ" budget={projectTotal.budget} disbursed={projectTotal.disbursed} color="rgba(255,255,255,0.95)" />
                 </div>
                 <div style={{
-                    marginTop: '16px',
-                    paddingTop: '16px',
-                    borderTop: '1px solid rgba(255,255,255,0.3)',
+                    marginTop: '24px',
+                    paddingTop: '24px',
+                    borderTop: '2px solid rgba(255,255,255,0.3)',
                     display: 'flex',
                     justifyContent: 'center',
-                    gap: '40px'
+                    gap: '60px'
                 }}>
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>รวมงบประมาณทั้งหมด</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{grandTotal.budget.toLocaleString('th-TH')} บาท</div>
+                        <div style={{ fontSize: '1.15rem', opacity: 0.95 }}>รวมงบประมาณทั้งหมด</div>
+                        <div style={{ fontSize: '2.2rem', fontWeight: 700 }}>{grandTotal.budget.toLocaleString('th-TH')} บาท</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>รวมเบิกจ่ายทั้งหมด</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{grandTotal.disbursed.toLocaleString('th-TH')} บาท</div>
+                        <div style={{ fontSize: '1.15rem', opacity: 0.95 }}>รวมเบิกจ่ายทั้งหมด</div>
+                        <div style={{ fontSize: '2.2rem', fontWeight: 700 }}>{grandTotal.disbursed.toLocaleString('th-TH')} บาท</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>ร้อยละรวม</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{grandTotal.budget > 0 ? ((grandTotal.disbursed / grandTotal.budget) * 100).toFixed(1) : '0'}%</div>
+                        <div style={{ fontSize: '1.15rem', opacity: 0.95 }}>ร้อยละรวม</div>
+                        <div style={{ fontSize: '2.2rem', fontWeight: 700 }}>{grandTotal.budget > 0 ? ((grandTotal.disbursed / grandTotal.budget) * 100).toFixed(1) : '0'}%</div>
                     </div>
                 </div>
             </div>

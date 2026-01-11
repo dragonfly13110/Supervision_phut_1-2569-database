@@ -77,100 +77,64 @@ export function SectionStatusSummary() {
             </div>
 
             {/* Summary Cards */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                gap: '16px',
-                marginBottom: '24px'
-            }}>
+            <div className="summary-cards-grid" style={{ marginBottom: '24px' }}>
                 {/* Total */}
-                <div style={{
-                    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                    borderRadius: '12px',
-                    padding: '20px',
-                    border: '1px solid #cbd5e1'
-                }}>
-                    <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '8px' }}>
-                        <FaChartPie style={{ marginRight: '6px' }} /> กิจกรรมทั้งหมด
+                <div className="status-summary-card">
+                    <div className="label">
+                        <FaChartPie /> กิจกรรมทั้งหมด
                     </div>
-                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#1e293b' }}>
-                        {stats.total}
-                    </div>
+                    <div className="value">{stats.total}</div>
                 </div>
 
                 {/* Completed */}
-                <div style={{
-                    background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
-                    borderRadius: '12px',
-                    padding: '20px',
-                    border: '1px solid #86efac',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s',
-                    transform: filterStatus === 'completed' ? 'scale(1.02)' : 'scale(1)'
-                }} onClick={() => setFilterStatus(filterStatus === 'completed' ? 'all' : 'completed')}>
-                    <div style={{ fontSize: '0.9rem', color: '#166534', marginBottom: '8px' }}>
-                        <FaCheck style={{ marginRight: '6px' }} /> เสร็จแล้ว
+                <div
+                    className={`status-summary-card completed ${filterStatus === 'completed' ? 'active' : ''}`}
+                    onClick={() => setFilterStatus(filterStatus === 'completed' ? 'all' : 'completed')}
+                    style={{ cursor: 'pointer' }}
+                >
+                    <div className="label">
+                        <FaCheck /> เสร็จแล้ว
                     </div>
-                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#166534' }}>
-                        {stats.completed}
-                    </div>
-                    <div style={{ fontSize: '0.85rem', color: '#16a34a', marginTop: '4px' }}>
+                    <div className="value">{stats.completed}</div>
+                    <div style={{ fontSize: '0.8rem', marginTop: '4px', opacity: 0.85 }}>
                         {completionRate}% ของทั้งหมด
                     </div>
                 </div>
 
                 {/* In Progress */}
-                <div style={{
-                    background: 'linear-gradient(135deg, #fef9c3 0%, #fde047 100%)',
-                    borderRadius: '12px',
-                    padding: '20px',
-                    border: '1px solid #facc15',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s',
-                    transform: filterStatus === 'in_progress' ? 'scale(1.02)' : 'scale(1)'
-                }} onClick={() => setFilterStatus(filterStatus === 'in_progress' ? 'all' : 'in_progress')}>
-                    <div style={{ fontSize: '0.9rem', color: '#a16207', marginBottom: '8px' }}>
-                        <FaClock style={{ marginRight: '6px' }} /> กำลังดำเนินการ
+                <div
+                    className={`status-summary-card in-progress ${filterStatus === 'in_progress' ? 'active' : ''}`}
+                    onClick={() => setFilterStatus(filterStatus === 'in_progress' ? 'all' : 'in_progress')}
+                    style={{ cursor: 'pointer' }}
+                >
+                    <div className="label">
+                        <FaClock /> กำลังดำเนินการ
                     </div>
-                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#a16207' }}>
-                        {stats.inProgress}
-                    </div>
+                    <div className="value">{stats.inProgress}</div>
                 </div>
 
                 {/* Scheduled */}
-                <div style={{
-                    background: 'linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%)',
-                    borderRadius: '12px',
-                    padding: '20px',
-                    border: '1px solid #60a5fa',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s',
-                    transform: filterStatus === 'scheduled' ? 'scale(1.02)' : 'scale(1)'
-                }} onClick={() => setFilterStatus(filterStatus === 'scheduled' ? 'all' : 'scheduled')}>
-                    <div style={{ fontSize: '0.9rem', color: '#1e40af', marginBottom: '8px' }}>
-                        <FaCalendarAlt style={{ marginRight: '6px' }} /> กำหนดวันแล้ว
+                <div
+                    className={`status-summary-card scheduled ${filterStatus === 'scheduled' ? 'active' : ''}`}
+                    onClick={() => setFilterStatus(filterStatus === 'scheduled' ? 'all' : 'scheduled')}
+                    style={{ cursor: 'pointer' }}
+                >
+                    <div className="label">
+                        <FaCalendarAlt /> กำหนดวันแล้ว
                     </div>
-                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#1e40af' }}>
-                        {stats.scheduled}
-                    </div>
+                    <div className="value">{stats.scheduled}</div>
                 </div>
 
                 {/* Pending */}
-                <div style={{
-                    background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
-                    borderRadius: '12px',
-                    padding: '20px',
-                    border: '1px solid #cbd5e1',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s',
-                    transform: filterStatus === 'pending' ? 'scale(1.02)' : 'scale(1)'
-                }} onClick={() => setFilterStatus(filterStatus === 'pending' ? 'all' : 'pending')}>
-                    <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '8px' }}>
-                        <FaCircle style={{ marginRight: '6px' }} /> ยังไม่เริ่ม
+                <div
+                    className={`status-summary-card pending ${filterStatus === 'pending' ? 'active' : ''}`}
+                    onClick={() => setFilterStatus(filterStatus === 'pending' ? 'all' : 'pending')}
+                    style={{ cursor: 'pointer' }}
+                >
+                    <div className="label">
+                        <FaCircle /> ยังไม่เริ่ม
                     </div>
-                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#64748b' }}>
-                        {stats.pending}
-                    </div>
+                    <div className="value">{stats.pending}</div>
                 </div>
             </div>
 
@@ -207,11 +171,10 @@ export function SectionStatusSummary() {
             )}
 
             {/* Activities Table */}
-            <div style={{
+            <div className="responsive-table-wrapper" style={{
                 background: '#fff',
                 borderRadius: '12px',
-                border: '1px solid #e2e8f0',
-                overflow: 'hidden'
+                border: '1px solid #e2e8f0'
             }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
