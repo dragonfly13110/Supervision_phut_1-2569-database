@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { FiUsers, FiImage, FiEdit3, FiCopy, FiCheck, FiUploadCloud, FiSettings, FiX, FiPlus } from 'react-icons/fi'
+import { FiUsers, FiEdit3, FiCopy, FiCheck, FiUploadCloud, FiSettings, FiX, FiPlus } from 'react-icons/fi'
 import { groupReports } from '../data/assetData'
 
 // Helper function to get status color

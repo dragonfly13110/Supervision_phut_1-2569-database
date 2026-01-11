@@ -7,7 +7,7 @@ import { Sidebar } from './components/Sidebar'
 import { SectionBudget } from './components/SectionBudget'
 import { SectionAssets } from './components/SectionAssets'
 import { SectionEquipment } from './components/SectionEquipment'
-import { SectionPolicy } from './components/SectionPolicy'
+// import { SectionPolicy } from './components/SectionPolicy' // Unused
 import { SectionGroupReports } from './components/SectionGroupReports'
 import { SectionOther } from './components/SectionOther'
 import { SectionBudgetDetailed } from './components/SectionBudgetDetailed'
