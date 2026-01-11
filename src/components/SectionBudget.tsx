@@ -234,20 +234,20 @@ export function SectionBudget() {
 
     // Summary Card Component
     const SummaryCard = ({ title, budget, disbursed, color }: { title: string, budget: number, disbursed: number, color: string }) => (
-        <div style={{ background: color, padding: '12px 16px', borderRadius: '8px', color: 'white', minWidth: '180px' }}>
-            <div style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '4px' }}>{title}</div>
+        <div style={{ background: color, padding: '12px 16px', borderRadius: '8px', minWidth: '180px', border: '1px solid rgba(0,0,0,0.1)' }}>
+            <div style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '8px', color: '#1e293b' }}>{title}</div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '12px' }}>
                 <div>
-                    <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>งบประมาณ</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>{budget.toLocaleString('th-TH')}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#475569' }}>งบประมาณ</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0f172a' }}>{budget.toLocaleString('th-TH')}</div>
                 </div>
                 <div>
-                    <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>เบิกจ่าย</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>{disbursed.toLocaleString('th-TH')}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#475569' }}>เบิกจ่าย</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0f172a' }}>{disbursed.toLocaleString('th-TH')}</div>
                 </div>
                 <div>
-                    <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>%</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>{budget > 0 ? ((disbursed / budget) * 100).toFixed(1) : '0'}%</div>
+                    <div style={{ fontSize: '0.75rem', color: '#475569' }}>%</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0f172a' }}>{budget > 0 ? ((disbursed / budget) * 100).toFixed(1) : '0'}%</div>
                 </div>
             </div>
         </div>
@@ -435,9 +435,9 @@ export function SectionBudget() {
             }}>
                 <div style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '16px', opacity: 0.9 }}>📊 สรุปภาพรวมทั้งหมด</div>
                 <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '16px' }}>
-                    <SummaryCard title="1.1 งบลงทุน" budget={investmentTotal.budget} disbursed={investmentTotal.disbursed} color="rgba(255,255,255,0.15)" />
-                    <SummaryCard title="1.2 งบดำเนินงาน" budget={operationTotal.budget} disbursed={operationTotal.disbursed} color="rgba(255,255,255,0.15)" />
-                    <SummaryCard title="1.3 งบโครงการฯ" budget={projectTotal.budget} disbursed={projectTotal.disbursed} color="rgba(255,255,255,0.15)" />
+                    <SummaryCard title="1.1 งบลงทุน" budget={investmentTotal.budget} disbursed={investmentTotal.disbursed} color="rgba(255,255,255,0.9)" />
+                    <SummaryCard title="1.2 งบดำเนินงาน" budget={operationTotal.budget} disbursed={operationTotal.disbursed} color="rgba(255,255,255,0.9)" />
+                    <SummaryCard title="1.3 งบโครงการฯ" budget={projectTotal.budget} disbursed={projectTotal.disbursed} color="rgba(255,255,255,0.9)" />
                 </div>
                 <div style={{
                     marginTop: '16px',
