@@ -73,6 +73,9 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
     const [newImageUrl, setNewImageUrl] = useState('');
     const [newImageCaption, setNewImageCaption] = useState('');
 
+    // Lightbox State for viewing images in full screen
+    const [lightboxImage, setLightboxImage] = useState<{ url: string; caption?: string } | null>(null);
+
     // Load from localStorage on mount
     useEffect(() => {
         const savedData = localStorage.getItem('detailedBudgetProjects');
@@ -268,6 +271,80 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
 
     return (
         <div className="section-container fade-in">
+
+            {/* Lightbox Modal */}
+            {lightboxImage && (
+                <div
+                    className="lightbox-overlay"
+                    onClick={() => setLightboxImage(null)}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.9)',
+                        zIndex: 2000,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        padding: '20px',
+                        cursor: 'pointer'
+                    }}
+                >
+                    <button
+                        onClick={() => setLightboxImage(null)}
+                        style={{
+                            position: 'absolute',
+                            top: '20px',
+                            right: '20px',
+                            background: 'rgba(255, 255, 255, 0.2)',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '48px',
+                            height: '48px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            color: 'white',
+                            fontSize: '24px',
+                            transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)')}
+                    >
+                        <FaTimes />
+                    </button>
+                    <img
+                        src={lightboxImage.url}
+                        alt={lightboxImage.caption || 'Full size image'}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            maxWidth: '90vw',
+                            maxHeight: '85vh',
+                            objectFit: 'contain',
+                            borderRadius: '12px',
+                            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+                            cursor: 'default'
+                        }}
+                    />
+                    {lightboxImage.caption && (
+                        <div
+                            style={{
+                                marginTop: '16px',
+                                color: 'white',
+                                fontSize: '1.1rem',
+                                textAlign: 'center',
+                                maxWidth: '80vw'
+                            }}
+                        >
+                            {lightboxImage.caption}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Image Modal */}
             {imageModal && (
@@ -721,30 +798,103 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                     </div>
 
                                                     {project.images && project.images.length > 0 ? (
-                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px' }}>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
                                                             {project.images.map((img, imgIdx) => (
-                                                                <div key={imgIdx} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-                                                                    <div style={{ aspectRatio: '4/3', overflow: 'hidden' }}>
-                                                                        <img src={img.url} alt={img.caption || 'Project Image'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                                <div
+                                                                    key={imgIdx}
+                                                                    style={{
+                                                                        position: 'relative',
+                                                                        borderRadius: '12px',
+                                                                        overflow: 'hidden',
+                                                                        border: '1px solid #e2e8f0',
+                                                                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                                                                        transition: 'transform 0.2s, box-shadow 0.2s',
+                                                                        cursor: isEditing ? 'default' : 'pointer'
+                                                                    }}
+                                                                    onClick={() => !isEditing && setLightboxImage(img)}
+                                                                    onMouseEnter={(e) => {
+                                                                        if (!isEditing) {
+                                                                            e.currentTarget.style.transform = 'scale(1.02)';
+                                                                            e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15)';
+                                                                        }
+                                                                    }}
+                                                                    onMouseLeave={(e) => {
+                                                                        e.currentTarget.style.transform = 'scale(1)';
+                                                                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)';
+                                                                    }}
+                                                                >
+                                                                    <div style={{ aspectRatio: '16/10', overflow: 'hidden' }}>
+                                                                        <img
+                                                                            src={img.url}
+                                                                            alt={img.caption || 'Project Image'}
+                                                                            style={{
+                                                                                width: '100%',
+                                                                                height: '100%',
+                                                                                objectFit: 'cover',
+                                                                                transition: 'transform 0.3s'
+                                                                            }}
+                                                                        />
                                                                     </div>
                                                                     {img.caption && (
-                                                                        <div style={{ padding: '6px 8px', fontSize: '12px', color: '#64748b', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+                                                                        <div style={{
+                                                                            padding: '10px 12px',
+                                                                            fontSize: '0.9rem',
+                                                                            color: '#475569',
+                                                                            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                                                                            borderTop: '1px solid #e2e8f0'
+                                                                        }}>
                                                                             {img.caption}
+                                                                        </div>
+                                                                    )}
+                                                                    {!isEditing && (
+                                                                        <div style={{
+                                                                            position: 'absolute',
+                                                                            bottom: img.caption ? '40px' : '8px',
+                                                                            right: '8px',
+                                                                            background: 'rgba(0, 0, 0, 0.6)',
+                                                                            color: 'white',
+                                                                            padding: '4px 8px',
+                                                                            borderRadius: '4px',
+                                                                            fontSize: '0.75rem',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            gap: '4px',
+                                                                            opacity: 0.8
+                                                                        }}>
+                                                                            🔍 คลิกเพื่อขยาย
                                                                         </div>
                                                                     )}
                                                                     {isEditing && (
                                                                         <button
-                                                                            onClick={() => handleRemoveImage(group.id, index, imgIdx)}
-                                                                            style={{ position: 'absolute', top: '4px', right: '4px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleRemoveImage(group.id, index, imgIdx);
+                                                                            }}
+                                                                            style={{
+                                                                                position: 'absolute',
+                                                                                top: '8px',
+                                                                                right: '8px',
+                                                                                background: '#ef4444',
+                                                                                color: 'white',
+                                                                                border: 'none',
+                                                                                borderRadius: '50%',
+                                                                                width: '32px',
+                                                                                height: '32px',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                cursor: 'pointer',
+                                                                                boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)'
+                                                                            }}
                                                                         >
-                                                                            <FaTimes size={12} />
+                                                                            <FaTimes size={14} />
                                                                         </button>
                                                                     )}
                                                                 </div>
                                                             ))}
                                                         </div>
                                                     ) : (
-                                                        <div style={{ fontSize: '0.9rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                                                        <div style={{ fontSize: '0.95rem', color: '#94a3b8', fontStyle: 'italic', padding: '20px', textAlign: 'center', background: '#f8fafc', borderRadius: '8px' }}>
                                                             {isEditing ? 'กด "เพิ่มรูปภาพ" เพื่อใส่รูปประกอบ' : 'ไม่มีรูปภาพประกอบ'}
                                                         </div>
                                                     )}
