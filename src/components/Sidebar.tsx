@@ -1,7 +1,8 @@
 import { useRef, useEffect, useState } from 'react'
-import { FiDollarSign, FiFileText, FiUsers, FiChevronDown, FiChevronsLeft, FiChevronsRight, FiChevronUp, FiChevronDown as FiScrollDown, FiEdit2, FiSave, FiX } from 'react-icons/fi'
+import { FiDollarSign, FiUsers, FiChevronDown, FiChevronsLeft, FiChevronsRight, FiChevronUp, FiChevronDown as FiScrollDown, FiEdit2, FiX } from 'react-icons/fi'
+import { FaGithub } from 'react-icons/fa'
 import { TbReportMoney } from "react-icons/tb";
-import { policyProjects, detailedBudgetProjects } from '../data/assetData'
+import { detailedBudgetProjects } from '../data/assetData'
 
 interface SidebarProps {
     sidebarOpen: boolean
@@ -43,10 +44,83 @@ export function Sidebar({ sidebarOpen, activeSection, expandedNav, onToggleNav, 
         setProjects(newProjects)
     }
 
-    const handleSaveOrder = () => {
-        console.log('Saved Order:', JSON.stringify(projects, null, 4))
-        alert('บันทึกลำดับเรียบร้อย! (ตรวจสอบใน Console สำหรับ JSON ใหม่)')
-        setIsEditMode(false)
+    // GitHub Config
+    const [isSaving, setIsSaving] = useState(false)
+    const [githubConfig] = useState({
+        owner: localStorage.getItem('gh_owner') || 'dragonfly13110',
+        repo: localStorage.getItem('gh_repo') || 'Supervision_phut_1-2569',
+        token: localStorage.getItem('gh_token') || '',
+        path: 'src/data/detailedBudgetProjects.json'
+    });
+
+    const handleSaveToGitHub = async () => {
+        if (!githubConfig.token) {
+            alert('กรุณาตั้งค่า GitHub Token ก่อน (ไปที่ "ส่วนที่ 2" แล้วกดปุ่มฟันเฟืองตั้งค่า)')
+            return
+        }
+
+        setIsSaving(true)
+        try {
+            // 1. Get current file SHA
+            const apiUrl = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.path}`;
+            const getRes = await fetch(apiUrl, {
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+
+            let sha = undefined;
+
+            if (getRes.status === 200) {
+                const fileData = await getRes.json();
+                sha = fileData.sha;
+            } else if (getRes.status === 404) {
+                // File doesn't exist yet
+            } else if (getRes.status === 401) {
+                throw new Error('Token ไม่ถูกต้อง (401 Unauthorized)');
+            } else {
+                throw new Error(`ดึงข้อมูลไฟล์ไม่สำเร็จ (${getRes.status}: ${getRes.statusText})`);
+            }
+
+            // 2. Update file
+            const jsonString = JSON.stringify(projects, null, 4);
+            const content = btoa(unescape(encodeURIComponent(jsonString)));
+
+            const body: any = {
+                message: 'Update project order via Sidebar',
+                content: content
+            };
+            if (sha) {
+                body.sha = sha;
+            }
+
+            const putRes = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (!putRes.ok) {
+                if (putRes.status === 401) throw new Error('Token ไม่ถูกต้อง หรือไม่มีสิทธิ์เขียนไฟล์');
+                if (putRes.status === 404) throw new Error('ไม่พบ Repository หรือ Path ที่ระบุ');
+                throw new Error(`บันทึกไม่สำเร็จ (${putRes.status}: ${putRes.statusText})`);
+            }
+
+            alert('บันทึกลำดับไปยัง GitHub เรียบร้อยแล้ว!');
+            localStorage.setItem('detailedBudgetProjects', JSON.stringify(projects)); // Sync local
+            setIsEditMode(false);
+
+        } catch (error) {
+            console.error(error);
+            alert('เกิดข้อผิดพลาด: ' + error);
+        } finally {
+            setIsSaving(false)
+        }
     }
 
     const handleCancelOrder = () => {
@@ -164,11 +238,12 @@ export function Sidebar({ sidebarOpen, activeSection, expandedNav, onToggleNav, 
                         {isEditMode ? (
                             <div className="sidebar-actions" onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: '5px', marginLeft: 'auto', marginRight: '5px' }}>
                                 <button
-                                    onClick={handleSaveOrder}
-                                    style={{ background: 'none', border: 'none', color: '#4ade80', cursor: 'pointer', padding: '2px' }}
-                                    title="บันทึก"
+                                    onClick={handleSaveToGitHub}
+                                    disabled={isSaving}
+                                    style={{ background: 'none', border: 'none', color: '#4ade80', cursor: isSaving ? 'wait' : 'pointer', padding: '2px', display: 'flex', alignItems: 'center', gap: '3px' }}
+                                    title="บันทึกขึ้น GitHub"
                                 >
-                                    <FiSave />
+                                    <FaGithub /> {isSaving ? '...' : ''}
                                 </button>
                                 <button
                                     onClick={handleCancelOrder}
@@ -200,7 +275,6 @@ export function Sidebar({ sidebarOpen, activeSection, expandedNav, onToggleNav, 
                                     title={project.title}
                                     style={{
                                         fontSize: '0.85rem',
-                                        lineHeight: '1.3',
                                         lineHeight: '1.3',
                                         padding: '8px 12px 8px 12px',
                                         display: 'flex',
