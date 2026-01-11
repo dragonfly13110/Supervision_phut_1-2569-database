@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import detailedBudgetProjectsData from '../data/detailedBudgetProjects.json';
-import { FaCheck, FaClock, FaCircle, FaFilter, FaChartPie } from 'react-icons/fa';
+import { FaCheck, FaClock, FaCircle, FaFilter, FaChartPie, FaCalendarAlt } from 'react-icons/fa';
 
 interface DetailedProject {
     name: string;
@@ -11,7 +11,7 @@ interface DetailedProject {
     result: string;
     problem: string;
     solution: string;
-    status?: 'pending' | 'in_progress' | 'completed';
+    status?: 'pending' | 'in_progress' | 'completed' | 'scheduled';
     images?: { url: string; caption?: string }[];
 }
 
@@ -59,6 +59,7 @@ export function SectionStatusSummary() {
         total: allProjects.length,
         completed: allProjects.filter(p => p.status === 'completed').length,
         inProgress: allProjects.filter(p => p.status === 'in_progress').length,
+        scheduled: allProjects.filter(p => p.status === 'scheduled').length,
         pending: allProjects.filter(p => !p.status || p.status === 'pending').length
     };
 
@@ -78,7 +79,7 @@ export function SectionStatusSummary() {
             {/* Summary Cards */}
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
                 gap: '16px',
                 marginBottom: '24px'
             }}>
@@ -136,6 +137,24 @@ export function SectionStatusSummary() {
                     </div>
                 </div>
 
+                {/* Scheduled */}
+                <div style={{
+                    background: 'linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    border: '1px solid #60a5fa',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s',
+                    transform: filterStatus === 'scheduled' ? 'scale(1.02)' : 'scale(1)'
+                }} onClick={() => setFilterStatus(filterStatus === 'scheduled' ? 'all' : 'scheduled')}>
+                    <div style={{ fontSize: '0.9rem', color: '#1e40af', marginBottom: '8px' }}>
+                        <FaCalendarAlt style={{ marginRight: '6px' }} /> กำหนดวันแล้ว
+                    </div>
+                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#1e40af' }}>
+                        {stats.scheduled}
+                    </div>
+                </div>
+
                 {/* Pending */}
                 <div style={{
                     background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
@@ -169,7 +188,7 @@ export function SectionStatusSummary() {
                     color: '#475569'
                 }}>
                     <FaFilter size={12} />
-                    กำลังแสดง: {filterStatus === 'completed' ? 'เสร็จแล้ว' : filterStatus === 'in_progress' ? 'กำลังดำเนินการ' : 'ยังไม่เริ่ม'}
+                    กำลังแสดง: {filterStatus === 'completed' ? 'เสร็จแล้ว' : filterStatus === 'in_progress' ? 'กำลังดำเนินการ' : filterStatus === 'scheduled' ? 'กำหนดวันแล้ว' : 'ยังไม่เริ่ม'}
                     <button
                         onClick={() => setFilterStatus('all')}
                         style={{
@@ -238,13 +257,14 @@ export function SectionStatusSummary() {
                                         borderRadius: '20px',
                                         fontSize: '0.85rem',
                                         fontWeight: 500,
-                                        background: project.status === 'completed' ? '#dcfce7' : project.status === 'in_progress' ? '#fef9c3' : '#f1f5f9',
-                                        color: project.status === 'completed' ? '#166534' : project.status === 'in_progress' ? '#a16207' : '#64748b',
-                                        border: `1px solid ${project.status === 'completed' ? '#bbf7d0' : project.status === 'in_progress' ? '#fde047' : '#e2e8f0'}`
+                                        background: project.status === 'completed' ? '#dcfce7' : project.status === 'in_progress' ? '#fef9c3' : project.status === 'scheduled' ? '#dbeafe' : '#f1f5f9',
+                                        color: project.status === 'completed' ? '#166534' : project.status === 'in_progress' ? '#a16207' : project.status === 'scheduled' ? '#1e40af' : '#64748b',
+                                        border: `1px solid ${project.status === 'completed' ? '#bbf7d0' : project.status === 'in_progress' ? '#fde047' : project.status === 'scheduled' ? '#60a5fa' : '#e2e8f0'}`
                                     }}>
                                         {project.status === 'completed' ? <><FaCheck size={12} /> เสร็จแล้ว</> :
                                             project.status === 'in_progress' ? <><FaClock size={12} /> กำลังดำเนินการ</> :
-                                                <><FaCircle size={10} /> ยังไม่เริ่ม</>}
+                                                project.status === 'scheduled' ? <><FaCalendarAlt size={12} /> กำหนดวันแล้ว</> :
+                                                    <><FaCircle size={10} /> ยังไม่เริ่ม</>}
                                     </span>
                                 </td>
                             </tr>

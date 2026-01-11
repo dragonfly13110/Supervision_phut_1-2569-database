@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import detailedBudgetProjectsData from '../data/detailedBudgetProjects.json';
-import { FaEdit, FaSave, FaChartLine, FaExclamationTriangle, FaLightbulb, FaGithub, FaCog, FaImage, FaPlus, FaTimes, FaChevronDown, FaChevronRight, FaTrash, FaCheck, FaClock, FaCircle } from 'react-icons/fa';
+import { FaEdit, FaSave, FaChartLine, FaExclamationTriangle, FaLightbulb, FaGithub, FaCog, FaImage, FaPlus, FaTimes, FaChevronDown, FaChevronRight, FaTrash, FaCheck, FaClock, FaCircle, FaCalendarAlt } from 'react-icons/fa';
 
 interface DetailedProject {
     name: string;
@@ -615,13 +615,14 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                         borderRadius: '12px',
                                                         fontSize: '0.75rem',
                                                         fontWeight: 500,
-                                                        background: project.status === 'completed' ? '#dcfce7' : project.status === 'in_progress' ? '#fef9c3' : '#f1f5f9',
-                                                        color: project.status === 'completed' ? '#166534' : project.status === 'in_progress' ? '#a16207' : '#64748b',
-                                                        border: `1px solid ${project.status === 'completed' ? '#bbf7d0' : project.status === 'in_progress' ? '#fde047' : '#e2e8f0'}`
+                                                        background: project.status === 'completed' ? '#dcfce7' : project.status === 'in_progress' ? '#fef9c3' : project.status === 'scheduled' ? '#dbeafe' : '#f1f5f9',
+                                                        color: project.status === 'completed' ? '#166534' : project.status === 'in_progress' ? '#a16207' : project.status === 'scheduled' ? '#1e40af' : '#64748b',
+                                                        border: `1px solid ${project.status === 'completed' ? '#bbf7d0' : project.status === 'in_progress' ? '#fde047' : project.status === 'scheduled' ? '#60a5fa' : '#e2e8f0'}`
                                                     }}>
                                                         {project.status === 'completed' ? <><FaCheck size={10} /> เสร็จแล้ว</> :
                                                             project.status === 'in_progress' ? <><FaClock size={10} /> กำลังดำเนินการ</> :
-                                                                <><FaCircle size={8} /> ยังไม่เริ่ม</>}
+                                                                project.status === 'scheduled' ? <><FaCalendarAlt size={10} /> กำหนดวันแล้ว</> :
+                                                                    <><FaCircle size={8} /> ยังไม่เริ่ม</>}
                                                     </span>
                                                 </div>
                                                 <div style={{
@@ -678,12 +679,13 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                                         border: '1px solid #cbd5e1',
                                                                         borderRadius: '6px',
                                                                         fontSize: '0.9rem',
-                                                                        background: project.status === 'completed' ? '#dcfce7' : project.status === 'in_progress' ? '#fef9c3' : '#f8fafc',
-                                                                        color: project.status === 'completed' ? '#166534' : project.status === 'in_progress' ? '#a16207' : '#475569',
+                                                                        background: project.status === 'completed' ? '#dcfce7' : project.status === 'in_progress' ? '#fef9c3' : project.status === 'scheduled' ? '#dbeafe' : '#f8fafc',
+                                                                        color: project.status === 'completed' ? '#166534' : project.status === 'in_progress' ? '#a16207' : project.status === 'scheduled' ? '#1e40af' : '#475569',
                                                                         cursor: 'pointer'
                                                                     }}
                                                                 >
                                                                     <option value="pending">⚪ ยังไม่เริ่ม</option>
+                                                                    <option value="scheduled">🗓️ กำหนดวันแล้ว</option>
                                                                     <option value="in_progress">🟡 กำลังดำเนินการ</option>
                                                                     <option value="completed">🟢 เสร็จแล้ว</option>
                                                                 </select>
