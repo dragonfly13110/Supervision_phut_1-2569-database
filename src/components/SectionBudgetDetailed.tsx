@@ -37,7 +37,7 @@ const stripActivityNumber = (name: string): string => {
 };
 
 export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedProps) {
-    const [budgetGroups, setBudgetGroups] = useState<BudgetGroup[]>(detailedBudgetProjectsData);
+    const [budgetGroups, setBudgetGroups] = useState<BudgetGroup[]>(detailedBudgetProjectsData as BudgetGroup[]);
     const [isEditing, setIsEditing] = useState(false);
     const [showGithubSettings, setShowGithubSettings] = useState(false);
     const [showAdvanced, setShowAdvanced] = useState(false);
