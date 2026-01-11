@@ -549,15 +549,15 @@ body {
 }
 
 .equipment-number {
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-dark) 100%);
   color: var(--primary-dark);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 22px;
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -567,10 +567,10 @@ body {
 }
 
 .equipment-name {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 22px;
+  font-weight: 600;
   color: var(--text-dark);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   line-height: 1.4;
 }
 
@@ -581,10 +581,10 @@ body {
 }
 
 .status-badge {
-  font-size: 11px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: 500;
+  font-size: 18px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
 }
 
 .status-badge.good {

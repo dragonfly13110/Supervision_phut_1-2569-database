@@ -249,9 +249,9 @@ export function SectionAssets() {
                             onClick={addAsset}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: '6px',
-                                padding: '8px 16px', background: '#ecfdf5', color: '#059669',
+                                padding: '10px 20px', background: '#ecfdf5', color: '#059669',
                                 border: '1px solid #a7f3d0', borderRadius: '8px', cursor: 'pointer',
-                                fontSize: '0.9rem', fontWeight: 500
+                                fontSize: '1.1rem', fontWeight: 500
                             }}
                         >
                             <FiPlus /> เพิ่มรายการ
@@ -290,7 +290,7 @@ export function SectionAssets() {
                                         ) : (
                                             <div className="equipment-name">{asset.name}</div>
                                         )}
-                                        <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+                                        <div style={{ fontSize: '20px', color: '#666', marginBottom: '10px' }}>
                                             {isEditing ? (
                                                 <div style={{ display: 'flex', gap: '8px' }}>
                                                     <input
@@ -332,7 +332,7 @@ export function SectionAssets() {
                                 {isEditing && (
                                     <div style={{ marginLeft: '44px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         <div>
-                                            <label style={{ fontSize: '12px', color: '#666' }}>ปัญหา:</label>
+                                            <label style={{ fontSize: '18px', color: '#666' }}>ปัญหา:</label>
                                             <input
                                                 type="text"
                                                 value={asset.problem}
@@ -341,7 +341,7 @@ export function SectionAssets() {
                                             />
                                         </div>
                                         <div>
-                                            <label style={{ fontSize: '12px', color: '#666' }}>แนวทางแก้ไข:</label>
+                                            <label style={{ fontSize: '18px', color: '#666' }}>แนวทางแก้ไข:</label>
                                             <input
                                                 type="text"
                                                 value={asset.solution}
@@ -352,8 +352,8 @@ export function SectionAssets() {
                                     </div>
                                 )}
                                 {!isEditing && asset.problem !== '-' && (
-                                    <div style={{ marginLeft: '44px', fontSize: '13px', background: '#fef3c7', padding: '8px 12px', borderRadius: '6px', borderLeft: '3px solid #f59e0b' }}>
-                                        <div style={{ color: '#92400e', marginBottom: '4px' }}><strong>ปัญหา:</strong> {asset.problem}</div>
+                                    <div style={{ marginLeft: '56px', fontSize: '20px', background: '#fef3c7', padding: '14px 18px', borderRadius: '10px', borderLeft: '5px solid #f59e0b' }}>
+                                        <div style={{ color: '#92400e', marginBottom: '6px' }}><strong>ปัญหา:</strong> {asset.problem}</div>
                                         <div style={{ color: '#166534' }}><strong>แนวทางแก้ไข:</strong> {asset.solution}</div>
                                     </div>
                                 )}
