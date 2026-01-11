@@ -477,7 +477,6 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                         <div className="projects-list">
                             {group.projects.map((project, index) => {
                                 const isExpanded = isProjectExpanded(group.id, index);
-                                const hasMultipleProjects = group.projects.length > 1;
                                 return (
                                     <div key={index} className="project-item" style={{ position: 'relative' }}>
                                         {/* Delete Project Button */}
@@ -496,56 +495,55 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                             </button>
                                         )}
                                         {/* Collapsible Header */}
-                                        {hasMultipleProjects && (
-                                            <div
-                                                className="project-collapse-header"
-                                                onClick={() => toggleProjectCollapse(group.id, index)}
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '10px',
-                                                    padding: '12px 16px',
-                                                    background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
-                                                    borderRadius: '8px',
-                                                    marginBottom: isExpanded ? '16px' : '0',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.2s ease',
-                                                    border: '1px solid #d1fae5'
-                                                }}
-                                            >
-                                                <span style={{ color: '#059669', fontSize: '14px' }}>
-                                                    {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
-                                                </span>
-                                                <div style={{ flex: 1 }}>
-                                                    <div style={{
-                                                        fontWeight: 600,
-                                                        color: '#065f46',
-                                                        fontSize: '1rem',
-                                                        marginBottom: '4px'
-                                                    }}>
-                                                        กิจกรรมที่ {index + 1}: {stripActivityNumber(project.name)}
-                                                    </div>
-                                                    <div style={{
-                                                        fontSize: '0.85rem',
-                                                        color: '#475569',
-                                                        fontWeight: 400
-                                                    }}>
-                                                        📋 {stripLeadingNumber(project.subActivity)}
-                                                    </div>
-                                                </div>
-                                                <span style={{
-                                                    fontSize: '0.85rem',
-                                                    color: '#10b981',
-                                                    fontWeight: 500,
-                                                    whiteSpace: 'nowrap'
+                                        {/* Collapsible Header - Show for all projects */}
+                                        <div
+                                            className="project-collapse-header"
+                                            onClick={() => toggleProjectCollapse(group.id, index)}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '10px',
+                                                padding: '12px 16px',
+                                                background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
+                                                borderRadius: '8px',
+                                                marginBottom: isExpanded ? '16px' : '0',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s ease',
+                                                border: '1px solid #d1fae5'
+                                            }}
+                                        >
+                                            <span style={{ color: '#059669', fontSize: '14px' }}>
+                                                {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
+                                            </span>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{
+                                                    fontWeight: 600,
+                                                    color: '#065f46',
+                                                    fontSize: '1rem',
+                                                    marginBottom: '4px'
                                                 }}>
-                                                    {project.budget}
-                                                </span>
+                                                    กิจกรรมที่ {index + 1}: {stripActivityNumber(project.name)}
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '0.85rem',
+                                                    color: '#475569',
+                                                    fontWeight: 400
+                                                }}>
+                                                    📋 {stripLeadingNumber(project.subActivity)}
+                                                </div>
                                             </div>
-                                        )}
+                                            <span style={{
+                                                fontSize: '0.85rem',
+                                                color: '#10b981',
+                                                fontWeight: 500,
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                {project.budget}
+                                            </span>
+                                        </div>
 
                                         {/* Collapsible Content */}
-                                        <div style={{ display: (hasMultipleProjects && !isExpanded) ? 'none' : 'block' }}>
+                                        <div style={{ display: !isExpanded ? 'none' : 'block' }}>
                                             <div className="project-header">
                                                 <div className="project-info">
                                                     {isEditing ? (
