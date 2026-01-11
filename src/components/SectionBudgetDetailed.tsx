@@ -324,7 +324,8 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                         style={{
                             maxWidth: '90vw',
                             maxHeight: '85vh',
-                            objectFit: 'contain',
+                            width: 'auto',
+                            height: 'auto',
                             borderRadius: '12px',
                             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
                             cursor: 'default'
