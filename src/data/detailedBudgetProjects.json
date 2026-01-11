@@ -255,14 +255,15 @@
         "title": "10. งบจังหวัดฯ",
         "projects": [
             {
-                "name": "โครงการ 1 (รอระบุ)",
-                "subActivity": "-",
+                "name": "\"โครงการพัฒนานครปฐมให้เป็นเมืองอัจฉริยะที่มีอัตลักษณ์ด้านแปรรูปด้วยนวัตกรรมและเทคโนโลยี รองรับการท่องเที่ยวเชิงอาหารและวัฒนธรรม\"",
+                "subActivity": "โครงการ \"นครปฐมการันตี\" (Nakhonpathom Guarantee)",
                 "relevantPolicies": "-",
                 "target": "-",
                 "budget": "-",
                 "result": "-",
                 "problem": "-",
-                "solution": "-"
+                "solution": "-",
+                "status": "in_progress"
             },
             {
                 "name": "โครงการ 2 (รอระบุ)",
