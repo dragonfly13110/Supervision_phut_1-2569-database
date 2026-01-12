@@ -3297,6 +3297,10 @@ a:focus-visible {
   }
 }
 
+.spin {
+  animation: spin 1s linear infinite;
+}
+
 .lazy-image-error {
   position: absolute;
   inset: 0;

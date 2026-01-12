@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
-import { saveToDiskAndSync } from '../utils/sync'
-import { FiPackage, FiHome, FiEdit2, FiSave, FiPlus, FiTrash2 } from 'react-icons/fi'
-import { FaGithub, FaCog } from 'react-icons/fa'
-import generalAssetsJson from '../data/generalAssets.json'
+import { FiPackage, FiHome, FiEdit2, FiSave, FiPlus, FiTrash2, FiLoader, FiAlertTriangle } from 'react-icons/fi'
+import { fetchSheetData, updateSheetData } from '../utils/sheetsApi'
 
 interface Asset {
     id: number
@@ -17,23 +15,28 @@ interface Asset {
 
 export function SectionAssets() {
     const [isEditing, setIsEditing] = useState(false)
-    const [showGithubSettings, setShowGithubSettings] = useState(false)
-    const [showAdvanced, setShowAdvanced] = useState(false)
-    const [assets, setAssets] = useState<Asset[]>(() => {
-        const saved = localStorage.getItem('general_assets')
-        return saved ? JSON.parse(saved) : generalAssetsJson
-    })
-
-    const [githubConfig, setGithubConfig] = useState({
-        owner: localStorage.getItem('gh_owner') || 'dragonfly13110',
-        repo: localStorage.getItem('gh_repo') || 'Supervision_phut_1-2569',
-        token: localStorage.getItem('gh_token') || '',
-        path: 'src/data/generalAssets.json'
-    })
+    const [isLoading, setIsLoading] = useState(true)
+    const [isSaving, setIsSaving] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const [assets, setAssets] = useState<Asset[]>([])
 
     useEffect(() => {
-        localStorage.setItem('general_assets', JSON.stringify(assets))
-    }, [assets])
+        loadData()
+    }, [])
+
+    const loadData = async () => {
+        setIsLoading(true)
+        setError(null)
+        try {
+            const data = await fetchSheetData<Asset>('generalAssets')
+            setAssets(data)
+        } catch (err: any) {
+            setError(err.message || 'ไม่สามารถโหลดข้อมูลได้')
+            console.error('Error loading data:', err)
+        } finally {
+            setIsLoading(false)
+        }
+    }
 
     const handleChange = (id: number, field: keyof Asset, value: string) => {
         setAssets(prev => prev.map(asset =>
@@ -72,145 +75,47 @@ export function SectionAssets() {
         ))
     }
 
-    const handleSaveLocal = async () => {
+    const handleSave = async () => {
+        setIsSaving(true)
         try {
-            await saveToDiskAndSync('generalAssets.json', assets)
-            localStorage.setItem('general_assets', JSON.stringify(assets))
+            await updateSheetData('generalAssets', assets)
             setIsEditing(false)
-            alert('บันทึกข้อมูลลงเครื่องและซิงค์ไปยัง Google Sheets เรียบร้อยแล้ว')
-        } catch (error) {
-            console.error(error)
-            alert('บันทึกข้อมูลสำเร็จ แต่ซิงค์ไม่สำเร็จ (ดู Console)')
+            alert('บันทึกข้อมูลไปยัง Google Sheets เรียบร้อยแล้ว!')
+        } catch (err: any) {
+            console.error('Error saving:', err)
+            alert('เกิดข้อผิดพลาด: ' + (err.message || 'ไม่สามารถบันทึกได้'))
+        } finally {
+            setIsSaving(false)
         }
     }
 
-    const handleSaveToGitHub = async () => {
-        if (!githubConfig.owner || !githubConfig.repo || !githubConfig.token) {
-            setShowGithubSettings(true)
-            return
-        }
-
-        try {
-            const apiUrl = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.path}`
-            const getRes = await fetch(apiUrl, {
-                headers: {
-                    'Authorization': `token ${githubConfig.token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            })
-
-            let sha = undefined
-            if (getRes.status === 200) {
-                const fileData = await getRes.json()
-                sha = fileData.sha
-            } else if (getRes.status === 401) {
-                throw new Error('Token ไม่ถูกต้อง (401 Unauthorized)')
-            } else if (getRes.status !== 404) {
-                throw new Error(`ดึงข้อมูลไฟล์ไม่สำเร็จ (${getRes.status})`)
-            }
-
-            const jsonString = JSON.stringify(assets, null, 4)
-            const content = btoa(unescape(encodeURIComponent(jsonString)))
-
-            const body: any = {
-                message: 'Update general assets data via App',
-                content: content
-            }
-            if (sha) body.sha = sha
-
-            const putRes = await fetch(apiUrl, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `token ${githubConfig.token}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(body)
-            })
-
-            if (!putRes.ok) {
-                throw new Error(`บันทึกไม่สำเร็จ (${putRes.status})`)
-            }
-
-            alert('บันทึกข้อมูลไปยัง GitHub เรียบร้อยแล้ว!')
-            setIsEditing(false)
-        } catch (error) {
-            console.error(error)
-            alert('เกิดข้อผิดพลาด: ' + error)
-        }
+    if (isLoading) {
+        return (
+            <section className="section">
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '60px', gap: '12px' }}>
+                    <FiLoader className="spin" style={{ fontSize: '24px', color: '#3b82f6' }} />
+                    <span style={{ fontSize: '1.1rem', color: '#64748b' }}>กำลังโหลดข้อมูลจาก Google Sheets...</span>
+                </div>
+            </section>
+        )
     }
 
-    const saveGithubConfig = () => {
-        localStorage.setItem('gh_owner', githubConfig.owner)
-        localStorage.setItem('gh_repo', githubConfig.repo)
-        localStorage.setItem('gh_token', githubConfig.token)
-        setShowGithubSettings(false)
+    if (error) {
+        return (
+            <section className="section">
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px', gap: '16px' }}>
+                    <FiAlertTriangle style={{ fontSize: '48px', color: '#ef4444' }} />
+                    <span style={{ fontSize: '1.1rem', color: '#ef4444' }}>{error}</span>
+                    <button onClick={loadData} style={{ padding: '10px 20px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                        ลองใหม่
+                    </button>
+                </div>
+            </section>
+        )
     }
 
     return (
         <section className="section">
-            {/* GitHub Settings Modal */}
-            {showGithubSettings && (
-                <div className="modal-overlay" style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center'
-                }}>
-                    <div className="modal-content" style={{ background: 'white', padding: '24px', borderRadius: '12px', width: '400px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
-                        <h3 style={{ marginBottom: '16px', color: '#1e293b', fontSize: '1.25rem' }}>ตั้งค่า GitHub</h3>
-
-                        <div style={{ marginBottom: '16px' }}>
-                            <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.95rem', fontWeight: '500', color: '#334155' }}>
-                                Personal Access Token <span style={{ color: 'red' }}>*</span>
-                            </label>
-                            <input
-                                type="password"
-                                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '1rem' }}
-                                value={githubConfig.token}
-                                onChange={e => setGithubConfig({ ...githubConfig, token: e.target.value })}
-                                placeholder="ghp_xxxxxxxxxxxx"
-                            />
-                        </div>
-
-                        <div style={{ marginBottom: '16px' }}>
-                            <button
-                                onClick={() => setShowAdvanced(!showAdvanced)}
-                                style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}
-                            >
-                                {showAdvanced ? '▼ ซ่อนตั้งค่าขั้นสูง' : '▶ แสดงตั้งค่าขั้นสูง'}
-                            </button>
-                        </div>
-
-                        {showAdvanced && (
-                            <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
-                                <div style={{ marginBottom: '10px' }}>
-                                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', color: '#475569' }}>Owner:</label>
-                                    <input
-                                        type="text"
-                                        style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1' }}
-                                        value={githubConfig.owner}
-                                        onChange={e => setGithubConfig({ ...githubConfig, owner: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '0.85rem', color: '#475569' }}>Repo:</label>
-                                    <input
-                                        type="text"
-                                        style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #cbd5e1' }}
-                                        value={githubConfig.repo}
-                                        onChange={e => setGithubConfig({ ...githubConfig, repo: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                            <button onClick={() => setShowGithubSettings(false)} style={{ background: '#f1f5f9', color: '#475569', padding: '10px 20px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>ยกเลิก</button>
-                            <button onClick={saveGithubConfig} style={{ background: '#16a34a', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>บันทึก</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             <div className="section-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
                     <div className="section-icon"><FiPackage /></div>
@@ -220,23 +125,15 @@ export function SectionAssets() {
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                    <button
-                        className="edit-toggle-btn"
-                        style={{ background: '#475569' }}
-                        onClick={() => setShowGithubSettings(true)}
-                        title="ตั้งค่า GitHub"
-                    >
-                        <FaCog />
-                    </button>
                     {isEditing ? (
-                        <>
-                            <button className="edit-toggle-btn" onClick={handleSaveLocal} style={{ background: '#3b82f6' }}>
-                                <FiSave /> บันทึก (Local)
-                            </button>
-                            <button className="edit-toggle-btn" style={{ background: '#24292e' }} onClick={handleSaveToGitHub}>
-                                <FaGithub /> บันทึกขึ้น GitHub
-                            </button>
-                        </>
+                        <button
+                            className="edit-toggle-btn"
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            style={{ background: isSaving ? '#94a3b8' : '#16a34a' }}
+                        >
+                            {isSaving ? <><FiLoader className="spin" /> กำลังบันทึก...</> : <><FiSave /> บันทึก</>}
+                        </button>
                     ) : (
                         <button className="edit-toggle-btn" onClick={() => setIsEditing(true)}>
                             <FiEdit2 /> แก้ไขข้อมูล

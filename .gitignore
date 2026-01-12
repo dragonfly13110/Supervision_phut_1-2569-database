@@ -117,3 +117,8 @@ dist
 
 # Credentials
 scripts/credentials.json
+
+# Environment variables
+.env.local
+.env*.local
+.vercel

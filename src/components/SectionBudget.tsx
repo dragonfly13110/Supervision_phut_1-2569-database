@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { FiDollarSign, FiTrendingUp, FiPackage, FiEdit2, FiSave, FiBriefcase, FiPlus, FiTrash2 } from 'react-icons/fi'
+import { FiDollarSign, FiTrendingUp, FiPackage, FiEdit2, FiSave, FiBriefcase, FiPlus, FiTrash2, FiLoader, FiAlertTriangle } from 'react-icons/fi'
 import { FaGithub, FaCog } from 'react-icons/fa'
-import budgetDataJson from '../data/budgetData.json'
+import { fetchSheetData, updateSheetData } from '../utils/sheetsApi'
 
 interface BudgetItem {
     budget: string
@@ -55,11 +55,20 @@ const parseNum = (value: string): number => {
 
 export function SectionBudget() {
     const [isEditing, setIsEditing] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
+    const [isSaving, setIsSaving] = useState(false)
+    const [error, setError] = useState<string | null>(null)
     const [showGithubSettings, setShowGithubSettings] = useState(false)
     const [showAdvanced, setShowAdvanced] = useState(false)
-    const [data, setData] = useState<BudgetData>(() => {
-        const saved = localStorage.getItem('budget_data_v2')
-        return saved ? JSON.parse(saved) : budgetDataJson
+    const [data, setData] = useState<BudgetData>({
+        investment: { construction: { budget: '0', disbursed: '0' } },
+        operation: {
+            utilities: { budget: '0', disbursed: '0' },
+            officeSupplies: { budget: '0', disbursed: '0' },
+            service: { budget: '0', disbursed: '0' },
+            travel: { budget: '0', disbursed: '0' },
+        },
+        project: {},
     })
 
     const [githubConfig, setGithubConfig] = useState({
@@ -70,8 +79,24 @@ export function SectionBudget() {
     })
 
     useEffect(() => {
-        localStorage.setItem('budget_data_v2', JSON.stringify(data))
-    }, [data])
+        loadData()
+    }, [])
+
+    const loadData = async () => {
+        setIsLoading(true)
+        setError(null)
+        try {
+            const result = await fetchSheetData<BudgetData>('budgetData')
+            if (result && result.length > 0) {
+                setData(result[0])
+            }
+        } catch (err: any) {
+            setError(err.message || 'ไม่สามารถโหลดข้อมูลได้')
+            console.error('Error loading data:', err)
+        } finally {
+            setIsLoading(false)
+        }
+    }
 
     const handleInvestmentChange = (subField: keyof BudgetItem, value: string) => {
         setData(prev => ({
@@ -135,10 +160,18 @@ export function SectionBudget() {
         })
     }
 
-    const handleSaveLocal = () => {
-        localStorage.setItem('budget_data_v2', JSON.stringify(data))
-        setIsEditing(false)
-        alert('บันทึกข้อมูลลงเครื่องเรียบร้อยแล้ว')
+    const handleSaveLocal = async () => {
+        setIsSaving(true)
+        try {
+            await updateSheetData('budgetData', [data])
+            setIsEditing(false)
+            alert('บันทึกข้อมูลไปยัง Google Sheets เรียบร้อยแล้ว!')
+        } catch (err: any) {
+            console.error('Error saving:', err)
+            alert('เกิดข้อผิดพลาด: ' + (err.message || 'ไม่สามารถบันทึกได้'))
+        } finally {
+            setIsSaving(false)
+        }
     }
 
     const handleSaveToGitHub = async () => {
@@ -308,6 +341,31 @@ export function SectionBudget() {
         </div>
     )
 
+    if (isLoading) {
+        return (
+            <section className="section">
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '60px', gap: '12px' }}>
+                    <FiLoader className="spin" style={{ fontSize: '24px', color: '#10b981' }} />
+                    <span style={{ fontSize: '1.1rem', color: '#64748b' }}>กำลังโหลดข้อมูลจาก Google Sheets...</span>
+                </div>
+            </section>
+        )
+    }
+
+    if (error) {
+        return (
+            <section className="section">
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px', gap: '16px' }}>
+                    <FiAlertTriangle style={{ fontSize: '48px', color: '#ef4444' }} />
+                    <span style={{ fontSize: '1.1rem', color: '#ef4444' }}>{error}</span>
+                    <button onClick={loadData} style={{ padding: '10px 20px', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                        ลองใหม่
+                    </button>
+                </div>
+            </section>
+        )
+    }
+
     return (
         <section className="section">
             {/* GitHub Settings Modal */}
@@ -404,8 +462,8 @@ export function SectionBudget() {
                     </button>
                     {isEditing ? (
                         <>
-                            <button className="edit-toggle-btn" onClick={handleSaveLocal} style={{ background: '#3b82f6', color: 'white', border: 'none', borderRadius: '20px', padding: '6px 16px', fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <FiSave /> บันทึก (Local)
+                            <button className="edit-toggle-btn" onClick={handleSaveLocal} disabled={isSaving} style={{ background: isSaving ? '#94a3b8' : '#16a34a', color: 'white', border: 'none', borderRadius: '20px', padding: '6px 16px', fontSize: '0.9rem', cursor: isSaving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                {isSaving ? <><FiLoader className="spin" /> กำลังบันทึก...</> : <><FiSave /> บันทึก</>}
                             </button>
                             <button className="edit-toggle-btn" style={{ background: '#24292e', color: 'white', border: 'none', borderRadius: '20px', padding: '6px 16px', fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={handleSaveToGitHub}>
                                 <FaGithub /> บันทึกขึ้น GitHub

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { saveToDiskAndSync } from '../utils/sync';
-import detailedBudgetProjectsData from '../data/detailedBudgetProjects.json';
+import { fetchSheetData, updateSheetData } from '../utils/sheetsApi';
 import { FaEdit, FaSave, FaChartLine, FaExclamationTriangle, FaLightbulb, FaGithub, FaCog, FaImage, FaPlus, FaTimes, FaChevronDown, FaChevronRight, FaTrash, FaCheck, FaClock, FaCircle, FaCalendarAlt } from 'react-icons/fa';
+import { FiLoader, FiAlertTriangle } from 'react-icons/fi';
 
 interface DetailedProject {
     name: string;
@@ -37,9 +37,29 @@ const stripActivityNumber = (name: string): string => {
     return name.replace(/(กิจกรรม:\s*)[\d.]+\s*/i, '$1');
 };
 
+// Policy options for dropdown
+const POLICY_OPTIONS = [
+    { id: 1, label: 'ข้อ 1. การส่งเสริมระบบเกษตรที่เท่าทันต่อการเปลี่ยนแปลงสภาพภูมิอากาศ' },
+    { id: 2, label: 'ข้อ 2. การป้องกัน ควบคุม กำจัด และแก้ไขปัญหาโรคและแมลงศัตรูพืช' },
+    { id: 3, label: 'ข้อ 3. การส่งเสริมระบบเครือข่ายทางการเกษตร' },
+    { id: 4, label: 'ข้อ 4. การให้บริการตามพระราชบัญญัติที่เกี่ยวข้อง' },
+    { id: 5, label: 'ข้อ 5. การพัฒนางานอำนวยการเพื่อสร้างสภาพแวดล้อมทางเศรษฐกิจที่เอื้อต่อการเกษตร' },
+    { id: 6, label: 'ข้อ 6. ส่งเสริมการผลิตและการตลาดสินค้าเกษตรมูลค่าสูง' },
+    { id: 7, label: 'ข้อ 7. สถานการณ์เร่งด่วนที่เกิดขึ้นในพื้นที่' },
+    { id: 8, label: 'ข้อ 8. การนำระบบส่งเสริมการเกษตรไปขับเคลื่อนงานในพื้นที่' },
+    { id: 9, label: 'ข้อ 9. การจัดทำแผนพัฒนาการเกษตร' },
+    { id: 10, label: 'ข้อ 10. การบริหารความเสี่ยง ตามหลักธรรมาภิบาล' },
+    { id: 11, label: 'ข้อ 11. เกษตรเชิงพื้นที่' },
+    { id: 12, label: 'ข้อ 12. ภูมิปัญญาท้องถิ่น / Handy Sense / Zoning' },
+    { id: 13, label: 'ข้อ 13. แนวทางการนำเทคโนโลยีที่เหมาะสมขยายผลสู่พื้นที่' },
+];
+
 export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedProps) {
-    const [budgetGroups, setBudgetGroups] = useState<BudgetGroup[]>(detailedBudgetProjectsData as BudgetGroup[]);
+    const [budgetGroups, setBudgetGroups] = useState<BudgetGroup[]>([]);
     const [isEditing, setIsEditing] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [showGithubSettings, setShowGithubSettings] = useState(false);
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [githubConfig, setGithubConfig] = useState({
@@ -77,30 +97,24 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
     // Lightbox State for viewing images in full screen
     const [lightboxImage, setLightboxImage] = useState<{ url: string; caption?: string } | null>(null);
 
-    // Load from localStorage on mount
+    // Load from Google Sheets on mount
     useEffect(() => {
-        const savedData = localStorage.getItem('detailedBudgetProjects');
-        if (savedData) {
-            const parsedData = JSON.parse(savedData);
-            // Sync with source
-            const mergedData = [...parsedData];
-            let hasNewData = false;
-
-            detailedBudgetProjectsData.forEach(project => {
-                const existingGroup = mergedData.find(p => p.id === project.id);
-                if (!existingGroup) {
-                    mergedData.push(project);
-                    hasNewData = true;
-                }
-            });
-
-            setBudgetGroups(mergedData);
-
-            if (hasNewData) {
-                localStorage.setItem('detailedBudgetProjects', JSON.stringify(mergedData));
-            }
-        }
+        loadData();
     }, []);
+
+    const loadData = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const data = await fetchSheetData<BudgetGroup>('detailedBudgetProjects');
+            setBudgetGroups(data);
+        } catch (err: any) {
+            setError(err.message || 'ไม่สามารถโหลดข้อมูลได้');
+            console.error('Error loading data:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleChange = (
         groupId: string,
@@ -181,14 +195,16 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
     };
 
     const handleSaveLocal = async () => {
+        setIsSaving(true);
         try {
-            await saveToDiskAndSync('detailedBudgetProjects.json', budgetGroups);
-            localStorage.setItem('detailedBudgetProjects', JSON.stringify(budgetGroups));
+            await updateSheetData('detailedBudgetProjects', budgetGroups);
             setIsEditing(false);
-            alert('บันทึกข้อมูลลงเครื่องและซิงค์ไปยัง Google Sheets เรียบร้อยแล้ว');
-        } catch (error) {
-            console.error(error);
-            alert('บันทึกข้อมูลสำเร็จ แต่ซิงค์ไม่สำเร็จ (ดู Console)');
+            alert('บันทึกข้อมูลไปยัง Google Sheets เรียบร้อยแล้ว!');
+        } catch (err: any) {
+            console.error('Error saving:', err);
+            alert('เกิดข้อผิดพลาด: ' + (err.message || 'ไม่สามารถบันทึกได้'));
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -275,6 +291,31 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
     const displayedGroups = (activeId && activeId !== 'section2' && activeId !== 'section-budget-detailed')
         ? budgetGroups.filter(g => g.id === activeId)
         : budgetGroups;
+
+    if (isLoading) {
+        return (
+            <div className="section-container fade-in">
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '60px', gap: '12px' }}>
+                    <FiLoader className="spin" style={{ fontSize: '24px', color: '#3b82f6' }} />
+                    <span style={{ fontSize: '1.1rem', color: '#64748b' }}>กำลังโหลดข้อมูลจาก Google Sheets...</span>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="section-container fade-in">
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px', gap: '16px' }}>
+                    <FiAlertTriangle style={{ fontSize: '48px', color: '#ef4444' }} />
+                    <span style={{ fontSize: '1.1rem', color: '#ef4444' }}>{error}</span>
+                    <button onClick={loadData} style={{ padding: '10px 20px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                        ลองใหม่
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="section-container fade-in">
@@ -490,8 +531,8 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                     </button>
                     {isEditing ? (
                         <>
-                            <button className="edit-toggle-btn" onClick={handleSaveLocal} style={{ background: '#3b82f6' }}>
-                                <FaSave /> บันทึก (Local)
+                            <button className="edit-toggle-btn" onClick={handleSaveLocal} disabled={isSaving} style={{ background: isSaving ? '#94a3b8' : '#16a34a' }}>
+                                {isSaving ? <><FiLoader className="spin" /> กำลังบันทึก...</> : <><FaSave /> บันทึก</>}
                             </button>
                             <button className="edit-toggle-btn" style={{ background: '#24292e' }} onClick={handleSaveToGitHub}>
                                 <FaGithub /> บันทึกขึ้น GitHub
@@ -697,12 +738,70 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                                     <option value="completed">🟢 เสร็จแล้ว</option>
                                                                 </select>
                                                             </div>
+                                                            <div style={{ gridColumn: '1 / -1' }}>
+                                                                <label style={{ fontSize: '0.85rem', color: '#64748b', display: 'block', marginBottom: '4px' }}>ประเด็นเน้นย้ำ (เลือกได้หลายข้อ):</label>
+                                                                <div style={{
+                                                                    display: 'flex',
+                                                                    flexWrap: 'wrap',
+                                                                    gap: '6px',
+                                                                    padding: '10px',
+                                                                    background: '#f8fafc',
+                                                                    borderRadius: '8px',
+                                                                    border: '1px solid #e2e8f0'
+                                                                }}>
+                                                                    {POLICY_OPTIONS.map(policy => {
+                                                                        const isSelected = (project.relevantPolicies || '').includes(`ข้อ ${policy.id}.`);
+                                                                        return (
+                                                                            <button
+                                                                                key={policy.id}
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    const current = project.relevantPolicies || '';
+                                                                                    const policyRef = `ข้อ ${policy.id}.`;
+                                                                                    let newValue: string;
+                                                                                    if (current.includes(policyRef)) {
+                                                                                        // Remove
+                                                                                        newValue = current
+                                                                                            .split(' และ ')
+                                                                                            .filter(p => !p.includes(policyRef))
+                                                                                            .join(' และ ');
+                                                                                    } else {
+                                                                                        // Add
+                                                                                        const parts = current ? current.split(' และ ').filter(p => p.trim()) : [];
+                                                                                        parts.push(policyRef + ' ' + policy.label.replace(/^ข้อ \d+\. /, ''));
+                                                                                        newValue = parts.join(' และ ');
+                                                                                    }
+                                                                                    handleChange(group.id, index, 'relevantPolicies', newValue || '-');
+                                                                                }}
+                                                                                style={{
+                                                                                    padding: '4px 10px',
+                                                                                    fontSize: '0.75rem',
+                                                                                    borderRadius: '16px',
+                                                                                    border: isSelected ? '2px solid #16a34a' : '1px solid #cbd5e1',
+                                                                                    background: isSelected ? '#dcfce7' : 'white',
+                                                                                    color: isSelected ? '#166534' : '#475569',
+                                                                                    cursor: 'pointer',
+                                                                                    fontWeight: isSelected ? 600 : 400,
+                                                                                    transition: 'all 0.15s ease'
+                                                                                }}
+                                                                            >
+                                                                                {isSelected ? '✓ ' : ''}{policy.id}
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                                {project.relevantPolicies && project.relevantPolicies !== '-' && (
+                                                                    <div style={{ marginTop: '6px', fontSize: '0.8rem', color: '#059669', background: '#ecfdf5', padding: '6px 10px', borderRadius: '6px' }}>
+                                                                        สอดคล้องกับ: {project.relevantPolicies}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     ) : (
                                                         <>
                                                             {project.relevantPolicies && project.relevantPolicies !== '-' && (
                                                                 <div className="relevant-policies-box">
-                                                                    {project.relevantPolicies}
+                                                                    <span style={{ color: '#059669', fontWeight: 500 }}>🎯 สอดคล้องกับ:</span> {project.relevantPolicies}
                                                                 </div>
                                                             )}
                                                         </>
