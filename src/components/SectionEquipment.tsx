@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { saveToDiskAndSync } from '../utils/sync'
 import { FiTool, FiEdit2, FiSave } from 'react-icons/fi'
 import { FaGithub, FaCog } from 'react-icons/fa'
 import projectAssetsJson from '../data/projectAssets.json'
@@ -40,10 +41,16 @@ export function SectionEquipment() {
         ))
     }
 
-    const handleSaveLocal = () => {
-        localStorage.setItem('project_assets', JSON.stringify(assets))
-        setIsEditing(false)
-        alert('บันทึกข้อมูลลงเครื่องเรียบร้อยแล้ว')
+    const handleSaveLocal = async () => {
+        try {
+            await saveToDiskAndSync('projectAssets.json', assets)
+            localStorage.setItem('project_assets', JSON.stringify(assets))
+            setIsEditing(false)
+            alert('บันทึกข้อมูลลงเครื่องและซิงค์ไปยัง Google Sheets เรียบร้อยแล้ว')
+        } catch (error) {
+            console.error(error)
+            alert('บันทึกข้อมูลสำเร็จ แต่ซิงค์ไม่สำเร็จ (ดู Console)')
+        }
     }
 
     const handleSaveToGitHub = async () => {
