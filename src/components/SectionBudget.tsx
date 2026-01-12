@@ -232,26 +232,7 @@ export function SectionBudget() {
         disbursed: investmentTotal.disbursed + operationTotal.disbursed + projectTotal.disbursed
     }
 
-    // Summary Card Component
-    const SummaryCard = ({ title, budget, disbursed, color }: { title: string, budget: number, disbursed: number, color: string }) => (
-        <div style={{ background: color, padding: '18px 22px', borderRadius: '12px', minWidth: '220px', border: '1px solid rgba(0,0,0,0.1)' }}>
-            <div style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '12px', color: '#1e293b' }}>{title}</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '18px' }}>
-                <div>
-                    <div style={{ fontSize: '1rem', color: '#475569' }}>งบประมาณ</div>
-                    <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#0f172a' }}>{budget.toLocaleString('th-TH')}</div>
-                </div>
-                <div>
-                    <div style={{ fontSize: '1rem', color: '#475569' }}>เบิกจ่าย</div>
-                    <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#0f172a' }}>{disbursed.toLocaleString('th-TH')}</div>
-                </div>
-                <div>
-                    <div style={{ fontSize: '1rem', color: '#475569' }}>%</div>
-                    <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#0f172a' }}>{budget > 0 ? ((disbursed / budget) * 100).toFixed(1) : '0'}%</div>
-                </div>
-            </div>
-        </div>
-    )
+
 
     // Budget Input Row Component
     const BudgetInputRow = ({ budget, disbursed, onBudgetChange, onDisbursedChange }: {
@@ -438,42 +419,99 @@ export function SectionBudget() {
                 </div>
             </div>
 
-            {/* Grand Summary */}
-            {/* Grand Summary */}
-            <div style={{
-                backgroundColor: '#ffffff',
+            {/* Budget Overview Section - Matching Dashboard design */}
+            <div className="card budget-overview-card" style={{
+                background: 'white',
+                backgroundColor: 'white',
+                backgroundImage: 'none',
                 border: '2px solid #10b981',
                 borderRadius: '16px',
-                padding: '28px',
-                marginBottom: '28px',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)',
-                color: '#1f2937'
+                color: '#1f2937',
+                marginBottom: '24px',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)'
             }}>
-                <div style={{ fontSize: '1.4rem', fontWeight: 600, marginBottom: '24px', opacity: 1, color: '#1f2937' }}>📊 สรุปภาพรวมทั้งหมด</div>
-                <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '24px' }}>
-                    <SummaryCard title="1.1 งบลงทุน" budget={investmentTotal.budget} disbursed={investmentTotal.disbursed} color="#f9fafb" />
-                    <SummaryCard title="1.2 งบดำเนินงาน" budget={operationTotal.budget} disbursed={operationTotal.disbursed} color="#f9fafb" />
-                    <SummaryCard title="1.3 งบโครงการฯ" budget={projectTotal.budget} disbursed={projectTotal.disbursed} color="#f9fafb" />
+                <div className="card-header" style={{ borderBottom: 'none', paddingBottom: '0' }}>
+                    <div className="card-icon" style={{ background: '#ecfdf5', color: '#10b981' }}><FiTrendingUp /></div>
+                    <h3 className="card-title" style={{ color: '#1f2937' }}>สรุปภาพรวมทั้งหมด</h3>
                 </div>
-                <div style={{
-                    marginTop: '24px',
-                    paddingTop: '24px',
-                    borderTop: '1px solid #e2e8f0',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    gap: '60px'
+
+                <div className="budget-summary-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gap: '16px',
+                    padding: '20px'
                 }}>
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '1.15rem', opacity: 0.95, color: '#64748b' }}>รวมงบประมาณทั้งหมด</div>
-                        <div style={{ fontSize: '2.2rem', fontWeight: 700, color: '#10b981' }}>{grandTotal.budget.toLocaleString('th-TH')} บาท</div>
+                    {/* 1.1 Investment */}
+                    <div className="budget-mini-card">
+                        <div className="budget-mini-header">1.1 งบลงทุน</div>
+                        <div className="budget-mini-labels">
+                            <span>งบประมาณ</span>
+                            <span>เบิกจ่าย</span>
+                            <span>%</span>
+                        </div>
+                        <div className="budget-mini-values">
+                            <span className="val-budget">{investmentTotal.budget.toLocaleString('th-TH')}</span>
+                            <span className="val-disbursed">{investmentTotal.disbursed.toLocaleString('th-TH')}</span>
+                            <span className="val-percent">{investmentTotal.budget > 0 ? ((investmentTotal.disbursed / investmentTotal.budget) * 100).toFixed(1) : '0'}%</span>
+                        </div>
                     </div>
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '1.15rem', opacity: 0.95, color: '#64748b' }}>รวมเบิกจ่ายทั้งหมด</div>
-                        <div style={{ fontSize: '2.2rem', fontWeight: 700, color: '#b45309' }}>{grandTotal.disbursed.toLocaleString('th-TH')} บาท</div>
+
+                    {/* 1.2 Operation */}
+                    <div className="budget-mini-card">
+                        <div className="budget-mini-header">1.2 งบดำเนินงาน</div>
+                        <div className="budget-mini-labels">
+                            <span>งบประมาณ</span>
+                            <span>เบิกจ่าย</span>
+                            <span>%</span>
+                        </div>
+                        <div className="budget-mini-values">
+                            <span className="val-budget">{operationTotal.budget.toLocaleString('th-TH')}</span>
+                            <span className="val-disbursed">{operationTotal.disbursed.toLocaleString('th-TH')}</span>
+                            <span className="val-percent">
+                                {operationTotal.budget > 0 ? ((operationTotal.disbursed / operationTotal.budget) * 100).toFixed(1) : '0'}%
+                            </span>
+                        </div>
                     </div>
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '1.15rem', opacity: 0.95, color: '#64748b' }}>ร้อยละรวม</div>
-                        <div style={{ fontSize: '2.2rem', fontWeight: 700, color: '#7c3aed' }}>{grandTotal.budget > 0 ? ((grandTotal.disbursed / grandTotal.budget) * 100).toFixed(1) : '0'}%</div>
+
+                    {/* 1.3 Project */}
+                    <div className="budget-mini-card">
+                        <div className="budget-mini-header">1.3 งบโครงการฯ</div>
+                        <div className="budget-mini-labels">
+                            <span>งบประมาณ</span>
+                            <span>เบิกจ่าย</span>
+                            <span>%</span>
+                        </div>
+                        <div className="budget-mini-values">
+                            <span className="val-budget">{projectTotal.budget.toLocaleString('th-TH')}</span>
+                            <span className="val-disbursed">{projectTotal.disbursed.toLocaleString('th-TH')}</span>
+                            <span className="val-percent">{projectTotal.budget > 0 ? ((projectTotal.disbursed / projectTotal.budget) * 100).toFixed(1) : '0'}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Total Footer */}
+                <div className="budget-total-footer" style={{
+                    borderTop: '1px solid #e5e7eb',
+                    padding: '20px',
+                    display: 'flex',
+                    justifyContent: 'space-around',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '20px'
+                }}>
+                    <div className="total-item">
+                        <div className="total-label">รวมงบประมาณทั้งหมด</div>
+                        <div className="total-value">{grandTotal.budget.toLocaleString('th-TH')} บาท</div>
+                    </div>
+                    <div className="total-item">
+                        <div className="total-label">รวมเบิกจ่ายทั้งหมด</div>
+                        <div className="total-value">{grandTotal.disbursed.toLocaleString('th-TH')} บาท</div>
+                    </div>
+                    <div className="total-item">
+                        <div className="total-label">ร้อยละรวม</div>
+                        <div className="total-value">
+                            {grandTotal.budget > 0 ? ((grandTotal.disbursed / grandTotal.budget) * 100).toFixed(1) : '0'}%
+                        </div>
                     </div>
                 </div>
             </div>
