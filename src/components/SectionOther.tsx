@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { saveToDiskAndSync } from '../utils/sync'
 import { FiAlertTriangle, FiEdit2, FiSave, FiPlus, FiTrash2 } from 'react-icons/fi'
 import { FaGithub, FaCog } from 'react-icons/fa'
 import otherIssuesData from '../data/otherIssues.json'
@@ -49,10 +50,16 @@ export function SectionOther() {
         }
     }
 
-    const handleSaveLocal = () => {
-        localStorage.setItem('other_issues_data', JSON.stringify(issues))
-        setIsEditing(false)
-        alert('บันทึกข้อมูลลงเครื่องเรียบร้อยแล้ว')
+    const handleSaveLocal = async () => {
+        try {
+            await saveToDiskAndSync('otherIssues.json', issues)
+            localStorage.setItem('other_issues_data', JSON.stringify(issues))
+            setIsEditing(false)
+            alert('บันทึกข้อมูลลงเครื่องและซิงค์ไปยัง Google Sheets เรียบร้อยแล้ว')
+        } catch (error) {
+            console.error(error)
+            alert('บันทึกข้อมูลสำเร็จ แต่ซิงค์ไม่สำเร็จ (ดู Console)')
+        }
     }
 
     const handleSaveToGitHub = async () => {

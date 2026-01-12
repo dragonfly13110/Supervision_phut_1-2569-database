@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { saveToDiskAndSync } from '../utils/sync';
 import detailedBudgetProjectsData from '../data/detailedBudgetProjects.json';
 import { FaEdit, FaSave, FaChartLine, FaExclamationTriangle, FaLightbulb, FaGithub, FaCog, FaImage, FaPlus, FaTimes, FaChevronDown, FaChevronRight, FaTrash, FaCheck, FaClock, FaCircle, FaCalendarAlt } from 'react-icons/fa';
 
@@ -179,10 +180,16 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
         }
     };
 
-    const handleSaveLocal = () => {
-        localStorage.setItem('detailedBudgetProjects', JSON.stringify(budgetGroups));
-        setIsEditing(false);
-        alert('บันทึกข้อมูลลงเครื่องเรียบร้อยแล้ว');
+    const handleSaveLocal = async () => {
+        try {
+            await saveToDiskAndSync('detailedBudgetProjects.json', budgetGroups);
+            localStorage.setItem('detailedBudgetProjects', JSON.stringify(budgetGroups));
+            setIsEditing(false);
+            alert('บันทึกข้อมูลลงเครื่องและซิงค์ไปยัง Google Sheets เรียบร้อยแล้ว');
+        } catch (error) {
+            console.error(error);
+            alert('บันทึกข้อมูลสำเร็จ แต่ซิงค์ไม่สำเร็จ (ดู Console)');
+        }
     };
 
     const handleSaveToGitHub = async () => {
