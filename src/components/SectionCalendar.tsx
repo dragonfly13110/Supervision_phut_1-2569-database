@@ -38,64 +38,130 @@ const THAI_MONTHS = [
 
 const THAI_DAYS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
 
-// Parse multiple dates from Thai text (e.g. "20 และ 22 ม.ค. 2569")
+// Parse multiple dates from Thai text - supports many formats
 function parseThaiDates(text: string): Date[] {
     if (!text || text === '-') return [];
 
     const thaiMonthMap: Record<string, number> = {
-        'มกราคม': 0, 'ม.ค.': 0, 'ม.ค': 0,
-        'กุมภาพันธ์': 1, 'ก.พ.': 1, 'ก.พ': 1,
-        'มีนาคม': 2, 'มี.ค.': 2, 'มี.ค': 2,
-        'เมษายน': 3, 'เม.ย.': 3, 'เม.ย': 3,
-        'พฤษภาคม': 4, 'พ.ค.': 4, 'พ.ค': 4,
-        'มิถุนายน': 5, 'มิ.ย.': 5, 'มิ.ย': 5,
-        'กรกฎาคม': 6, 'ก.ค.': 6, 'ก.ค': 6,
-        'สิงหาคม': 7, 'ส.ค.': 7, 'ส.ค': 7,
-        'กันยายน': 8, 'ก.ย.': 8, 'ก.ย': 8,
-        'ตุลาคม': 9, 'ต.ค.': 9, 'ต.ค': 9,
-        'พฤศจิกายน': 10, 'พ.ย.': 10, 'พ.ย': 10,
-        'ธันวาคม': 11, 'ธ.ค.': 11, 'ธ.ค': 11
+        // Full Thai names
+        'มกราคม': 0, 'กุมภาพันธ์': 1, 'มีนาคม': 2, 'เมษายน': 3,
+        'พฤษภาคม': 4, 'มิถุนายน': 5, 'กรกฎาคม': 6, 'สิงหาคม': 7,
+        'กันยายน': 8, 'ตุลาคม': 9, 'พฤศจิกายน': 10, 'ธันวาคม': 11,
+        // Short Thai with dot
+        'ม.ค.': 0, 'ก.พ.': 1, 'มี.ค.': 2, 'เม.ย.': 3,
+        'พ.ค.': 4, 'มิ.ย.': 5, 'ก.ค.': 6, 'ส.ค.': 7,
+        'ก.ย.': 8, 'ต.ค.': 9, 'พ.ย.': 10, 'ธ.ค.': 11,
+        // Short Thai without dot
+        'มค': 0, 'กพ': 1, 'มีค': 2, 'เมย': 3,
+        'พค': 4, 'มิย': 5, 'กค': 6, 'สค': 7,
+        'กย': 8, 'ตค': 9, 'พย': 10, 'ธค': 11,
+        // English months
+        'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3,
+        'may': 4, 'jun': 5, 'jul': 6, 'aug': 7,
+        'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11,
+        'january': 0, 'february': 1, 'march': 2, 'april': 3,
+        'june': 5, 'july': 6, 'august': 7, 'september': 8,
+        'october': 9, 'november': 10, 'december': 11
     };
 
     const dates: Date[] = [];
+    const currentYear = new Date().getFullYear();
 
-    // Find all month references in text
-    const monthPattern = /(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม|ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)/;
-    const monthMatch = text.match(monthPattern);
+    // Helper: parse year (supports both พ.ศ. and ค.ศ.)
+    const parseYear = (yearStr: string): number => {
+        const y = parseInt(yearStr);
+        if (isNaN(y)) return currentYear;
+        if (y > 2400) return y - 543; // พ.ศ. -> ค.ศ.
+        if (y < 100) return 2000 + y; // 69 -> 2069 -> but we need 2026 if it's 26
+        return y;
+    };
 
-    if (monthMatch && monthMatch.index !== undefined) {
-        const month = thaiMonthMap[monthMatch[1]];
+    // Pattern 1: DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
+    const slashPattern = /(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/g;
+    let match;
+    while ((match = slashPattern.exec(text)) !== null) {
+        const day = parseInt(match[1]);
+        const month = parseInt(match[2]) - 1; // 0-indexed
+        const year = parseYear(match[3]);
+        if (day >= 1 && day <= 31 && month >= 0 && month <= 11) {
+            dates.push(new Date(year, month, day));
+        }
+    }
+
+    // Pattern 2: Thai month pattern (e.g., "28 มกราคม 2569", "20 และ 22 ม.ค. 69")
+    const thaiMonthPattern = /(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม|ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.|มค|กพ|มีค|เมย|พค|มิย|กค|สค|กย|ตค|พย|ธค)/gi;
+
+    let monthMatch;
+    while ((monthMatch = thaiMonthPattern.exec(text)) !== null) {
+        const monthStr = monthMatch[1].toLowerCase();
+        const month = thaiMonthMap[monthStr] ?? thaiMonthMap[monthMatch[1]];
+        if (month === undefined) continue;
+
         const monthIndex = monthMatch.index;
 
-        // Get text BEFORE the month (where day numbers should be)
-        const textBeforeMonth = text.substring(0, monthIndex);
+        // Get text BEFORE the month (for day numbers)
+        const textBeforeMonth = text.substring(Math.max(0, monthIndex - 50), monthIndex);
 
-        // Get year from text AFTER month
-        const textAfterMonth = text.substring(monthIndex);
-        const yearMatch = textAfterMonth.match(/25(6[89]|70)/);
-        let year = 2026; // Default
+        // Get text AFTER month (for year)
+        const textAfterMonth = text.substring(monthIndex, monthIndex + 30);
+
+        // Parse year - look for 2 or 4 digit year
+        const yearMatch = textAfterMonth.match(/\s*\.?\s*(\d{2,4})/);
+        let year = currentYear;
         if (yearMatch) {
-            year = parseInt('25' + yearMatch[1]) - 543;
+            year = parseYear(yearMatch[1]);
         }
 
-        // Find all day numbers before the month
-        // Pattern to find "วันที่ X และ Y" or "X และ Y" or just single numbers
-        const daysPattern = /(\d{1,2})(?:\s*(?:และ|,|\/)\s*(\d{1,2}))?(?:\s*(?:และ|,|\/)\s*(\d{1,2}))?/g;
-        let daysMatch;
-        const foundDays: number[] = [];
+        // Find day numbers - support various separators
+        const daysText = textBeforeMonth;
+        const dayNumbers: number[] = [];
 
-        while ((daysMatch = daysPattern.exec(textBeforeMonth)) !== null) {
-            if (daysMatch[1]) foundDays.push(parseInt(daysMatch[1]));
-            if (daysMatch[2]) foundDays.push(parseInt(daysMatch[2]));
-            if (daysMatch[3]) foundDays.push(parseInt(daysMatch[3]));
+        // Match patterns like: "20 และ 22", "20, 22", "20-22", "วันที่ 20"
+        const dayPattern = /\b(\d{1,2})\b/g;
+        let dayMatch;
+        while ((dayMatch = dayPattern.exec(daysText)) !== null) {
+            const day = parseInt(dayMatch[1]);
+            if (day >= 1 && day <= 31) {
+                dayNumbers.push(day);
+            }
         }
 
-        // Filter valid days (1-31) and create dates
-        foundDays
-            .filter(day => day >= 1 && day <= 31 && !foundDays.includes(year % 100)) // exclude year digits
-            .forEach(day => {
-                dates.push(new Date(year, month, day));
-            });
+        // Check for day range (e.g., "15-17")
+        const rangeMatch = textBeforeMonth.match(/(\d{1,2})\s*[-–]\s*(\d{1,2})\s*$/);
+        if (rangeMatch) {
+            const start = parseInt(rangeMatch[1]);
+            const end = parseInt(rangeMatch[2]);
+            if (start <= end && start >= 1 && end <= 31) {
+                dayNumbers.length = 0; // clear existing
+                for (let d = start; d <= end; d++) {
+                    dayNumbers.push(d);
+                }
+            }
+        }
+
+        // Create dates
+        dayNumbers.forEach(day => {
+            const newDate = new Date(year, month, day);
+            // Avoid duplicates
+            if (!dates.some(d => d.getTime() === newDate.getTime())) {
+                dates.push(newDate);
+            }
+        });
+    }
+
+    // Pattern 3: ISO format YYYY-MM-DD
+    const isoPattern = /(\d{4})-(\d{2})-(\d{2})/g;
+    while ((match = isoPattern.exec(text)) !== null) {
+        let year = parseInt(match[1]);
+        if (year > 2400) year -= 543; // พ.ศ. format
+        const month = parseInt(match[2]) - 1;
+        const day = parseInt(match[3]);
+        if (day >= 1 && day <= 31 && month >= 0 && month <= 11) {
+            const newDate = new Date(year, month, day);
+            if (!dates.some(d => d.getTime() === newDate.getTime())) {
+                dates.push(newDate);
+            }
+        }
     }
 
     return dates;
