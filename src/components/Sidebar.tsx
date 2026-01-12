@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react'
-import { FiDollarSign, FiUsers, FiChevronDown, FiChevronsLeft, FiChevronsRight, FiChevronUp, FiChevronDown as FiScrollDown, FiEdit2, FiX, FiHome, FiCalendar, FiSearch } from 'react-icons/fi'
+import { FiDollarSign, FiUsers, FiChevronDown, FiChevronsLeft, FiChevronsRight, FiChevronUp, FiChevronDown as FiScrollDown, FiEdit2, FiX, FiHome, FiCalendar } from 'react-icons/fi'
 import { FaGithub } from 'react-icons/fa'
 import { TbReportMoney } from "react-icons/tb";
 import { detailedBudgetProjects } from '../data/assetData'
