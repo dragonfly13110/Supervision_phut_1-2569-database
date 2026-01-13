@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { fetchSheetData, updateSheetData } from '../utils/sheetsApi';
 import { FaEdit, FaSave, FaChartLine, FaExclamationTriangle, FaLightbulb, FaGithub, FaCog, FaImage, FaPlus, FaTimes, FaChevronDown, FaChevronRight, FaTrash, FaCheck, FaClock, FaCircle, FaCalendarAlt } from 'react-icons/fa';
 import { FiLoader, FiAlertTriangle } from 'react-icons/fi';
+import { useAuth } from './AuthContext';
 
 interface DetailedProject {
     name: string;
@@ -55,6 +56,7 @@ const POLICY_OPTIONS = [
 ];
 
 export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedProps) {
+    const { isLoggedIn } = useAuth();
     const [budgetGroups, setBudgetGroups] = useState<BudgetGroup[]>([]);
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -521,27 +523,31 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                    <button
-                        className={`edit-toggle-btn`}
-                        style={{ background: '#475569' }}
-                        onClick={() => setShowGithubSettings(true)}
-                        title="ตั้งค่า GitHub"
-                    >
-                        <FaCog />
-                    </button>
-                    {isEditing ? (
+                    {isLoggedIn && (
                         <>
-                            <button className="edit-toggle-btn" onClick={handleSaveLocal} disabled={isSaving} style={{ background: isSaving ? '#94a3b8' : '#16a34a' }}>
-                                {isSaving ? <><FiLoader className="spin" /> กำลังบันทึก...</> : <><FaSave /> บันทึก</>}
+                            <button
+                                className={`edit-toggle-btn`}
+                                style={{ background: '#475569' }}
+                                onClick={() => setShowGithubSettings(true)}
+                                title="ตั้งค่า GitHub"
+                            >
+                                <FaCog />
                             </button>
-                            <button className="edit-toggle-btn" style={{ background: '#24292e' }} onClick={handleSaveToGitHub}>
-                                <FaGithub /> บันทึกขึ้น GitHub
-                            </button>
+                            {isEditing ? (
+                                <>
+                                    <button className="edit-toggle-btn" onClick={handleSaveLocal} disabled={isSaving} style={{ background: isSaving ? '#94a3b8' : '#16a34a' }}>
+                                        {isSaving ? <><FiLoader className="spin" /> กำลังบันทึก...</> : <><FaSave /> บันทึก</>}
+                                    </button>
+                                    <button className="edit-toggle-btn" style={{ background: '#24292e' }} onClick={handleSaveToGitHub}>
+                                        <FaGithub /> บันทึกขึ้น GitHub
+                                    </button>
+                                </>
+                            ) : (
+                                <button className="edit-toggle-btn" onClick={() => setIsEditing(true)}>
+                                    <FaEdit /> แก้ไขข้อมูล
+                                </button>
+                            )}
                         </>
-                    ) : (
-                        <button className="edit-toggle-btn" onClick={() => setIsEditing(true)}>
-                            <FaEdit /> แก้ไขข้อมูล
-                        </button>
                     )}
                 </div>
             </div>

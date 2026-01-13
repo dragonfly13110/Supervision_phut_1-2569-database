@@ -9,13 +9,13 @@ const SHEET_CONFIGS: Record<string, { headers: string[], dataKey?: string }> = {
         headers: ['ID', 'หัวข้อ', 'เนื้อหา'],
     },
     'generalAssets': {
-        headers: ['ID', 'ชื่อ', 'จำนวน', 'รายละเอียด', 'สถานะ', 'สถานะ (ข้อความ)', 'ปัญหา', 'แนวทางแก้ไข'],
+        headers: ['ID', 'ชื่อ', 'จำนวน', 'รายละเอียด', 'สถานะ', 'สถานะ (ข้อความ)', 'ปัญหา', 'แนวทางแก้ไข', 'รูปภาพ'],
     },
     'projectAssets': {
-        headers: ['ID', 'ลำดับ', 'ชื่อ', 'จำนวน', 'สถานะ', 'สถานะ (ข้อความ)', 'ปัญหา', 'แนวทางแก้ไข'],
+        headers: ['ID', 'ลำดับ', 'ชื่อ', 'จำนวน', 'สถานะ', 'สถานะ (ข้อความ)', 'ปัญหา', 'แนวทางแก้ไข', 'รูปภาพ'],
     },
     'detailedBudgetProjects': {
-        headers: ['รหัส', 'ชื่อโครงการ', 'กิจกรรม', 'กิจกรรมย่อย', 'นโยบายที่เกี่ยวข้อง', 'เป้าหมาย', 'งบประมาณ', 'ผลการดำเนินงาน', 'ปัญหา', 'แนวทางแก้ไข', 'สถานะ'],
+        headers: ['รหัส', 'ชื่อโครงการ', 'กิจกรรม', 'กิจกรรมย่อย', 'นโยบายที่เกี่ยวข้อง', 'เป้าหมาย', 'งบประมาณ', 'ผลการดำเนินงาน', 'ปัญหา', 'แนวทางแก้ไข', 'สถานะ', 'รูปภาพ'],
     },
     'budgetData': {
         headers: ['ประเภท', 'หมวดหมู่', 'งบประมาณ', 'เบิกจ่าย'],
@@ -66,29 +66,43 @@ function rowsToObjects(sheetName: string, rows: any[][]): any[] {
     }
 
     if (sheetName === 'generalAssets') {
-        return dataRows.map(row => ({
-            id: parseInt(row[0]) || 0,
-            name: row[1] || '',
-            amount: row[2] || '',
-            details: row[3] || '',
-            status: row[4] || 'good',
-            statusText: row[5] || '',
-            problem: row[6] || '-',
-            solution: row[7] || '-',
-        }));
+        return dataRows.map(row => {
+            let images: any[] = [];
+            try {
+                if (row[8]) images = JSON.parse(row[8]);
+            } catch (e) { images = []; }
+            return {
+                id: parseInt(row[0]) || 0,
+                name: row[1] || '',
+                amount: row[2] || '',
+                details: row[3] || '',
+                status: row[4] || 'good',
+                statusText: row[5] || '',
+                problem: row[6] || '-',
+                solution: row[7] || '-',
+                images: images,
+            };
+        });
     }
 
     if (sheetName === 'projectAssets') {
-        return dataRows.map(row => ({
-            id: parseInt(row[0]) || 0,
-            formOrder: parseInt(row[1]) || 0,
-            name: row[2] || '',
-            amount: row[3] || '',
-            status: row[4] || 'good',
-            statusText: row[5] || '',
-            problem: row[6] || '-',
-            solution: row[7] || '-',
-        }));
+        return dataRows.map(row => {
+            let images: any[] = [];
+            try {
+                if (row[8]) images = JSON.parse(row[8]);
+            } catch (e) { images = []; }
+            return {
+                id: parseInt(row[0]) || 0,
+                formOrder: parseInt(row[1]) || 0,
+                name: row[2] || '',
+                amount: row[3] || '',
+                status: row[4] || 'good',
+                statusText: row[5] || '',
+                problem: row[6] || '-',
+                solution: row[7] || '-',
+                images: images,
+            };
+        });
     }
 
     if (sheetName === 'detailedBudgetProjects') {
@@ -107,6 +121,16 @@ function rowsToObjects(sheetName: string, rows: any[][]): any[] {
                 };
             }
 
+            // Parse images from JSON string
+            let images: any[] = [];
+            try {
+                if (row[11]) {
+                    images = JSON.parse(row[11]);
+                }
+            } catch (e) {
+                images = [];
+            }
+
             groupedData[groupId].projects.push({
                 name: row[2] || '',
                 subActivity: row[3] || '',
@@ -117,6 +141,7 @@ function rowsToObjects(sheetName: string, rows: any[][]): any[] {
                 problem: row[8] || '',
                 solution: row[9] || '',
                 status: translateStatusReverse(row[10]) || 'pending',
+                images: images,
             });
         }
 
@@ -177,35 +202,52 @@ function objectsToRows(sheetName: string, data: any[]): any[][] {
     }
 
     if (sheetName === 'generalAssets') {
-        return data.map(item => [
-            item.id || '',
-            item.name || '',
-            item.amount || '',
-            item.details || '',
-            item.status || 'good',
-            item.statusText || '',
-            item.problem || '-',
-            item.solution || '-',
-        ]);
+        return data.map(item => {
+            const imagesJson = item.images && item.images.length > 0
+                ? JSON.stringify(item.images)
+                : '';
+            return [
+                item.id || '',
+                item.name || '',
+                item.amount || '',
+                item.details || '',
+                item.status || 'good',
+                item.statusText || '',
+                item.problem || '-',
+                item.solution || '-',
+                imagesJson,
+            ];
+        });
     }
 
     if (sheetName === 'projectAssets') {
-        return data.map(item => [
-            item.id || '',
-            item.formOrder || '',
-            item.name || '',
-            item.amount || '',
-            item.status || 'good',
-            item.statusText || '',
-            item.problem || '-',
-            item.solution || '-',
-        ]);
+        return data.map(item => {
+            const imagesJson = item.images && item.images.length > 0
+                ? JSON.stringify(item.images)
+                : '';
+            return [
+                item.id || '',
+                item.formOrder || '',
+                item.name || '',
+                item.amount || '',
+                item.status || 'good',
+                item.statusText || '',
+                item.problem || '-',
+                item.solution || '-',
+                imagesJson,
+            ];
+        });
     }
 
     if (sheetName === 'detailedBudgetProjects') {
         const rows: any[][] = [];
         for (const group of data) {
             for (const project of group.projects || []) {
+                // Serialize images to JSON string
+                const imagesJson = project.images && project.images.length > 0
+                    ? JSON.stringify(project.images)
+                    : '';
+
                 rows.push([
                     group.id || '',
                     group.title || '',
@@ -218,6 +260,7 @@ function objectsToRows(sheetName: string, data: any[]): any[][] {
                     project.problem || '',
                     project.solution || '',
                     translateStatus(project.status) || '',
+                    imagesJson,
                 ]);
             }
         }

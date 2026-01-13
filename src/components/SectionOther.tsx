@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { FiAlertTriangle, FiEdit2, FiSave, FiPlus, FiTrash2, FiLoader } from 'react-icons/fi'
 import { fetchSheetData, updateSheetData } from '../utils/sheetsApi'
+import { useAuth } from './AuthContext'
 
 interface OtherIssue {
     id: string
@@ -9,6 +10,7 @@ interface OtherIssue {
 }
 
 export function SectionOther() {
+    const { isLoggedIn } = useAuth()
     const [issues, setIssues] = useState<OtherIssue[]>([])
     const [isEditing, setIsEditing] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
@@ -105,19 +107,21 @@ export function SectionOther() {
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                    {isEditing ? (
-                        <button
-                            className="edit-toggle-btn"
-                            onClick={handleSave}
-                            disabled={isSaving}
-                            style={{ background: isSaving ? '#94a3b8' : '#16a34a' }}
-                        >
-                            {isSaving ? <><FiLoader className="spin" /> กำลังบันทึก...</> : <><FiSave /> บันทึก</>}
-                        </button>
-                    ) : (
-                        <button className="edit-toggle-btn" onClick={() => setIsEditing(true)}>
-                            <FiEdit2 /> แก้ไขข้อมูล
-                        </button>
+                    {isLoggedIn && (
+                        isEditing ? (
+                            <button
+                                className="edit-toggle-btn"
+                                onClick={handleSave}
+                                disabled={isSaving}
+                                style={{ background: isSaving ? '#94a3b8' : '#16a34a' }}
+                            >
+                                {isSaving ? <><FiLoader className="spin" /> กำลังบันทึก...</> : <><FiSave /> บันทึก</>}
+                            </button>
+                        ) : (
+                            <button className="edit-toggle-btn" onClick={() => setIsEditing(true)}>
+                                <FiEdit2 /> แก้ไขข้อมูล
+                            </button>
+                        )
                     )}
                 </div>
             </div>

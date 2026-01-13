@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { FiUsers, FiEdit3, FiCopy, FiCheck, FiUploadCloud, FiSettings, FiX, FiPlus } from 'react-icons/fi'
 import { groupReports } from '../data/assetData'
+import { useAuth } from './AuthContext'
 
 // Helper function to get status color
 const getStatusStyle = (status: string) => {
@@ -49,6 +50,7 @@ const GITHUB_FILE_PATH = 'src/data/assetData.ts'
 const GITHUB_BRANCH = 'main'
 
 export function SectionGroupReports() {
+    const { isLoggedIn } = useAuth()
     const [notes, setNotes] = useState<NotesState>({})
     const [edits, setEdits] = useState<EditsState>({})
     const [editing, setEditing] = useState<EditingState>({})
@@ -333,59 +335,63 @@ export function SectionGroupReports() {
                     <p className="section-subtitle">ผลการดำเนินงานของแต่ละกลุ่มงาน (จากไฟล์ T&V 2568)</p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                        onClick={() => setShowSettings(!showSettings)}
-                        title="ตั้งค่า GitHub Token"
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '10px',
-                            background: showSettings ? '#374151' : '#f3f4f6',
-                            color: showSettings ? '#fff' : '#374151',
-                            border: 'none',
-                            borderRadius: '8px',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        <FiSettings size={18} />
-                    </button>
-                    <button
-                        onClick={copyToClipboard}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            padding: '10px 14px',
-                            background: copied ? '#166534' : '#f3f4f6',
-                            color: copied ? '#fff' : '#374151',
-                            border: 'none',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontWeight: 500,
-                            fontSize: '14px'
-                        }}
-                    >
-                        {copied ? <><FiCheck /> Copied!</> : <><FiCopy /> Copy</>}
-                    </button>
-                    <button
-                        onClick={pushToGitHub}
-                        disabled={pushing}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '10px 16px',
-                            background: pushing ? '#9ca3af' : pushStatus === 'success' ? '#166534' : pushStatus === 'error' ? '#dc2626' : '#2d7a32',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '8px',
-                            cursor: pushing ? 'not-allowed' : 'pointer',
-                            fontWeight: 500,
-                            fontSize: '14px'
-                        }}
-                    >
-                        <FiUploadCloud /> {pushing ? 'กำลังบันทึก...' : 'บันทึกขึ้น GitHub'}
-                    </button>
+                    {isLoggedIn && (
+                        <>
+                            <button
+                                onClick={() => setShowSettings(!showSettings)}
+                                title="ตั้งค่า GitHub Token"
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    padding: '10px',
+                                    background: showSettings ? '#374151' : '#f3f4f6',
+                                    color: showSettings ? '#fff' : '#374151',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <FiSettings size={18} />
+                            </button>
+                            <button
+                                onClick={copyToClipboard}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '10px 14px',
+                                    background: copied ? '#166534' : '#f3f4f6',
+                                    color: copied ? '#fff' : '#374151',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    fontWeight: 500,
+                                    fontSize: '14px'
+                                }}
+                            >
+                                {copied ? <><FiCheck /> Copied!</> : <><FiCopy /> Copy</>}
+                            </button>
+                            <button
+                                onClick={pushToGitHub}
+                                disabled={pushing}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '10px 16px',
+                                    background: pushing ? '#9ca3af' : pushStatus === 'success' ? '#166534' : pushStatus === 'error' ? '#dc2626' : '#2d7a32',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    cursor: pushing ? 'not-allowed' : 'pointer',
+                                    fontWeight: 500,
+                                    fontSize: '14px'
+                                }}
+                            >
+                                <FiUploadCloud /> {pushing ? 'กำลังบันทึก...' : 'บันทึกขึ้น GitHub'}
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -634,25 +640,27 @@ export function SectionGroupReports() {
                                             }}>
                                                 {getEditValue(group.id, idx, 'status', item.status)}
                                             </span>
-                                            <button
-                                                onClick={() => toggleEdit(group.id, idx)}
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '6px',
-                                                    padding: '8px 14px',
-                                                    background: editMode ? '#f59e0b' : '#e5e7eb',
-                                                    color: editMode ? '#fff' : '#374151',
-                                                    border: 'none',
-                                                    borderRadius: '8px',
-                                                    cursor: 'pointer',
-                                                    fontWeight: 500,
-                                                    fontSize: '13px',
-                                                    transition: 'all 0.2s ease'
-                                                }}
-                                            >
-                                                {editMode ? <><FiCheck size={14} /> บันทึก</> : <><FiEdit3 size={14} /> แก้ไข</>}
-                                            </button>
+                                            {isLoggedIn && (
+                                                <button
+                                                    onClick={() => toggleEdit(group.id, idx)}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '6px',
+                                                        padding: '8px 14px',
+                                                        background: editMode ? '#f59e0b' : '#e5e7eb',
+                                                        color: editMode ? '#fff' : '#374151',
+                                                        border: 'none',
+                                                        borderRadius: '8px',
+                                                        cursor: 'pointer',
+                                                        fontWeight: 500,
+                                                        fontSize: '13px',
+                                                        transition: 'all 0.2s ease'
+                                                    }}
+                                                >
+                                                    {editMode ? <><FiCheck size={14} /> บันทึก</> : <><FiEdit3 size={14} /> แก้ไข</>}
+                                                </button>
+                                            )}
                                         </div>
 
                                         {/* Topic */}

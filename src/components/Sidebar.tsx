@@ -367,25 +367,10 @@ export function Sidebar({ sidebarOpen, activeSection, expandedNav, onToggleNav, 
                 <div className="nav-section">
                     <div
                         className={`nav-section-header ${activeSection.startsWith('section3') ? 'active' : ''}`}
-                        onClick={() => onToggleNav('section3')}
+                        onClick={() => onNavigateTo('section3-other')}
                     >
                         <div className="nav-section-icon"><FiUsers /></div>
-                        <div className="nav-section-title">ส่วนที่ 3: กลุ่มงานและอื่นๆ</div>
-                        <FiChevronDown className={`nav-section-arrow ${expandedNav === 'section3' ? 'expanded' : ''}`} />
-                    </div>
-                    <div className={`nav-items ${expandedNav === 'section3' ? 'expanded' : ''}`}>
-                        <div
-                            className={`nav-item ${activeSection === 'section3-groups' ? 'active' : ''}`}
-                            onClick={() => onNavigateTo('section3-groups')}
-                        >
-                            รายงานจากกลุ่มงาน
-                        </div>
-                        <div
-                            className={`nav-item ${activeSection === 'section3-other' ? 'active' : ''}`}
-                            onClick={() => onNavigateTo('section3-other')}
-                        >
-                            ประเด็นอื่นๆ
-                        </div>
+                        <div className="nav-section-title">ส่วนที่ 3: ประเด็นอื่นๆ</div>
                     </div>
                 </div>
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { FiDollarSign, FiTrendingUp, FiPackage, FiEdit2, FiSave, FiBriefcase, FiPlus, FiTrash2, FiLoader, FiAlertTriangle } from 'react-icons/fi'
 import { FaGithub, FaCog } from 'react-icons/fa'
 import { fetchSheetData, updateSheetData } from '../utils/sheetsApi'
+import { useAuth } from './AuthContext'
 
 interface BudgetItem {
     budget: string
@@ -54,6 +55,7 @@ const parseNum = (value: string): number => {
 }
 
 export function SectionBudget() {
+    const { isLoggedIn } = useAuth()
     const [isEditing, setIsEditing] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
@@ -441,38 +443,42 @@ export function SectionBudget() {
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                    <button
-                        className="edit-toggle-btn"
-                        style={{
-                            background: '#e5e7eb',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: '36px',
-                            height: '36px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#4b5563',
-                            cursor: 'pointer'
-                        }}
-                        onClick={() => setShowGithubSettings(true)}
-                        title="ตั้งค่า GitHub"
-                    >
-                        <FaCog size={18} />
-                    </button>
-                    {isEditing ? (
+                    {isLoggedIn && (
                         <>
-                            <button className="edit-toggle-btn" onClick={handleSaveLocal} disabled={isSaving} style={{ background: isSaving ? '#94a3b8' : '#16a34a', color: 'white', border: 'none', borderRadius: '20px', padding: '6px 16px', fontSize: '0.9rem', cursor: isSaving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                {isSaving ? <><FiLoader className="spin" /> กำลังบันทึก...</> : <><FiSave /> บันทึก</>}
+                            <button
+                                className="edit-toggle-btn"
+                                style={{
+                                    background: '#e5e7eb',
+                                    border: 'none',
+                                    borderRadius: '50%',
+                                    width: '36px',
+                                    height: '36px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: '#4b5563',
+                                    cursor: 'pointer'
+                                }}
+                                onClick={() => setShowGithubSettings(true)}
+                                title="ตั้งค่า GitHub"
+                            >
+                                <FaCog size={18} />
                             </button>
-                            <button className="edit-toggle-btn" style={{ background: '#24292e', color: 'white', border: 'none', borderRadius: '20px', padding: '6px 16px', fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={handleSaveToGitHub}>
-                                <FaGithub /> บันทึกขึ้น GitHub
-                            </button>
+                            {isEditing ? (
+                                <>
+                                    <button className="edit-toggle-btn" onClick={handleSaveLocal} disabled={isSaving} style={{ background: isSaving ? '#94a3b8' : '#16a34a', color: 'white', border: 'none', borderRadius: '20px', padding: '6px 16px', fontSize: '0.9rem', cursor: isSaving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        {isSaving ? <><FiLoader className="spin" /> กำลังบันทึก...</> : <><FiSave /> บันทึก</>}
+                                    </button>
+                                    <button className="edit-toggle-btn" style={{ background: '#24292e', color: 'white', border: 'none', borderRadius: '20px', padding: '6px 16px', fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={handleSaveToGitHub}>
+                                        <FaGithub /> บันทึกขึ้น GitHub
+                                    </button>
+                                </>
+                            ) : (
+                                <button className="edit-toggle-btn" onClick={() => setIsEditing(true)} style={{ background: '#1f2937', color: 'white', border: 'none', borderRadius: '20px', padding: '6px 16px', fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <FiEdit2 size={14} /> แก้ไขข้อมูล
+                                </button>
+                            )}
                         </>
-                    ) : (
-                        <button className="edit-toggle-btn" onClick={() => setIsEditing(true)} style={{ background: '#1f2937', color: 'white', border: 'none', borderRadius: '20px', padding: '6px 16px', fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <FiEdit2 size={14} /> แก้ไขข้อมูล
-                        </button>
                     )}
                 </div>
             </div>

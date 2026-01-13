@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FiMenu, FiX } from 'react-icons/fi'
+import { FiMenu, FiX, FiLogIn, FiLogOut, FiUser } from 'react-icons/fi'
 
 // Components
 import { Hero } from './components/Hero'
@@ -7,7 +7,6 @@ import { Sidebar } from './components/Sidebar'
 import { SectionBudget } from './components/SectionBudget'
 import { SectionAssets } from './components/SectionAssets'
 import { SectionEquipment } from './components/SectionEquipment'
-import { SectionGroupReports } from './components/SectionGroupReports'
 import { SectionOther } from './components/SectionOther'
 import { SectionBudgetDetailed } from './components/SectionBudgetDetailed'
 import { SectionStatusSummary } from './components/SectionStatusSummary'
@@ -15,14 +14,19 @@ import { SectionDashboard } from './components/SectionDashboard'
 import { SectionCalendar } from './components/SectionCalendar'
 import { SearchFilter } from './components/SearchFilter'
 import { Footer } from './components/Footer'
+import { AuthProvider, useAuth } from './components/AuthContext'
+import { LoginModal } from './components/LoginModal'
 
-function App() {
+function AppContent() {
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [activeSection, setActiveSection] = useState('section1')
     const [expandedNav, setExpandedNav] = useState<string | null>('section1')
 
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
     const [sidebarWidth, setSidebarWidth] = useState(300)
+
+    const [showLoginModal, setShowLoginModal] = useState(false)
+    const { isLoggedIn, logout } = useAuth()
 
     const toggleNav = (section: string) => {
         setExpandedNav(expandedNav === section ? null : section)
@@ -37,6 +41,80 @@ function App() {
 
     return (
         <div className="app-container">
+            {/* Login Modal */}
+            <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
+
+            {/* Admin Login Button - Fixed Position */}
+            <div style={{
+                position: 'fixed',
+                top: '16px',
+                right: '16px',
+                zIndex: 1000,
+                display: 'flex',
+                gap: '8px',
+                alignItems: 'center'
+            }}>
+                {isLoggedIn ? (
+                    <>
+                        <span style={{
+                            background: '#dcfce7',
+                            color: '#166534',
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            fontSize: '0.85rem',
+                            fontWeight: 500,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                        }}>
+                            <FiUser size={14} /> ผู้ดูแลระบบ
+                        </span>
+                        <button
+                            onClick={logout}
+                            style={{
+                                background: '#fef2f2',
+                                color: '#dc2626',
+                                border: '1px solid #fecaca',
+                                padding: '8px 14px',
+                                borderRadius: '8px',
+                                fontSize: '0.85rem',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <FiLogOut size={14} /> ออกจากระบบ
+                        </button>
+                    </>
+                ) : (
+                    <button
+                        onClick={() => setShowLoginModal(true)}
+                        style={{
+                            background: 'linear-gradient(135deg, #166534 0%, #15803d 100%)',
+                            color: 'white',
+                            border: 'none',
+                            padding: '10px 16px',
+                            borderRadius: '8px',
+                            fontSize: '0.9rem',
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            boxShadow: '0 2px 12px rgba(22, 101, 52, 0.3)',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        <FiLogIn size={16} /> เข้าสู่ระบบ
+                    </button>
+                )}
+            </div>
+
             {/* Mobile Menu Toggle */}
             <button
                 className="menu-toggle"
@@ -106,13 +184,8 @@ function App() {
                     <SectionBudgetDetailed activeSection={activeSection} />
                 )}
 
-                {/* Section 3: Group Reports */}
-                {(activeSection === 'section3' || activeSection === 'section3-groups') && (
-                    <SectionGroupReports />
-                )}
-
                 {/* Section 3: Other */}
-                {activeSection === 'section3-other' && (
+                {(activeSection === 'section3' || activeSection === 'section3-other') && (
                     <SectionOther />
                 )}
 
@@ -128,4 +201,13 @@ function App() {
     )
 }
 
+function App() {
+    return (
+        <AuthProvider>
+            <AppContent />
+        </AuthProvider>
+    )
+}
+
 export default App
+
