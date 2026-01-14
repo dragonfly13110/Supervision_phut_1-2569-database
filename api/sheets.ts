@@ -54,7 +54,7 @@ async function getAuthClient() {
 function rowsToObjects(sheetName: string, rows: any[][]): any[] {
     if (!rows || rows.length === 0) return [];
 
-    const headers = rows[0];
+    const _headers = rows[0];
     const dataRows = rows.slice(1);
 
     if (sheetName === 'otherIssues') {
@@ -367,7 +367,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 return res.status(400).json({ error: 'No data provided' });
             }
 
-            const config = SHEET_CONFIGS[sheetName];
+            const _config = SHEET_CONFIGS[sheetName];
             const sheetThaiName = SHEET_NAME_MAP[sheetName];
 
             // Clear existing data (except header)
