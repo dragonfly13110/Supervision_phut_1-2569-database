@@ -152,12 +152,7 @@ function rowsToObjects(sheetName: string, rows: any[][]): any[] {
         // Transform rows to the budgetData structure expected by SectionBudget
         const result: any = {
             investment: { construction: { budget: '0', disbursed: '0' } },
-            operation: {
-                utilities: { budget: '0', disbursed: '0' },
-                officeSupplies: { budget: '0', disbursed: '0' },
-                service: { budget: '0', disbursed: '0' },
-                travel: { budget: '0', disbursed: '0' },
-            },
+            operation: {},
             project: {},
         };
 
@@ -174,10 +169,15 @@ function rowsToObjects(sheetName: string, rows: any[][]): any[] {
                     result.operation.utilities = { budget, disbursed };
                 } else if (category === 'ค่าวัสดุ') {
                     result.operation.officeSupplies = { budget, disbursed };
-                } else if (category === 'ค่าใช้สอย') {
+                } else if (category === 'ค่าเช่าบ้าน') {
+                    result.operation.houseRent = { budget, disbursed };
+                } else if (category === 'ค่าใช้สอย' || category === 'ค่าจ้างเหมาบริการ') {
                     result.operation.service = { budget, disbursed };
-                } else if (category === 'ค่าเดินทาง') {
+                } else if (category === 'ค่าเดินทาง' || category === 'เบี้ยเลี้ยง') {
                     result.operation.travel = { budget, disbursed };
+                } else {
+                    // Dynamic fallback
+                    result.operation[category] = { budget, disbursed };
                 }
             } else if (type === 'งบโครงการ') {
                 const projectKey = category || `project_${Object.keys(result.project).length + 1}`;
@@ -187,6 +187,7 @@ function rowsToObjects(sheetName: string, rows: any[][]): any[] {
 
         return [result]; // Return as array with single object
     }
+
 
     return dataRows;
 }
@@ -283,13 +284,25 @@ function objectsToRows(sheetName: string, data: any[]): any[][] {
                 if (budgetData.operation.officeSupplies) {
                     rows.push(['งบดำเนินงาน', 'ค่าวัสดุ', budgetData.operation.officeSupplies.budget || '0', budgetData.operation.officeSupplies.disbursed || '0']);
                 }
+                if (budgetData.operation.houseRent) {
+                    rows.push(['งบดำเนินงาน', 'ค่าเช่าบ้าน', budgetData.operation.houseRent.budget || '0', budgetData.operation.houseRent.disbursed || '0']);
+                }
                 if (budgetData.operation.service) {
-                    rows.push(['งบดำเนินงาน', 'ค่าใช้สอย', budgetData.operation.service.budget || '0', budgetData.operation.service.disbursed || '0']);
+                    rows.push(['งบดำเนินงาน', 'ค่าจ้างเหมาบริการ', budgetData.operation.service.budget || '0', budgetData.operation.service.disbursed || '0']);
                 }
                 if (budgetData.operation.travel) {
-                    rows.push(['งบดำเนินงาน', 'ค่าเดินทาง', budgetData.operation.travel.budget || '0', budgetData.operation.travel.disbursed || '0']);
+                    rows.push(['งบดำเนินงาน', 'เบี้ยเลี้ยง', budgetData.operation.travel.budget || '0', budgetData.operation.travel.disbursed || '0']);
+                }
+                // Any other dynamic keys
+                const standardKeys = ['utilities', 'officeSupplies', 'houseRent', 'service', 'travel'];
+                for (const [key, val] of Object.entries(budgetData.operation)) {
+                    if (!standardKeys.includes(key)) {
+                        const v = val as any;
+                        rows.push(['งบดำเนินงาน', key, v.budget || '0', v.disbursed || '0']);
+                    }
                 }
             }
+
             // Projects
             if (budgetData.project) {
                 for (const [key, proj] of Object.entries(budgetData.project)) {

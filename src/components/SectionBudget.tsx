@@ -22,15 +22,13 @@ interface BudgetData {
         construction: BudgetItem
     }
     operation: {
-        utilities: BudgetItem
-        officeSupplies: BudgetItem
-        service: BudgetItem
-        travel: BudgetItem
+        [key: string]: BudgetItem
     }
     project: {
         [key: string]: ProjectItem
     }
 }
+
 
 // Helper function to format number with commas
 const formatNumber = (value: string): string => {
@@ -56,6 +54,25 @@ const parseNum = (value: string): number => {
     return isNaN(num) ? 0 : num
 }
 
+const getInitialState = (round: string): BudgetData => {
+    const isRound2 = round === 'round2';
+    return {
+        investment: { construction: { budget: '0', disbursed: '0' } },
+        operation: isRound2 ? {
+            utilities: { budget: '0', disbursed: '0' },
+            houseRent: { budget: '0', disbursed: '0' },
+            service: { budget: '0', disbursed: '0' },
+            travel: { budget: '0', disbursed: '0' },
+        } : {
+            utilities: { budget: '0', disbursed: '0' },
+            officeSupplies: { budget: '0', disbursed: '0' },
+            service: { budget: '0', disbursed: '0' },
+            travel: { budget: '0', disbursed: '0' },
+        },
+        project: {},
+    };
+};
+
 export function SectionBudget() {
     const { isLoggedIn } = useAuth()
     const { selectedRound } = useRound()
@@ -63,20 +80,13 @@ export function SectionBudget() {
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const [data, setData] = useState<BudgetData>({
-        investment: { construction: { budget: '0', disbursed: '0' } },
-        operation: {
-            utilities: { budget: '0', disbursed: '0' },
-            officeSupplies: { budget: '0', disbursed: '0' },
-            service: { budget: '0', disbursed: '0' },
-            travel: { budget: '0', disbursed: '0' },
-        },
-        project: {},
-    })
+    const [data, setData] = useState<BudgetData>(() => getInitialState(selectedRound))
 
     useEffect(() => {
+        setData(getInitialState(selectedRound))
         loadData()
     }, [selectedRound])
+
 
 
     const loadData = async () => {
@@ -171,12 +181,20 @@ export function SectionBudget() {
         }
     }
 
-    const operationItems = [
-        { key: 'utilities' as keyof BudgetData['operation'], title: 'ค่าสาธารณูปโภค', sub: 'ค่าน้ำ/ค่าไฟ' },
-        { key: 'officeSupplies' as keyof BudgetData['operation'], title: 'ค่าวัสดุสำนักงาน', sub: '' },
-        { key: 'service' as keyof BudgetData['operation'], title: 'ค่าจ้างเหมาบริการ', sub: '' },
-        { key: 'travel' as keyof BudgetData['operation'], title: 'เบี้ยเลี้ยง/ค่าเดินทาง', sub: '' },
-    ]
+    const OPERATION_ITEM_LABELS: Record<string, { title: string; sub?: string }> = {
+        utilities: { title: 'ค่าสาธารณูปโภค', sub: 'ค่าน้ำ/ค่าไฟ' },
+        officeSupplies: { title: 'ค่าวัสดุสำนักงาน', sub: '' },
+        houseRent: { title: 'ค่าเช่าบ้าน', sub: '' },
+        service: { title: 'ค่าจ้างเหมาบริการ', sub: '' },
+        travel: { title: 'เบี้ยเลี้ยง/ค่าเดินทาง', sub: '' },
+    };
+
+    const operationItems = Object.keys(data.operation).map(key => ({
+        key: key as keyof BudgetData['operation'],
+        title: OPERATION_ITEM_LABELS[key]?.title || key,
+        sub: OPERATION_ITEM_LABELS[key]?.sub || ''
+    }));
+
 
     // Calculate section totals
     const investmentTotal = {

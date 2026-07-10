@@ -94,8 +94,9 @@ function transformBudgetData(data) {
             const categoryMap = {
                 utilities: 'ค่าสาธารณูปโภค',
                 officeSupplies: 'ค่าวัสดุ',
-                service: 'ค่าใช้สอย',
-                travel: 'ค่าเดินทาง'
+                houseRent: 'ค่าเช่าบ้าน',
+                service: 'ค่าจ้างเหมาบริการ',
+                travel: 'เบี้ยเลี้ยง'
             };
             rows.push(['งบดำเนินงาน', categoryMap[key] || key, value.budget || '-', value.disbursed || '-']);
         }
