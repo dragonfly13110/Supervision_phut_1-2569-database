@@ -8,7 +8,8 @@
     "build": "npx tsc -b && npx vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "sync": "node scripts/sync-to-sheets.js"
+    "sync": "node scripts/sync-to-sheets.js",
+    "pull": "node scripts/pull-from-sheets.js"
   },
   "dependencies": {
     "googleapis": "^144.0.0",

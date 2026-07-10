@@ -80,17 +80,28 @@ export function SectionDashboard() {
         });
 
         // Budget from budgetData.json
+        const getBudgetVal = (obj: any, key: string, prop: 'budget' | 'disbursed') => {
+            if (obj && obj[key] && obj[key][prop]) {
+                const val = obj[key][prop];
+                return val === '-' ? 0 : parseFloat(val) || 0;
+            }
+            return 0;
+        };
+
+        const op = (budgetDataJson as any).operation || {};
         const operationBudget =
-            parseFloat(budgetDataJson.operation.utilities.budget) +
-            parseFloat(budgetDataJson.operation.officeSupplies.budget) +
-            parseFloat(budgetDataJson.operation.service.budget) +
-            parseFloat(budgetDataJson.operation.travel.budget);
+            getBudgetVal(op, 'utilities', 'budget') +
+            getBudgetVal(op, 'officeSupplies', 'budget') +
+            getBudgetVal(op, 'houseRent', 'budget') +
+            getBudgetVal(op, 'service', 'budget') +
+            getBudgetVal(op, 'travel', 'budget');
 
         const operationDisbursed =
-            parseFloat(budgetDataJson.operation.utilities.disbursed) +
-            parseFloat(budgetDataJson.operation.officeSupplies.disbursed) +
-            parseFloat(budgetDataJson.operation.service.disbursed) +
-            parseFloat(budgetDataJson.operation.travel.disbursed);
+            getBudgetVal(op, 'utilities', 'disbursed') +
+            getBudgetVal(op, 'officeSupplies', 'disbursed') +
+            getBudgetVal(op, 'houseRent', 'disbursed') +
+            getBudgetVal(op, 'service', 'disbursed') +
+            getBudgetVal(op, 'travel', 'disbursed');
 
         // Project budget (งบโครงการฯ)
         let projectBudget = 0;

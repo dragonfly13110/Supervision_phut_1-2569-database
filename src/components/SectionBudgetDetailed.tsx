@@ -8,11 +8,12 @@ import { useRound } from './RoundContext';
 
 interface DetailedProject {
     name: string;
-    subActivity: string;
+    subActivity?: string;
     relevantPolicies?: string;
-    target: string;
-    budget: string;
+    target?: string;
+    budget?: string;
     result: string;
+    progress?: string;
     problem: string;
     solution: string;
     status?: 'pending' | 'scheduled' | 'in_progress' | 'completed';
@@ -38,6 +39,18 @@ const stripLeadingNumber = (text: string): string => {
 // Helper: strip number after "กิจกรรม:" like "กิจกรรม: 1.1 กิจกรรม..." -> "กิจกรรม: กิจกรรม..."
 const stripActivityNumber = (name: string): string => {
     return name.replace(/(กิจกรรม:\s*)[\d.]+\s*/i, '$1');
+};
+
+// Helper: Get formatted display name with numbers prepended if not already present
+const getProjectDisplayName = (projectName: string, groupId: string, index: number): string => {
+    if (/^\d+(\.\d+)?[\s\.:]/.test(projectName.trim())) {
+        return projectName;
+    }
+    if (groupId === '1') {
+        return `1.${index + 1} ${projectName}`;
+    } else {
+        return `${index + 1}. ${projectName}`;
+    }
 };
 
 // Policy options for dropdown
@@ -447,8 +460,47 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                         )}
 
                         <div className="projects-list">
+                            {selectedRound === 'round2' && group.id === '1' && (
+                                <div style={{
+                                    marginBottom: '20px',
+                                    borderRadius: '12px',
+                                    overflow: 'hidden',
+                                    border: '1px solid #e2e8f0',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                                    background: '#fff',
+                                    padding: '12px'
+                                }}>
+                                    <div style={{
+                                        fontSize: '1rem',
+                                        fontWeight: '600',
+                                        color: '#0f766e',
+                                        marginBottom: '10px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px'
+                                    }}>
+                                        🗺️ Service Solution Model
+                                    </div>
+                                    <img 
+                                        src="/service_solution_model.png" 
+                                        alt="Service Solution Model" 
+                                        style={{
+                                            width: '100%',
+                                            height: 'auto',
+                                            borderRadius: '8px',
+                                            display: 'block',
+                                            cursor: 'zoom-in',
+                                            border: '1px solid #cbd5e1'
+                                        }}
+                                        onClick={() => {
+                                            window.open('/service_solution_model.png', '_blank');
+                                        }}
+                                    />
+                                </div>
+                            )}
                             {group.projects.map((project, index) => {
                                 const isExpanded = isProjectExpanded(group.id, index);
+                                const hasNoTarget = (project.result || '').includes('ไม่มีเป้าหมาย') || (project.progress || '').includes('ไม่มีเป้าหมาย') || (project.subActivity || '').includes('ไม่มีเป้าหมาย');
                                 return (
                                     <div key={index} className="project-item" style={{ position: 'relative' }}>
                                         {/* Delete Project Button */}
@@ -476,69 +528,124 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                 alignItems: 'center',
                                                 gap: '8px',
                                                 padding: '10px 12px',
-                                                background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
+                                                background: hasNoTarget 
+                                                    ? 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' 
+                                                    : 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)',
                                                 borderRadius: '6px',
                                                 marginBottom: isExpanded ? '10px' : '0',
                                                 cursor: 'pointer',
                                                 transition: 'all 0.2s ease',
-                                                border: '1px solid #d1fae5'
+                                                border: hasNoTarget ? '1px solid #cbd5e1' : '1px solid #d1fae5',
+                                                opacity: hasNoTarget ? 0.85 : 1
                                             }}
                                         >
-                                            <span style={{ color: '#059669', fontSize: '14px' }}>
+                                            <span style={{ color: hasNoTarget ? '#94a3b8' : '#059669', fontSize: '14px' }}>
                                                 {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
                                             </span>
                                             <div style={{ flex: 1 }}>
-                                                <div style={{
-                                                    fontWeight: 600,
-                                                    color: '#065f46',
-                                                    fontSize: '1.15rem',
-                                                    marginBottom: '6px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '10px',
-                                                    flexWrap: 'wrap'
-                                                }}>
-                                                    กิจกรรมที่ {index + 1}: {stripActivityNumber(project.name)}
-                                                    {/* Status Badge */}
-                                                    <span style={{
-                                                        display: 'inline-flex',
+                                                {selectedRound === 'round2' ? (
+                                                    <div style={{
+                                                        fontWeight: 600,
+                                                        color: hasNoTarget ? '#64748b' : '#065f46',
+                                                        fontSize: '1.15rem',
+                                                        lineHeight: '1.5',
+                                                        display: 'flex',
                                                         alignItems: 'center',
-                                                        gap: '4px',
-                                                        padding: '2px 8px',
-                                                        borderRadius: '12px',
-                                                        fontSize: '0.75rem',
-                                                        fontWeight: 500,
-                                                        background: project.status === 'completed' ? '#dcfce7' : project.status === 'in_progress' ? '#fef9c3' : project.status === 'scheduled' ? '#dbeafe' : '#f1f5f9',
-                                                        color: project.status === 'completed' ? '#166534' : project.status === 'in_progress' ? '#a16207' : project.status === 'scheduled' ? '#1e40af' : '#64748b',
-                                                        border: `1px solid ${project.status === 'completed' ? '#bbf7d0' : project.status === 'in_progress' ? '#fde047' : project.status === 'scheduled' ? '#60a5fa' : '#e2e8f0'}`
+                                                        gap: '8px',
+                                                        width: '100%'
                                                     }}>
-                                                        {project.status === 'completed' ? <><FaCheck size={10} /> เสร็จแล้ว</> :
-                                                            project.status === 'in_progress' ? <><FaClock size={10} /> กำลังดำเนินการ</> :
-                                                                project.status === 'scheduled' ? <><FaCalendarAlt size={10} /> กำหนดวันแล้ว</> :
-                                                                    <><FaCircle size={8} /> ยังไม่เริ่ม</>}
-                                                    </span>
-                                                </div>
-                                                <div style={{
-                                                    fontSize: '1rem',
-                                                    color: '#475569',
-                                                    fontWeight: 400,
-                                                    lineHeight: '1.5'
-                                                }}>
-                                                    📋 <strong>กิจกรรมย่อย:</strong> {stripLeadingNumber(project.subActivity)}
-                                                </div>
+                                                        <span>{getProjectDisplayName(project.name, group.id, index)}</span>
+                                                        {hasNoTarget && (
+                                                            <span style={{
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                padding: '2px 8px',
+                                                                borderRadius: '12px',
+                                                                fontSize: '0.75rem',
+                                                                fontWeight: 500,
+                                                                background: '#f1f5f9',
+                                                                color: '#64748b',
+                                                                border: '1px solid #e2e8f0',
+                                                                marginLeft: 'auto',
+                                                                whiteSpace: 'nowrap'
+                                                            }}>
+                                                                ไม่มีเป้าหมายในพื้นที่
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <div style={{
+                                                        fontWeight: 600,
+                                                        color: hasNoTarget ? '#64748b' : '#065f46',
+                                                        fontSize: '1.15rem',
+                                                        marginBottom: '6px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '10px',
+                                                        flexWrap: 'wrap'
+                                                    }}>
+                                                        <span>กิจกรรมที่ {index + 1}: {stripActivityNumber(project.name)}</span>
+                                                        {/* Status Badge / No target Badge */}
+                                                        {hasNoTarget ? (
+                                                            <span style={{
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                padding: '2px 8px',
+                                                                borderRadius: '12px',
+                                                                fontSize: '0.75rem',
+                                                                fontWeight: 500,
+                                                                background: '#f1f5f9',
+                                                                color: '#64748b',
+                                                                border: '1px solid #e2e8f0',
+                                                            }}>
+                                                                ไม่มีเป้าหมายในพื้นที่
+                                                            </span>
+                                                        ) : (
+                                                            <span style={{
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                gap: '4px',
+                                                                padding: '2px 8px',
+                                                                borderRadius: '12px',
+                                                                fontSize: '0.75rem',
+                                                                fontWeight: 500,
+                                                                background: project.status === 'completed' ? '#dcfce7' : project.status === 'in_progress' ? '#fef9c3' : project.status === 'scheduled' ? '#dbeafe' : '#f1f5f9',
+                                                                color: project.status === 'completed' ? '#166534' : project.status === 'in_progress' ? '#a16207' : project.status === 'scheduled' ? '#1e40af' : '#64748b',
+                                                                border: `1px solid ${project.status === 'completed' ? '#bbf7d0' : project.status === 'in_progress' ? '#fde047' : project.status === 'scheduled' ? '#60a5fa' : '#e2e8f0'}`
+                                                            }}>
+                                                                {project.status === 'completed' ? <><FaCheck size={10} /> เสร็จแล้ว</> :
+                                                                    project.status === 'in_progress' ? <><FaClock size={10} /> กำลังดำเนินการ</> :
+                                                                        project.status === 'scheduled' ? <><FaCalendarAlt size={10} /> กำหนดวันแล้ว</> :
+                                                                            <><FaCircle size={8} /> ยังไม่เริ่ม</>}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                {selectedRound !== 'round2' && (
+                                                    <div style={{
+                                                        fontSize: '1rem',
+                                                        color: hasNoTarget ? '#94a3b8' : '#475569',
+                                                        fontWeight: 400,
+                                                        lineHeight: '1.5'
+                                                    }}>
+                                                        📋 <strong>กิจกรรมย่อย:</strong> {stripLeadingNumber(project.subActivity || '')}
+                                                    </div>
+                                                )}
                                             </div>
-                                            <span style={{
-                                                fontSize: '0.85rem',
-                                                color: '#10b981',
-                                                fontWeight: 500,
-                                                whiteSpace: 'nowrap'
-                                            }}>
-                                                {project.budget}
-                                            </span>
+                                            {selectedRound !== 'round2' && !hasNoTarget && (
+                                                <span style={{
+                                                    fontSize: '0.85rem',
+                                                    color: '#10b981',
+                                                    fontWeight: 500,
+                                                    whiteSpace: 'nowrap'
+                                                }}>
+                                                    {project.budget}
+                                                </span>
+                                            )}
                                         </div>
 
                                         {/* Collapsible Content */}
-                                        <div style={{ display: !isExpanded ? 'none' : 'block' }}>
+                                        <div style={{ display: !isExpanded ? 'none' : 'block', opacity: hasNoTarget ? 0.75 : 1 }}>
                                             <div className="project-header">
                                                 <div className="project-info">
                                                     {isEditing ? (
@@ -552,37 +659,41 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                                     style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
                                                                 />
                                                             </div>
-                                                            <div>
-                                                                <label style={{ fontSize: '0.85rem', color: '#64748b', display: 'block', marginBottom: '2px' }}>กิจกรรมย่อย:</label>
-                                                                <textarea
-                                                                    value={project.subActivity}
-                                                                    onChange={(e) => handleChange(group.id, index, 'subActivity', e.target.value)}
-                                                                    style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', resize: 'vertical' }}
-                                                                    rows={2}
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <label style={{ fontSize: '0.85rem', color: '#64748b', display: 'block', marginBottom: '2px' }}>สถานะ:</label>
-                                                                <select
-                                                                    value={project.status || 'pending'}
-                                                                    onChange={(e) => handleChange(group.id, index, 'status', e.target.value)}
-                                                                    style={{
-                                                                        width: '200px',
-                                                                        padding: '8px 12px',
-                                                                        border: '1px solid #cbd5e1',
-                                                                        borderRadius: '6px',
-                                                                        fontSize: '0.9rem',
-                                                                        background: project.status === 'completed' ? '#dcfce7' : project.status === 'in_progress' ? '#fef9c3' : project.status === 'scheduled' ? '#dbeafe' : '#f8fafc',
-                                                                        color: project.status === 'completed' ? '#166534' : project.status === 'in_progress' ? '#a16207' : project.status === 'scheduled' ? '#1e40af' : '#475569',
-                                                                        cursor: 'pointer'
-                                                                    }}
-                                                                >
-                                                                    <option value="pending">⚪ ยังไม่เริ่ม</option>
-                                                                    <option value="scheduled">🗓️ กำหนดวันแล้ว</option>
-                                                                    <option value="in_progress">🟡 กำลังดำเนินการ</option>
-                                                                    <option value="completed">🟢 เสร็จแล้ว</option>
-                                                                </select>
-                                                            </div>
+                                                            {selectedRound !== 'round2' && (
+                                                                <div>
+                                                                    <label style={{ fontSize: '0.85rem', color: '#64748b', display: 'block', marginBottom: '2px' }}>กิจกรรมย่อย:</label>
+                                                                    <textarea
+                                                                        value={project.subActivity}
+                                                                        onChange={(e) => handleChange(group.id, index, 'subActivity', e.target.value)}
+                                                                        style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', resize: 'vertical' }}
+                                                                        rows={2}
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                            {selectedRound !== 'round2' && (
+                                                                <div>
+                                                                    <label style={{ fontSize: '0.85rem', color: '#64748b', display: 'block', marginBottom: '2px' }}>สถานะ:</label>
+                                                                    <select
+                                                                        value={project.status || 'pending'}
+                                                                        onChange={(e) => handleChange(group.id, index, 'status', e.target.value)}
+                                                                        style={{
+                                                                            width: '200px',
+                                                                            padding: '8px 12px',
+                                                                            border: '1px solid #cbd5e1',
+                                                                            borderRadius: '6px',
+                                                                            fontSize: '0.9rem',
+                                                                            background: project.status === 'completed' ? '#dcfce7' : project.status === 'in_progress' ? '#fef9c3' : project.status === 'scheduled' ? '#dbeafe' : '#f8fafc',
+                                                                            color: project.status === 'completed' ? '#166534' : project.status === 'in_progress' ? '#a16207' : project.status === 'scheduled' ? '#1e40af' : '#475569',
+                                                                            cursor: 'pointer'
+                                                                        }}
+                                                                    >
+                                                                        <option value="pending">⚪ ยังไม่เริ่ม</option>
+                                                                        <option value="scheduled">🗓️ กำหนดวันแล้ว</option>
+                                                                        <option value="in_progress">🟡 กำลังดำเนินการ</option>
+                                                                        <option value="completed">🟢 เสร็จแล้ว</option>
+                                                                    </select>
+                                                                </div>
+                                                            )}
                                                             <div style={{ gridColumn: '1 / -1' }}>
                                                                 <label style={{ fontSize: '0.85rem', color: '#64748b', display: 'block', marginBottom: '4px' }}>ประเด็นเน้นย้ำ (เลือกได้หลายข้อ):</label>
                                                                 <div style={{
@@ -652,34 +763,36 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                         </>
                                                     )}
                                                 </div>
-                                                <div className="project-metrics">
-                                                    <div className="metric">
-                                                        <span className="label">เป้าหมาย:</span>
-                                                        {isEditing ? (
-                                                            <input
-                                                                type="text"
-                                                                value={project.target}
-                                                                onChange={(e) => handleChange(group.id, index, 'target', e.target.value)}
-                                                                style={{ width: '100px', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
-                                                            />
-                                                        ) : (
-                                                            <span className="value">{project.target}</span>
-                                                        )}
+                                                {selectedRound !== 'round2' && (
+                                                    <div className="project-metrics">
+                                                        <div className="metric">
+                                                            <span className="label">เป้าหมาย:</span>
+                                                            {isEditing ? (
+                                                                <input
+                                                                    type="text"
+                                                                    value={project.target}
+                                                                    onChange={(e) => handleChange(group.id, index, 'target', e.target.value)}
+                                                                    style={{ width: '100px', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                                                                />
+                                                            ) : (
+                                                                <span className="value">{project.target}</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="metric">
+                                                            <span className="label">งบประมาณ:</span>
+                                                            {isEditing ? (
+                                                                <input
+                                                                    type="text"
+                                                                    value={project.budget}
+                                                                    onChange={(e) => handleChange(group.id, index, 'budget', e.target.value)}
+                                                                    style={{ width: '100px', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                                                                />
+                                                            ) : (
+                                                                <span className="value">{project.budget}</span>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <div className="metric">
-                                                        <span className="label">งบประมาณ:</span>
-                                                        {isEditing ? (
-                                                            <input
-                                                                type="text"
-                                                                value={project.budget}
-                                                                onChange={(e) => handleChange(group.id, index, 'budget', e.target.value)}
-                                                                style={{ width: '100px', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
-                                                            />
-                                                        ) : (
-                                                            <span className="value">{project.budget}</span>
-                                                        )}
-                                                    </div>
-                                                </div>
+                                                )}
                                             </div>
 
                                             <div className="project-feedback">
@@ -699,6 +812,25 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                         <div className="feedback-content">{project.result}</div>
                                                     )}
                                                 </div>
+ 
+                                                {selectedRound === 'round2' && (
+                                                    <div className="feedback-item" style={{ marginTop: '16px' }}>
+                                                        <div className="feedback-label" style={{ color: '#0369a1' }}>
+                                                            <FaChartLine className="icon" style={{ color: '#0369a1' }} /> ความก้าวหน้า
+                                                        </div>
+                                                        {isEditing ? (
+                                                            <textarea
+                                                                className="edit-textarea"
+                                                                value={project.progress || ''}
+                                                                onChange={(e) => handleChange(group.id, index, 'progress', e.target.value)}
+                                                                rows={3}
+                                                                placeholder="ระบุความก้าวหน้า..."
+                                                            />
+                                                        ) : (
+                                                            <div className="feedback-content">{project.progress || '-'}</div>
+                                                        )}
+                                                    </div>
+                                                )}
 
                                                 <div className="feedback-row">
                                                     <div className="feedback-item half">

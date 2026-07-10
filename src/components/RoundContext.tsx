@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, ReactNode } from 'react'
 
 export type RoundType = 'round1' | 'round2'
 
@@ -13,7 +13,9 @@ const RoundContext = createContext<RoundContextType | null>(null)
 export function RoundProvider({ children }: { children: ReactNode }) {
     const [selectedRound, setSelectedRound] = useState<RoundType>(() => {
         const saved = localStorage.getItem('selected_round')
-        return (saved === 'round1' || saved === 'round2') ? saved : 'round2'
+        if (saved === 'round1' || saved === 'round2') return saved
+        localStorage.setItem('selected_round', 'round2')
+        return 'round2'
     })
 
     const setRound = (round: RoundType) => {

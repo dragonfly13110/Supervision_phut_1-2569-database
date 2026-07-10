@@ -7,11 +7,12 @@ import { useRound } from './RoundContext';
 
 interface DetailedProject {
     name: string;
-    subActivity: string;
+    subActivity?: string;
     relevantPolicies?: string;
-    target: string;
-    budget: string;
+    target?: string;
+    budget?: string;
     result: string;
+    progress?: string;
     problem: string;
     solution: string;
     status?: 'pending' | 'scheduled' | 'in_progress' | 'completed';
@@ -28,7 +29,7 @@ interface BudgetGroup {
 interface CalendarEvent {
     date: Date;
     title: string;
-    subActivity: string;
+    subActivity?: string;
     status?: string;
     result: string;
 }
@@ -353,24 +354,26 @@ export function SectionCalendar() {
                 )}
 
                 {/* Legend */}
-                <div className="calendar-legend">
-                    <div className="calendar-legend-item">
-                        <span className="calendar-legend-dot" style={{ background: '#10b981' }}></span>
-                        <span>เสร็จสิ้น</span>
+                {selectedRound !== 'round2' && (
+                    <div className="calendar-legend">
+                        <div className="calendar-legend-item">
+                            <span className="calendar-legend-dot" style={{ background: '#10b981' }}></span>
+                            <span>เสร็จสิ้น</span>
+                        </div>
+                        <div className="calendar-legend-item">
+                            <span className="calendar-legend-dot" style={{ background: '#3b82f6' }}></span>
+                            <span>กำลังดำเนินการ</span>
+                        </div>
+                        <div className="calendar-legend-item">
+                            <span className="calendar-legend-dot" style={{ background: '#f59e0b' }}></span>
+                            <span>กำหนดวันแล้ว</span>
+                        </div>
+                        <div className="calendar-legend-item">
+                            <span className="calendar-legend-dot" style={{ background: '#6b7280' }}></span>
+                            <span>รอดำเนินการ</span>
+                        </div>
                     </div>
-                    <div className="calendar-legend-item">
-                        <span className="calendar-legend-dot" style={{ background: '#3b82f6' }}></span>
-                        <span>กำลังดำเนินการ</span>
-                    </div>
-                    <div className="calendar-legend-item">
-                        <span className="calendar-legend-dot" style={{ background: '#f59e0b' }}></span>
-                        <span>กำหนดวันแล้ว</span>
-                    </div>
-                    <div className="calendar-legend-item">
-                        <span className="calendar-legend-dot" style={{ background: '#6b7280' }}></span>
-                        <span>รอดำเนินการ</span>
-                    </div>
-                </div>
+                )}
             </div>
         </section>
     );

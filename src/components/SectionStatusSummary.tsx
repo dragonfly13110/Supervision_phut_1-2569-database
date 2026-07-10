@@ -3,15 +3,17 @@ import detailedBudgetProjectsDataRound1 from '../data/detailedBudgetProjects.jso
 import detailedBudgetProjectsDataRound2 from '../data/detailedBudgetProjects.round2.json';
 import { FaCheck, FaClock, FaCircle, FaFilter, FaChartPie, FaCalendarAlt } from 'react-icons/fa';
 import { useRound } from './RoundContext';
+import { fetchSheetData } from '../utils/sheetsApi';
 
 
 interface DetailedProject {
     name: string;
-    subActivity: string;
+    subActivity?: string;
     relevantPolicies?: string;
-    target: string;
-    budget: string;
+    target?: string;
+    budget?: string;
     result: string;
+    progress?: string;
     problem: string;
     solution: string;
     status?: 'pending' | 'in_progress' | 'completed' | 'scheduled';
@@ -36,15 +38,17 @@ export function SectionStatusSummary() {
     const [budgetGroups, setBudgetGroups] = useState<BudgetGroup[]>(defaultData as BudgetGroup[]);
     const [filterStatus, setFilterStatus] = useState<string>('all');
 
-    // Load from localStorage on mount and when round changes
+    // Load from local/localStorage on mount and when round changes
     useEffect(() => {
-        const key = selectedRound === 'round1' ? 'detailedBudgetProjects' : 'detailedBudgetProjects_round2';
-        const savedData = localStorage.getItem(key);
-        if (savedData) {
-            setBudgetGroups(JSON.parse(savedData));
-        } else {
-            setBudgetGroups(defaultData as BudgetGroup[]);
-        }
+        const load = async () => {
+            try {
+                const data = await fetchSheetData<BudgetGroup>('detailedBudgetProjects');
+                setBudgetGroups(data);
+            } catch (error) {
+                console.error("Failed to load status summary data:", error);
+            }
+        };
+        load();
     }, [selectedRound]);
 
 
@@ -86,97 +90,116 @@ export function SectionStatusSummary() {
             </div>
 
             {/* Summary Cards */}
-            <div className="summary-cards-grid" style={{ marginBottom: '24px' }}>
-                {/* Total */}
-                <div className="status-summary-card">
-                    <div className="label">
-                        <FaChartPie /> กิจกรรมทั้งหมด
-                    </div>
-                    <div className="value">{stats.total}</div>
-                </div>
-
-                {/* Completed */}
-                <div
-                    className={`status-summary-card completed ${filterStatus === 'completed' ? 'active' : ''}`}
-                    onClick={() => setFilterStatus(filterStatus === 'completed' ? 'all' : 'completed')}
-                    style={{ cursor: 'pointer' }}
-                >
-                    <div className="label">
-                        <FaCheck /> เสร็จแล้ว
-                    </div>
-                    <div className="value">{stats.completed}</div>
-                    <div style={{ fontSize: '0.8rem', marginTop: '4px', opacity: 0.85 }}>
-                        {completionRate}% ของทั้งหมด
-                    </div>
-                </div>
-
-                {/* In Progress */}
-                <div
-                    className={`status-summary-card in-progress ${filterStatus === 'in_progress' ? 'active' : ''}`}
-                    onClick={() => setFilterStatus(filterStatus === 'in_progress' ? 'all' : 'in_progress')}
-                    style={{ cursor: 'pointer' }}
-                >
-                    <div className="label">
-                        <FaClock /> กำลังดำเนินการ
-                    </div>
-                    <div className="value">{stats.inProgress}</div>
-                </div>
-
-                {/* Scheduled */}
-                <div
-                    className={`status-summary-card scheduled ${filterStatus === 'scheduled' ? 'active' : ''}`}
-                    onClick={() => setFilterStatus(filterStatus === 'scheduled' ? 'all' : 'scheduled')}
-                    style={{ cursor: 'pointer' }}
-                >
-                    <div className="label">
-                        <FaCalendarAlt /> กำหนดวันแล้ว
-                    </div>
-                    <div className="value">{stats.scheduled}</div>
-                </div>
-
-                {/* Pending */}
-                <div
-                    className={`status-summary-card pending ${filterStatus === 'pending' ? 'active' : ''}`}
-                    onClick={() => setFilterStatus(filterStatus === 'pending' ? 'all' : 'pending')}
-                    style={{ cursor: 'pointer' }}
-                >
-                    <div className="label">
-                        <FaCircle /> ยังไม่เริ่ม
-                    </div>
-                    <div className="value">{stats.pending}</div>
-                </div>
-            </div>
-
-            {/* Filter Info */}
-            {filterStatus !== 'all' && (
+            {selectedRound === 'round2' ? (
                 <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '10px 16px',
                     background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
                     borderRadius: '8px',
-                    marginBottom: '16px',
-                    fontSize: '0.9rem',
-                    color: '#475569'
+                    padding: '16px',
+                    marginBottom: '24px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '12px'
                 }}>
-                    <FaFilter size={12} />
-                    กำลังแสดง: {filterStatus === 'completed' ? 'เสร็จแล้ว' : filterStatus === 'in_progress' ? 'กำลังดำเนินการ' : filterStatus === 'scheduled' ? 'กำหนดวันแล้ว' : 'ยังไม่เริ่ม'}
-                    <button
-                        onClick={() => setFilterStatus('all')}
-                        style={{
-                            marginLeft: 'auto',
-                            background: '#e2e8f0',
-                            border: 'none',
-                            padding: '4px 12px',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '0.85rem'
-                        }}
-                    >
-                        แสดงทั้งหมด
-                    </button>
+                    <span style={{ fontSize: '1.2rem' }}>📋</span>
+                    <span style={{ fontWeight: 500, color: '#475569' }}>ประเด็นติดตามทั้งหมด:</span>
+                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#0f172a' }}>{stats.total} ประเด็น</span>
                 </div>
+            ) : (
+                <>
+                    <div className="summary-cards-grid" style={{ marginBottom: '24px' }}>
+                        {/* Total */}
+                        <div className="status-summary-card">
+                            <div className="label">
+                                <FaChartPie /> กิจกรรมทั้งหมด
+                            </div>
+                            <div className="value">{stats.total}</div>
+                        </div>
+
+                        {/* Completed */}
+                        <div
+                            className={`status-summary-card completed ${filterStatus === 'completed' ? 'active' : ''}`}
+                            onClick={() => setFilterStatus(filterStatus === 'completed' ? 'all' : 'completed')}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            <div className="label">
+                                <FaCheck /> เสร็จแล้ว
+                            </div>
+                            <div className="value">{stats.completed}</div>
+                            <div style={{ fontSize: '0.8rem', marginTop: '4px', opacity: 0.85 }}>
+                                {completionRate}% ของทั้งหมด
+                            </div>
+                        </div>
+
+                        {/* In Progress */}
+                        <div
+                            className={`status-summary-card in-progress ${filterStatus === 'in_progress' ? 'active' : ''}`}
+                            onClick={() => setFilterStatus(filterStatus === 'in_progress' ? 'all' : 'in_progress')}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            <div className="label">
+                                <FaClock /> กำลังดำเนินการ
+                            </div>
+                            <div className="value">{stats.inProgress}</div>
+                        </div>
+
+                        {/* Scheduled */}
+                        <div
+                            className={`status-summary-card scheduled ${filterStatus === 'scheduled' ? 'active' : ''}`}
+                            onClick={() => setFilterStatus(filterStatus === 'scheduled' ? 'all' : 'scheduled')}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            <div className="label">
+                                <FaCalendarAlt /> กำหนดวันแล้ว
+                            </div>
+                            <div className="value">{stats.scheduled}</div>
+                        </div>
+
+                        {/* Pending */}
+                        <div
+                            className={`status-summary-card pending ${filterStatus === 'pending' ? 'active' : ''}`}
+                            onClick={() => setFilterStatus(filterStatus === 'pending' ? 'all' : 'pending')}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            <div className="label">
+                                <FaCircle /> ยังไม่เริ่ม
+                            </div>
+                            <div className="value">{stats.pending}</div>
+                        </div>
+                    </div>
+
+                    {/* Filter Info */}
+                    {filterStatus !== 'all' && (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '10px 16px',
+                            background: '#f8fafc',
+                            borderRadius: '8px',
+                            marginBottom: '16px',
+                            fontSize: '0.9rem',
+                            color: '#475569'
+                        }}>
+                            <FaFilter size={12} />
+                            กำลังแสดง: {filterStatus === 'completed' ? 'เสร็จแล้ว' : filterStatus === 'in_progress' ? 'กำลังดำเนินการ' : filterStatus === 'scheduled' ? 'กำหนดวันแล้ว' : 'ยังไม่เริ่ม'}
+                            <button
+                                onClick={() => setFilterStatus('all')}
+                                style={{
+                                    marginLeft: 'auto',
+                                    background: '#e2e8f0',
+                                    border: 'none',
+                                    padding: '4px 12px',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem'
+                                }}
+                            >
+                                แสดงทั้งหมด
+                            </button>
+                        </div>
+                    )}
+                </>
             )}
 
             {/* Activities Table */}
@@ -187,12 +210,21 @@ export function SectionStatusSummary() {
             }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
-                        <tr style={{ background: '#f8fafc' }}>
-                            <th style={{ padding: '14px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '2px solid #e2e8f0', width: '50px' }}>#</th>
-                            <th style={{ padding: '14px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '2px solid #e2e8f0' }}>โครงการ / กิจกรรม</th>
-                            <th style={{ padding: '14px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '2px solid #e2e8f0', width: '120px' }}>งบประมาณ</th>
-                            <th style={{ padding: '14px 16px', textAlign: 'center', fontWeight: '600', color: '#374151', borderBottom: '2px solid #e2e8f0', width: '150px' }}>สถานะ</th>
-                        </tr>
+                        {selectedRound === 'round2' ? (
+                            <tr style={{ background: '#f8fafc' }}>
+                                <th style={{ padding: '14px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '2px solid #e2e8f0', width: '50px' }}>#</th>
+                                <th style={{ padding: '14px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '2px solid #e2e8f0', width: '30%' }}>ประเด็นการนิเทศงานและติดตาม</th>
+                                <th style={{ padding: '14px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '2px solid #e2e8f0', width: '40%' }}>ผลการดำเนินงาน</th>
+                                <th style={{ padding: '14px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '2px solid #e2e8f0', width: '30%' }}>ความก้าวหน้า</th>
+                            </tr>
+                        ) : (
+                            <tr style={{ background: '#f8fafc' }}>
+                                <th style={{ padding: '14px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '2px solid #e2e8f0', width: '50px' }}>#</th>
+                                <th style={{ padding: '14px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '2px solid #e2e8f0' }}>โครงการ / กิจกรรม</th>
+                                <th style={{ padding: '14px 16px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '2px solid #e2e8f0', width: '120px' }}>งบประมาณ</th>
+                                <th style={{ padding: '14px 16px', textAlign: 'center', fontWeight: '600', color: '#374151', borderBottom: '2px solid #e2e8f0', width: '150px' }}>สถานะ</th>
+                            </tr>
+                        )}
                     </thead>
                     <tbody>
                         {filteredProjects.map((project, idx) => (
@@ -204,41 +236,62 @@ export function SectionStatusSummary() {
                                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                             >
                                 <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '0.9rem' }}>{idx + 1}</td>
-                                <td style={{ padding: '12px 16px' }}>
-                                    <div style={{ fontSize: '0.8rem', color: '#059669', marginBottom: '4px', fontWeight: 500 }}>
-                                        {project.groupTitle}
-                                    </div>
-                                    <div style={{ fontWeight: 500, color: '#1e293b', fontSize: '0.95rem' }}>
-                                        {stripActivityNumber(project.name)}
-                                    </div>
-                                    {project.subActivity && (
-                                        <div style={{ fontSize: '0.85rem', color: '#6366f1', marginTop: '4px', fontWeight: 400 }}>
-                                            กิจกรรมย่อย: {project.subActivity}
-                                        </div>
-                                    )}
-                                </td>
-                                <td style={{ padding: '12px 16px', color: '#475569', fontSize: '0.9rem' }}>
-                                    {project.budget}
-                                </td>
-                                <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                    <span style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        padding: '6px 12px',
-                                        borderRadius: '20px',
-                                        fontSize: '0.85rem',
-                                        fontWeight: 500,
-                                        background: project.status === 'completed' ? '#dcfce7' : project.status === 'in_progress' ? '#fef9c3' : project.status === 'scheduled' ? '#dbeafe' : '#f1f5f9',
-                                        color: project.status === 'completed' ? '#166534' : project.status === 'in_progress' ? '#a16207' : project.status === 'scheduled' ? '#1e40af' : '#64748b',
-                                        border: `1px solid ${project.status === 'completed' ? '#bbf7d0' : project.status === 'in_progress' ? '#fde047' : project.status === 'scheduled' ? '#60a5fa' : '#e2e8f0'}`
-                                    }}>
-                                        {project.status === 'completed' ? <><FaCheck size={12} /> เสร็จแล้ว</> :
-                                            project.status === 'in_progress' ? <><FaClock size={12} /> กำลังดำเนินการ</> :
-                                                project.status === 'scheduled' ? <><FaCalendarAlt size={12} /> กำหนดวันแล้ว</> :
-                                                    <><FaCircle size={10} /> ยังไม่เริ่ม</>}
-                                    </span>
-                                </td>
+                                {selectedRound === 'round2' ? (
+                                    <>
+                                        <td style={{ padding: '12px 16px' }}>
+                                            <div style={{ fontSize: '0.8rem', color: '#059669', marginBottom: '4px', fontWeight: 500 }}>
+                                                {project.groupTitle}
+                                            </div>
+                                            <div style={{ fontWeight: 500, color: '#1e293b', fontSize: '0.95rem', whiteSpace: 'pre-wrap' }}>
+                                                {project.name}
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '12px 16px', color: '#475569', fontSize: '0.9rem', whiteSpace: 'pre-wrap' }}>
+                                            {project.result || '-'}
+                                        </td>
+                                        <td style={{ padding: '12px 16px', color: '#0369a1', fontSize: '0.9rem', whiteSpace: 'pre-wrap' }}>
+                                            {project.progress || '-'}
+                                        </td>
+                                    </>
+                                ) : (
+                                    <>
+                                        <td style={{ padding: '12px 16px' }}>
+                                            <div style={{ fontSize: '0.8rem', color: '#059669', marginBottom: '4px', fontWeight: 500 }}>
+                                                {project.groupTitle}
+                                            </div>
+                                            <div style={{ fontWeight: 500, color: '#1e293b', fontSize: '0.95rem' }}>
+                                                {stripActivityNumber(project.name)}
+                                            </div>
+                                            {project.subActivity && (
+                                                <div style={{ fontSize: '0.85rem', color: '#6366f1', marginTop: '4px', fontWeight: 400 }}>
+                                                    กิจกรรมย่อย: {project.subActivity}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td style={{ padding: '12px 16px', color: '#475569', fontSize: '0.9rem' }}>
+                                            {project.budget}
+                                        </td>
+                                        <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                            <span style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                padding: '6px 12px',
+                                                borderRadius: '20px',
+                                                fontSize: '0.85rem',
+                                                fontWeight: 500,
+                                                background: project.status === 'completed' ? '#dcfce7' : project.status === 'in_progress' ? '#fef9c3' : project.status === 'scheduled' ? '#dbeafe' : '#f1f5f9',
+                                                color: project.status === 'completed' ? '#166534' : project.status === 'in_progress' ? '#a16207' : project.status === 'scheduled' ? '#1e40af' : '#64748b',
+                                                border: `1px solid ${project.status === 'completed' ? '#bbf7d0' : project.status === 'in_progress' ? '#fde047' : project.status === 'scheduled' ? '#60a5fa' : '#e2e8f0'}`
+                                            }}>
+                                                {project.status === 'completed' ? <><FaCheck size={12} /> เสร็จแล้ว</> :
+                                                    project.status === 'in_progress' ? <><FaClock size={12} /> กำลังดำเนินการ</> :
+                                                        project.status === 'scheduled' ? <><FaCalendarAlt size={12} /> กำหนดวันแล้ว</> :
+                                                            <><FaCircle size={10} /> ยังไม่เริ่ม</>}
+                                            </span>
+                                        </td>
+                                    </>
+                                )}
                             </tr>
                         ))}
                     </tbody>

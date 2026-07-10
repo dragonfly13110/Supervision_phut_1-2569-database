@@ -7,11 +7,12 @@ import { useRound } from './RoundContext';
 
 interface DetailedProject {
     name: string;
-    subActivity: string;
+    subActivity?: string;
     relevantPolicies?: string;
-    target: string;
-    budget: string;
+    target?: string;
+    budget?: string;
     result: string;
+    progress?: string;
     problem: string;
     solution: string;
     status?: 'pending' | 'scheduled' | 'in_progress' | 'completed';
@@ -74,10 +75,13 @@ export function SearchFilter({ onNavigate }: SearchFilterProps) {
                 // Text search
                 if (lowerQuery) {
                     const fieldsToSearch = [
-                        { field: 'name', value: project.name },
-                        { field: 'subActivity', value: project.subActivity },
-                        { field: 'result', value: project.result },
-                        { field: 'target', value: project.target },
+                        { field: 'name', value: project.name || '' },
+                        { field: 'subActivity', value: project.subActivity || '' },
+                        { field: 'result', value: project.result || '' },
+                        { field: 'progress', value: project.progress || '' },
+                        { field: 'problem', value: project.problem || '' },
+                        { field: 'solution', value: project.solution || '' },
+                        { field: 'target', value: project.target || '' },
                         { field: 'relevantPolicies', value: project.relevantPolicies || '' },
                     ];
 
@@ -176,13 +180,15 @@ export function SearchFilter({ onNavigate }: SearchFilterProps) {
                         <FiX />
                     </button>
                 )}
-                <button
-                    className={`search-filter-toggle ${showFilters ? 'active' : ''}`}
-                    onClick={() => setShowFilters(!showFilters)}
-                    title="ตัวกรอง"
-                >
-                    <FiFilter />
-                </button>
+                {selectedRound !== 'round2' && (
+                    <button
+                        className={`search-filter-toggle ${showFilters ? 'active' : ''}`}
+                        onClick={() => setShowFilters(!showFilters)}
+                        title="ตัวกรอง"
+                    >
+                        <FiFilter />
+                    </button>
+                )}
             </div>
 
             {/* Filter chips */}
@@ -224,10 +230,12 @@ export function SearchFilter({ onNavigate }: SearchFilterProps) {
                                     className="search-filter-result-item"
                                     onClick={() => handleResultClick(result)}
                                 >
-                                    <div
-                                        className="search-filter-result-status"
-                                        style={{ background: getStatusColor(result.project.status) }}
-                                    ></div>
+                                    {selectedRound !== 'round2' && (
+                                        <div
+                                            className="search-filter-result-status"
+                                            style={{ background: getStatusColor(result.project.status) }}
+                                        ></div>
+                                    )}
                                     <div className="search-filter-result-content">
                                         <div className="search-filter-result-title">
                                             {result.project.subActivity || result.project.name}
@@ -236,15 +244,17 @@ export function SearchFilter({ onNavigate }: SearchFilterProps) {
                                             <span className="search-filter-result-group">
                                                 {result.groupTitle.substring(0, 50)}...
                                             </span>
-                                            <span
-                                                className="search-filter-result-badge"
-                                                style={{
-                                                    background: `${getStatusColor(result.project.status)}20`,
-                                                    color: getStatusColor(result.project.status)
-                                                }}
-                                            >
-                                                {getStatusLabel(result.project.status)}
-                                            </span>
+                                            {selectedRound !== 'round2' && (
+                                                <span
+                                                    className="search-filter-result-badge"
+                                                    style={{
+                                                        background: `${getStatusColor(result.project.status)}20`,
+                                                        color: getStatusColor(result.project.status)
+                                                    }}
+                                                >
+                                                    {getStatusLabel(result.project.status)}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

@@ -30,7 +30,7 @@ export function Sidebar({ sidebarOpen, activeSection, expandedNav, onToggleNav, 
     const activeProjectsData = selectedRound === 'round1' ? detailedBudgetProjects : detailedBudgetProjectsRound2
 
     // Reordering Logic
-    const [projects, setProjects] = useState(activeProjectsData)
+    const [projects, setProjects] = useState<any[]>(activeProjectsData)
     const [isEditMode, setIsEditMode] = useState(false)
 
     // Sync projects if source or round changes (optional, but good practice if data was dynamic)

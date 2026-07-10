@@ -224,9 +224,29 @@ export function SectionEquipment() {
 
             <div className="equipment-grid">
                 {assets.map((item) => (
-                    <div className="equipment-card" key={item.id} style={{ flexDirection: 'column', gap: '12px' }}>
+                    <div 
+                        className={`equipment-card ${item.statusText === 'ไม่มีในระบบ' ? 'inactive-asset' : ''}`} 
+                        key={item.id} 
+                        style={{ 
+                            flexDirection: 'column', 
+                            gap: '12px',
+                            opacity: item.statusText === 'ไม่มีในระบบ' ? 0.45 : 1,
+                            backgroundColor: item.statusText === 'ไม่มีในระบบ' ? '#f8fafc' : undefined,
+                            border: item.statusText === 'ไม่มีในระบบ' ? '1px dashed #cbd5e1' : undefined,
+                            boxShadow: item.statusText === 'ไม่มีในระบบ' ? 'none' : undefined,
+                            pointerEvents: item.statusText === 'ไม่มีในระบบ' && !isEditing ? 'none' : undefined,
+                            transition: 'all 0.2s ease'
+                        }}
+                    >
                         <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                            <div className="equipment-number">
+                            <div 
+                                className="equipment-number"
+                                style={item.statusText === 'ไม่มีในระบบ' ? {
+                                    background: '#e2e8f0',
+                                    color: '#94a3b8',
+                                    boxShadow: 'none'
+                                } : undefined}
+                            >
                                 {isEditing ? (
                                     <input
                                         type="number"
@@ -249,13 +269,13 @@ export function SectionEquipment() {
                                 ) : (
                                     <div className="equipment-name">{item.name}</div>
                                 )}
-                                <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>
+                                <div style={{ fontSize: '0.95rem', color: '#475569', marginTop: '6px' }}>
                                     จำนวน: {isEditing ? (
                                         <input
                                             type="text"
                                             value={item.amount}
                                             onChange={e => handleChange(item.id, 'amount', e.target.value)}
-                                            style={{ width: '100px', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                                            style={{ width: '100px', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.95rem' }}
                                         />
                                     ) : (
                                         <strong>{item.amount}</strong>
@@ -284,7 +304,17 @@ export function SectionEquipment() {
                                     <option value="danger">ชำรุด</option>
                                 </select>
                             ) : (
-                                <span className={`status-badge ${item.status}`}>{item.statusText}</span>
+                                <span 
+                                    className={`status-badge ${item.status}`}
+                                    style={item.statusText === 'ไม่มีในระบบ' ? {
+                                        background: '#f1f5f9',
+                                        color: '#64748b',
+                                        border: '1px solid #cbd5e1',
+                                        fontWeight: 500
+                                    } : undefined}
+                                >
+                                    {item.statusText}
+                                </span>
                             )}
                         </div>
                         {isEditing && (
