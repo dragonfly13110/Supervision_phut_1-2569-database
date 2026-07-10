@@ -1,12 +1,16 @@
 import { FiCalendar, FiMapPin } from 'react-icons/fi'
+import { useRound } from './RoundContext'
 
 export function Hero() {
+    const { getRoundLabel } = useRound()
+
     return (
         <section className="hero">
             <div className="hero-content">
                 <div className="hero-badge">
-                    <FiCalendar /> ปีงบประมาณ พ.ศ. 2569 ครั้งที่ 1
+                    <FiCalendar /> ปีงบประมาณ พ.ศ. 2569 {getRoundLabel()}
                 </div>
+
                 <h1 className="hero-title">
                     แผนนิเทศงานตามระบบส่งเสริมการเกษตร<br />
                     (T&V System)

@@ -3,6 +3,8 @@ import { fetchSheetData, updateSheetData } from '../utils/sheetsApi';
 import { FaEdit, FaSave, FaChartLine, FaExclamationTriangle, FaLightbulb, FaImage, FaPlus, FaTimes, FaChevronDown, FaChevronRight, FaTrash, FaCheck, FaClock, FaCircle, FaCalendarAlt } from 'react-icons/fa';
 import { FiLoader, FiAlertTriangle } from 'react-icons/fi';
 import { useAuth } from './AuthContext';
+import { useRound } from './RoundContext';
+
 
 interface DetailedProject {
     name: string;
@@ -91,10 +93,13 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
     // Lightbox State for viewing images in full screen
     const [lightboxImage, setLightboxImage] = useState<{ url: string; caption?: string } | null>(null);
 
-    // Load from Google Sheets on mount
+    const { selectedRound } = useRound();
+
+    // Load from Google Sheets on mount and when round changes
     useEffect(() => {
         loadData();
-    }, []);
+    }, [selectedRound]);
+
 
     const loadData = async () => {
         setIsLoading(true);

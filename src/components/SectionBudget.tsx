@@ -3,7 +3,10 @@ import { FiDollarSign, FiTrendingUp, FiPackage, FiEdit2, FiSave, FiBriefcase, Fi
 import { fetchSheetData, updateSheetData } from '../utils/sheetsApi'
 import { useAuth } from './AuthContext'
 
+import { useRound } from './RoundContext'
+
 interface BudgetItem {
+
     budget: string
     disbursed: string
 }
@@ -55,6 +58,7 @@ const parseNum = (value: string): number => {
 
 export function SectionBudget() {
     const { isLoggedIn } = useAuth()
+    const { selectedRound } = useRound()
     const [isEditing, setIsEditing] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
@@ -72,7 +76,8 @@ export function SectionBudget() {
 
     useEffect(() => {
         loadData()
-    }, [])
+    }, [selectedRound])
+
 
     const loadData = async () => {
         setIsLoading(true)

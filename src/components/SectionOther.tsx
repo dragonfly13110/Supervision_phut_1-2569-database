@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { FiAlertTriangle, FiEdit2, FiSave, FiPlus, FiTrash2, FiLoader } from 'react-icons/fi'
 import { fetchSheetData, updateSheetData } from '../utils/sheetsApi'
 import { useAuth } from './AuthContext'
+import { useRound } from './RoundContext'
+
 
 interface OtherIssue {
     id: string
@@ -11,16 +13,18 @@ interface OtherIssue {
 
 export function SectionOther() {
     const { isLoggedIn } = useAuth()
+    const { selectedRound } = useRound()
     const [issues, setIssues] = useState<OtherIssue[]>([])
     const [isEditing, setIsEditing] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    // Load data from Google Sheets on mount
+    // Load data from Google Sheets on mount and round change
     useEffect(() => {
         loadData()
-    }, [])
+    }, [selectedRound])
+
 
     const loadData = async () => {
         setIsLoading(true)

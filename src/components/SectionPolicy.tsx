@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { FiFileText, FiEdit2, FiSave, FiPlus, FiTrash2, FiGithub, FiSettings, FiX } from 'react-icons/fi'
 import { policyProjects } from '../data/assetData'
+import { useRound } from './RoundContext'
+
 
 interface Project {
     name: string
@@ -23,10 +25,8 @@ interface SectionPolicyProps {
 }
 
 export function SectionPolicy({ activeSection, onNavigateTo }: SectionPolicyProps) {
-    const [edits, setEdits] = useState<Policy[]>(() => {
-        const saved = localStorage.getItem('policy_edits')
-        return saved ? JSON.parse(saved) : policyProjects
-    })
+    const { selectedRound } = useRound()
+    const [edits, setEdits] = useState<Policy[]>(policyProjects)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [isPushing, setIsPushing] = useState(false)
 
@@ -38,9 +38,24 @@ export function SectionPolicy({ activeSection, onNavigateTo }: SectionPolicyProp
     const [newImageUrl, setNewImageUrl] = useState('')
     const [activeImageInput, setActiveImageInput] = useState<{ policyId: string, projectIdx: number } | null>(null)
 
+
+    // Load edits on mount and when round changes
     useEffect(() => {
-        localStorage.setItem('policy_edits', JSON.stringify(edits))
-    }, [edits])
+        const key = selectedRound === 'round1' ? 'policy_edits' : 'policy_edits_round2'
+        const saved = localStorage.getItem(key)
+        if (saved) {
+            setEdits(JSON.parse(saved))
+        } else {
+            setEdits(policyProjects)
+        }
+    }, [selectedRound])
+
+    // Save edits when edits change
+    useEffect(() => {
+        const key = selectedRound === 'round1' ? 'policy_edits' : 'policy_edits_round2'
+        localStorage.setItem(key, JSON.stringify(edits))
+    }, [edits, selectedRound])
+
 
     // Load/Save GitHub Token
     useEffect(() => {

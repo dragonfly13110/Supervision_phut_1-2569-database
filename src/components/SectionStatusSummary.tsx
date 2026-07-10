@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
-import detailedBudgetProjectsData from '../data/detailedBudgetProjects.json';
+import detailedBudgetProjectsDataRound1 from '../data/detailedBudgetProjects.json';
+import detailedBudgetProjectsDataRound2 from '../data/detailedBudgetProjects.round2.json';
 import { FaCheck, FaClock, FaCircle, FaFilter, FaChartPie, FaCalendarAlt } from 'react-icons/fa';
+import { useRound } from './RoundContext';
+
 
 interface DetailedProject {
     name: string;
@@ -28,16 +31,22 @@ const stripActivityNumber = (name: string): string => {
 };
 
 export function SectionStatusSummary() {
-    const [budgetGroups, setBudgetGroups] = useState<BudgetGroup[]>(detailedBudgetProjectsData as BudgetGroup[]);
+    const { selectedRound } = useRound();
+    const defaultData = selectedRound === 'round1' ? detailedBudgetProjectsDataRound1 : detailedBudgetProjectsDataRound2;
+    const [budgetGroups, setBudgetGroups] = useState<BudgetGroup[]>(defaultData as BudgetGroup[]);
     const [filterStatus, setFilterStatus] = useState<string>('all');
 
-    // Load from localStorage on mount
+    // Load from localStorage on mount and when round changes
     useEffect(() => {
-        const savedData = localStorage.getItem('detailedBudgetProjects');
+        const key = selectedRound === 'round1' ? 'detailedBudgetProjects' : 'detailedBudgetProjects_round2';
+        const savedData = localStorage.getItem(key);
         if (savedData) {
             setBudgetGroups(JSON.parse(savedData));
+        } else {
+            setBudgetGroups(defaultData as BudgetGroup[]);
         }
-    }, []);
+    }, [selectedRound]);
+
 
     // Flatten all projects with group info
     const allProjects = budgetGroups.flatMap(group =>

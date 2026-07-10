@@ -324,6 +324,57 @@ function translateStatusReverse(status: string): string {
     return statusMap[status] || 'pending';
 }
 
+function getSheetName(sheetName: string, round?: string): string {
+    const baseName = SHEET_NAME_MAP[sheetName];
+    if (round === '2' || round === 'round2') {
+        return `${baseName} - ครั้งที่ 2`;
+    }
+    return baseName;
+}
+
+async function ensureSheetExists(sheets: any, spreadsheetId: string, sheetTitle: string, headers: string[]) {
+    try {
+        await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: `'${sheetTitle}'!A1:1`,
+        });
+    } catch (error: any) {
+        // Sheet doesn't exist, create it
+        if (error.status === 400 || error.message.includes('Unable to parse range')) {
+            console.log(`Creating sheet: ${sheetTitle}`);
+            try {
+                await sheets.spreadsheets.batchUpdate({
+                    spreadsheetId,
+                    requestBody: {
+                        requests: [
+                            {
+                                addSheet: {
+                                    properties: {
+                                        title: sheetTitle,
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                });
+                // Write headers
+                await sheets.spreadsheets.values.update({
+                    spreadsheetId,
+                    range: `'${sheetTitle}'!A1`,
+                    valueInputOption: 'USER_ENTERED',
+                    requestBody: {
+                        values: [headers],
+                    },
+                });
+            } catch (createError) {
+                console.error(`Failed to create sheet "${sheetTitle}":`, createError);
+            }
+        } else {
+            throw error;
+        }
+    }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -340,14 +391,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (req.method === 'GET') {
             const sheetName = req.query.sheet as string;
+            const round = req.query.round as string;
 
             if (!sheetName || !SHEET_NAME_MAP[sheetName]) {
                 return res.status(400).json({ error: 'Invalid sheet name' });
             }
 
+            const sheetTitle = getSheetName(sheetName, round);
+            const config = SHEET_CONFIGS[sheetName];
+
+            await ensureSheetExists(sheets, SPREADSHEET_ID, sheetTitle, config.headers);
+
             const response = await sheets.spreadsheets.values.get({
                 spreadsheetId: SPREADSHEET_ID,
-                range: `'${SHEET_NAME_MAP[sheetName]}'!A:Z`,
+                range: `'${sheetTitle}'!A:Z`,
             });
 
             const rows = response.data.values || [];
@@ -357,7 +414,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         if (req.method === 'POST') {
-            const { sheet: sheetName, data } = req.body;
+            const { sheet: sheetName, data, round } = req.body;
 
             if (!sheetName || !SHEET_NAME_MAP[sheetName]) {
                 return res.status(400).json({ error: 'Invalid sheet name' });
@@ -367,13 +424,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 return res.status(400).json({ error: 'No data provided' });
             }
 
-            const _config = SHEET_CONFIGS[sheetName];
-            const sheetThaiName = SHEET_NAME_MAP[sheetName];
+            const config = SHEET_CONFIGS[sheetName];
+            const sheetTitle = getSheetName(sheetName, round);
+
+            await ensureSheetExists(sheets, SPREADSHEET_ID, sheetTitle, config.headers);
 
             // Clear existing data (except header)
             await sheets.spreadsheets.values.clear({
                 spreadsheetId: SPREADSHEET_ID,
-                range: `'${sheetThaiName}'!A2:Z`,
+                range: `'${sheetTitle}'!A2:Z`,
             });
 
             // Write new data
@@ -382,7 +441,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (rows.length > 0) {
                 await sheets.spreadsheets.values.update({
                     spreadsheetId: SPREADSHEET_ID,
-                    range: `'${sheetThaiName}'!A2`,
+                    range: `'${sheetTitle}'!A2`,
                     valueInputOption: 'USER_ENTERED',
                     requestBody: {
                         values: rows,
@@ -400,3 +459,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(500).json({ error: error.message || 'Internal Server Error' });
     }
 }
+

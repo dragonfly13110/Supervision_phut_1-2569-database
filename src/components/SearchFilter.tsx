@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { FiSearch, FiX, FiFilter } from 'react-icons/fi';
-import detailedBudgetProjectsData from '../data/detailedBudgetProjects.json';
+import detailedBudgetProjectsDataRound1 from '../data/detailedBudgetProjects.json';
+import detailedBudgetProjectsDataRound2 from '../data/detailedBudgetProjects.round2.json';
+import { useRound } from './RoundContext';
+
 
 interface DetailedProject {
     name: string;
@@ -42,12 +45,16 @@ const STATUS_FILTERS = [
 ];
 
 export function SearchFilter({ onNavigate }: SearchFilterProps) {
+    const { selectedRound } = useRound();
     const [query, setQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [isOpen, setIsOpen] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
 
-    const budgetGroups = detailedBudgetProjectsData as unknown as BudgetGroup[];
+    const budgetGroups = (selectedRound === 'round1'
+        ? detailedBudgetProjectsDataRound1
+        : detailedBudgetProjectsDataRound2) as unknown as BudgetGroup[];
+
 
     // Search results
     const results = useMemo(() => {

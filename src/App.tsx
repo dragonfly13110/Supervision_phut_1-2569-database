@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { FiMenu, FiX, FiLogIn, FiLogOut, FiUser } from 'react-icons/fi'
+import { RoundProvider, useRound } from './components/RoundContext'
+
 
 // Components
 import { Hero } from './components/Hero'
@@ -18,7 +20,9 @@ import { AuthProvider, useAuth } from './components/AuthContext'
 import { LoginModal } from './components/LoginModal'
 
 function AppContent() {
+    const { selectedRound, setRound } = useRound()
     const [sidebarOpen, setSidebarOpen] = useState(false)
+
     const [activeSection, setActiveSection] = useState('section1')
     const [expandedNav, setExpandedNav] = useState<string | null>('section1')
 
@@ -44,7 +48,7 @@ function AppContent() {
             {/* Login Modal */}
             <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
 
-            {/* Admin Login Button - Fixed Position */}
+            {/* Admin Login & Round Selector - Fixed Position */}
             <div style={{
                 position: 'fixed',
                 top: '16px',
@@ -54,6 +58,28 @@ function AppContent() {
                 gap: '8px',
                 alignItems: 'center'
             }}>
+                {/* Round Selector */}
+                <select
+                    value={selectedRound}
+                    onChange={(e) => setRound(e.target.value as any)}
+                    style={{
+                        background: '#ffffff',
+                        color: '#166534',
+                        border: '1px solid #bbf7d0',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                        outline: 'none',
+                        transition: 'all 0.2s'
+                    }}
+                >
+                    <option value="round1">ครั้งที่ 1/2569</option>
+                    <option value="round2">ครั้งที่ 2/2569</option>
+                </select>
+
                 {isLoggedIn ? (
                     <>
                         <span style={{
@@ -204,10 +230,13 @@ function AppContent() {
 function App() {
     return (
         <AuthProvider>
-            <AppContent />
+            <RoundProvider>
+                <AppContent />
+            </RoundProvider>
         </AuthProvider>
     )
 }
+
 
 export default App
 

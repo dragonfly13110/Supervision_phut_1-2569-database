@@ -505,8 +505,11 @@ export const groupReports = [
 ]
 
 import detailedBudgetProjectsData from './detailedBudgetProjects.json';
+import detailedBudgetProjectsDataRound2 from './detailedBudgetProjects.round2.json';
 
 // ข้อมูลโครงการงบประมาณรายจ่ายประจำปี 2569 (รายละเอียด)
 export const detailedBudgetProjects = detailedBudgetProjectsData;
+export const detailedBudgetProjectsRound2 = detailedBudgetProjectsDataRound2;
+
 
 

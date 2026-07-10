@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { FiTool, FiEdit2, FiSave, FiLoader, FiAlertTriangle, FiImage, FiPlus, FiX } from 'react-icons/fi'
 import { fetchSheetData, updateSheetData } from '../utils/sheetsApi'
 import { useAuth } from './AuthContext'
+import { useRound } from './RoundContext'
 
 interface ProjectAsset {
     id: number
@@ -17,6 +18,7 @@ interface ProjectAsset {
 
 export function SectionEquipment() {
     const { isLoggedIn } = useAuth()
+    const { selectedRound } = useRound()
     const [isEditing, setIsEditing] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
@@ -33,7 +35,8 @@ export function SectionEquipment() {
 
     useEffect(() => {
         loadData()
-    }, [])
+    }, [selectedRound])
+
 
     const loadData = async () => {
         setIsLoading(true)

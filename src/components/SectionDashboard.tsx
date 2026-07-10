@@ -1,6 +1,10 @@
 import { FiTrendingUp, FiCheckCircle, FiClock, FiCalendar, FiBarChart2, FiDollarSign, FiSettings, FiEdit2, FiActivity } from 'react-icons/fi';
-import detailedBudgetProjectsData from '../data/detailedBudgetProjects.json';
-import budgetDataJson from '../data/budgetData.json';
+import detailedBudgetProjectsDataRound1 from '../data/detailedBudgetProjects.json';
+import detailedBudgetProjectsDataRound2 from '../data/detailedBudgetProjects.round2.json';
+import budgetDataJsonRound1 from '../data/budgetData.json';
+import budgetDataJsonRound2 from '../data/budgetData.round2.json';
+import { useRound } from './RoundContext';
+
 
 interface DetailedProject {
     name: string;
@@ -34,7 +38,16 @@ function formatNumber(num: number): string {
 }
 
 export function SectionDashboard() {
-    const budgetGroups = detailedBudgetProjectsData as unknown as BudgetGroup[];
+    const { selectedRound } = useRound();
+    
+    const budgetGroups = (selectedRound === 'round1'
+        ? detailedBudgetProjectsDataRound1
+        : detailedBudgetProjectsDataRound2) as unknown as BudgetGroup[];
+
+    const budgetDataJson = selectedRound === 'round1'
+        ? budgetDataJsonRound1
+        : budgetDataJsonRound2;
+
 
     // Calculate statistics
     const stats = (() => {
@@ -80,9 +93,16 @@ export function SectionDashboard() {
             parseFloat(budgetDataJson.operation.travel.disbursed);
 
         // Project budget (งบโครงการฯ)
-        const projectBudget = parseFloat(budgetDataJson.project.project1.budget);
-        const projectDisbursed = parseFloat(budgetDataJson.project.project1.disbursed);
+        let projectBudget = 0;
+        let projectDisbursed = 0;
+        if (budgetDataJson.project) {
+            Object.values(budgetDataJson.project).forEach((p: any) => {
+                projectBudget += parseBudget(p.budget || '0');
+                projectDisbursed += parseBudget(p.disbursed || '0');
+            });
+        }
         const projectPercent = projectBudget > 0 ? Math.round((projectDisbursed / projectBudget) * 100 * 10) / 10 : 0;
+
 
         return {
             totalProjects,

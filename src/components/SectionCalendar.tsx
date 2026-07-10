@@ -1,6 +1,9 @@
 import { useState, useMemo } from 'react';
 import { FiChevronLeft, FiChevronRight, FiCalendar } from 'react-icons/fi';
-import detailedBudgetProjectsData from '../data/detailedBudgetProjects.json';
+import detailedBudgetProjectsDataRound1 from '../data/detailedBudgetProjects.json';
+import detailedBudgetProjectsDataRound2 from '../data/detailedBudgetProjects.round2.json';
+import { useRound } from './RoundContext';
+
 
 interface DetailedProject {
     name: string;
@@ -178,10 +181,14 @@ function getStatusColor(status?: string): string {
 }
 
 export function SectionCalendar() {
+    const { selectedRound } = useRound();
     const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1)); // Start at Jan 2026
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-    const budgetGroups = detailedBudgetProjectsData as unknown as BudgetGroup[];
+    const budgetGroups = (selectedRound === 'round1'
+        ? detailedBudgetProjectsDataRound1
+        : detailedBudgetProjectsDataRound2) as unknown as BudgetGroup[];
+
 
     // Parse events from project data
     const events = useMemo(() => {

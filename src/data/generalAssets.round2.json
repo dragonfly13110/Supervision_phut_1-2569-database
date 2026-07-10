@@ -1,0 +1,72 @@
+[
+    {
+        "id": 1,
+        "name": "รถยนต์ราชการ",
+        "amount": "1 คัน",
+        "details": "ทะเบียน กษ 2516 นครปฐม",
+        "status": "good",
+        "statusText": "ใช้งานปกติ",
+        "problem": "-",
+        "solution": "-"
+    },
+    {
+        "id": 2,
+        "name": "ที่ดิน",
+        "amount": "1 แปลง",
+        "details": "เนื้อที่ 200 ตร.ว.",
+        "status": "good",
+        "statusText": "ใช้งานปกติ",
+        "problem": "-",
+        "solution": "-"
+    },
+    {
+        "id": 3,
+        "name": "อาคารสำนักงาน",
+        "amount": "1 ยูนิต",
+        "details": "พื้นที่ 200 ตร.ว.",
+        "status": "good",
+        "statusText": "ใช้งานปกติ",
+        "problem": "-",
+        "solution": "-"
+    },
+    {
+        "id": 4,
+        "name": "โรงเก็บพัสดุ",
+        "amount": "1 ยูนิต",
+        "details": "สภาพใช้งานปกติ",
+        "status": "good",
+        "statusText": "ใช้งานปกติ",
+        "problem": "-",
+        "solution": "-"
+    },
+    {
+        "id": 5,
+        "name": "บ้านพักราชการ",
+        "amount": "2 ยูนิต",
+        "details": "บ้านแฝด 2 ชั้น",
+        "status": "good",
+        "statusText": "ใช้งานปกติ",
+        "problem": "-",
+        "solution": "-"
+    },
+    {
+        "id": 6,
+        "name": "รั้วคอนกรีตเสริมเหล็ก",
+        "amount": "15.75 เมตร",
+        "details": "-",
+        "status": "good",
+        "statusText": "ใช้งานปกติ",
+        "problem": "-",
+        "solution": "-"
+    },
+    {
+        "id": 7,
+        "name": "ครุภัณฑ์และสิ่งก่อสร้างต่าง ๆ ",
+        "amount": "93 รายการ",
+        "details": "อยู่ระหว่างจำหน่าย 34 รายการ",
+        "status": "good",
+        "statusText": "ใช้งานปกติ",
+        "problem": "-",
+        "solution": "-"
+    }
+]

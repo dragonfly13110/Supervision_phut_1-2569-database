@@ -13,10 +13,35 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configuration
-const SPREADSHEET_ID = '1dT94hJ4ec4AKUJMB5-5DupSysW6qchrjZfUJIPT2tgY';
-const CREDENTIALS_PATH = path.join(__dirname, 'credentials.json');
+// Load env variables manually from .env.local or .env
+const loadEnv = () => {
+    for (const envFile of ['.env.local', '.env']) {
+        const envPath = path.join(__dirname, '..', envFile);
+        if (fs.existsSync(envPath)) {
+            const envContent = fs.readFileSync(envPath, 'utf8');
+            envContent.split(/\r?\n/).forEach(line => {
+                const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+                if (match) {
+                    const key = match[1];
+                    let value = match[2] || '';
+                    if (value.startsWith('"') && value.endsWith('"')) {
+                        value = value.substring(1, value.length - 1);
+                    }
+                    if (value.startsWith("'") && value.endsWith("'")) {
+                        value = value.substring(1, value.length - 1);
+                    }
+                    process.env[key] = value;
+                }
+            });
+            break;
+        }
+    }
+};
+loadEnv();
+
+const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID || '1dT94hJ4ec4AKUJMB5-5DupSysW6qchrjZfUJIPT2tgY';
 const DATA_DIR = path.join(__dirname, '..', 'src', 'data');
+
 
 // Sheet names for each data type
 const SHEET_CONFIGS = {
@@ -158,14 +183,18 @@ function translateStatus(status) {
 async function syncToSheets() {
     console.log('🚀 เริ่มซิงค์ข้อมูลไปยัง Google Sheets...\n');
     
-    // Load credentials
-    const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
+    const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
     
     // Authenticate
     const auth = new google.auth.GoogleAuth({
-        credentials,
+        credentials: {
+            client_email: clientEmail,
+            private_key: privateKey,
+        },
         scopes: ['https://www.googleapis.com/auth/spreadsheets']
     });
+
     
     const sheets = google.sheets({ version: 'v4', auth });
     
@@ -175,102 +204,111 @@ async function syncToSheets() {
     });
     
     const existingSheets = spreadsheet.data.sheets.map(s => s.properties.title);
+
+    const ROUNDS = [
+        { fileSuffix: '', sheetSuffix: '' },
+        { fileSuffix: '.round2', sheetSuffix: ' - ครั้งที่ 2' }
+    ];
     
-    // Process each data type
-    for (const [key, config] of Object.entries(SHEET_CONFIGS)) {
-        console.log(`📊 กำลังประมวลผล: ${config.name}`);
-        
-        try {
-            // Read JSON file
-            const filePath = path.join(DATA_DIR, config.file);
-            if (!fs.existsSync(filePath)) {
-                console.log(`   ⚠️ ไม่พบไฟล์: ${config.file}`);
-                continue;
-            }
+    // Process each data type for each round
+    for (const round of ROUNDS) {
+        for (const [key, config] of Object.entries(SHEET_CONFIGS)) {
+            const fileName = config.file.replace('.json', `${round.fileSuffix}.json`);
+            const sheetName = `${config.name}${round.sheetSuffix}`;
+            console.log(`📊 กำลังประมวลผล: ${sheetName} (ไฟล์: ${fileName})`);
             
-            const rawData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-            const rows = config.transform(rawData);
-            
-            // Create sheet if not exists
-            if (!existingSheets.includes(config.name)) {
-                await sheets.spreadsheets.batchUpdate({
-                    spreadsheetId: SPREADSHEET_ID,
-                    requestBody: {
-                        requests: [{
-                            addSheet: {
-                                properties: {
-                                    title: config.name
-                                }
-                            }
-                        }]
-                    }
-                });
-                console.log(`   ✅ สร้าง Sheet ใหม่: ${config.name}`);
-            }
-            
-            // Clear existing data
-            await sheets.spreadsheets.values.clear({
-                spreadsheetId: SPREADSHEET_ID,
-                range: `'${config.name}'!A:Z`
-            });
-            
-            // Write headers and data
-            const allRows = [config.headers, ...rows];
-            await sheets.spreadsheets.values.update({
-                spreadsheetId: SPREADSHEET_ID,
-                range: `'${config.name}'!A1`,
-                valueInputOption: 'USER_ENTERED',
-                requestBody: {
-                    values: allRows
+            try {
+                // Read JSON file
+                const filePath = path.join(DATA_DIR, fileName);
+                if (!fs.existsSync(filePath)) {
+                    console.log(`   ⚠️ ไม่พบไฟล์: ${fileName}`);
+                    continue;
                 }
-            });
-            
-            // Format header row
-            const sheetData = await sheets.spreadsheets.get({
-                spreadsheetId: SPREADSHEET_ID
-            });
-            const sheetId = sheetData.data.sheets.find(s => s.properties.title === config.name)?.properties.sheetId;
-            
-            if (sheetId !== undefined) {
-                await sheets.spreadsheets.batchUpdate({
-                    spreadsheetId: SPREADSHEET_ID,
-                    requestBody: {
-                        requests: [
-                            {
-                                repeatCell: {
-                                    range: {
-                                        sheetId: sheetId,
-                                        startRowIndex: 0,
-                                        endRowIndex: 1
-                                    },
-                                    cell: {
-                                        userEnteredFormat: {
-                                            backgroundColor: { red: 0.2, green: 0.6, blue: 0.2 },
-                                            textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } }
-                                        }
-                                    },
-                                    fields: 'userEnteredFormat(backgroundColor,textFormat)'
-                                }
-                            },
-                            {
-                                autoResizeDimensions: {
-                                    dimensions: {
-                                        sheetId: sheetId,
-                                        dimension: 'COLUMNS',
-                                        startIndex: 0,
-                                        endIndex: config.headers.length
+                
+                const rawData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                const rows = config.transform(rawData);
+                
+                // Create sheet if not exists
+                if (!existingSheets.includes(sheetName)) {
+                    await sheets.spreadsheets.batchUpdate({
+                        spreadsheetId: SPREADSHEET_ID,
+                        requestBody: {
+                            requests: [{
+                                addSheet: {
+                                    properties: {
+                                        title: sheetName
                                     }
                                 }
-                            }
-                        ]
+                            }]
+                        }
+                    });
+                    console.log(`   ✅ สร้าง Sheet ใหม่: ${sheetName}`);
+                }
+                
+                // Clear existing data
+                await sheets.spreadsheets.values.clear({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: `'${sheetName}'!A:Z`
+                });
+                
+                // Write headers and data
+                const allRows = [config.headers, ...rows];
+                await sheets.spreadsheets.values.update({
+                    spreadsheetId: SPREADSHEET_ID,
+                    range: `'${sheetName}'!A1`,
+                    valueInputOption: 'USER_ENTERED',
+                    requestBody: {
+                        values: allRows
                     }
                 });
+                
+                // Format header row
+                const sheetData = await sheets.spreadsheets.get({
+                    spreadsheetId: SPREADSHEET_ID
+                });
+                const sheetId = sheetData.data.sheets.find(s => s.properties.title === sheetName)?.properties.sheetId;
+                
+                if (sheetId !== undefined) {
+                    await sheets.spreadsheets.batchUpdate({
+                        spreadsheetId: SPREADSHEET_ID,
+                        requestBody: {
+                            requests: [
+                                {
+                                    repeatCell: {
+                                        range: {
+                                            sheetId: sheetId,
+                                            startRowIndex: 0,
+                                            endRowIndex: 1
+                                        },
+                                        cell: {
+                                            userEnteredFormat: {
+                                                backgroundColor: { red: 0.2, green: 0.6, blue: 0.2 },
+                                                textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } }
+                                            }
+                                        },
+                                        fields: 'userEnteredFormat(backgroundColor,textFormat)'
+                                    }
+                                },
+                                {
+                                    autoResizeDimensions: {
+                                        dimensions: {
+                                            sheetId: sheetId,
+                                            dimension: 'COLUMNS',
+                                            startIndex: 0,
+                                            endIndex: config.headers.length
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    });
+                }
+                
+                console.log(`   ✅ อัพเดท ${rows.length} แถว`);
+                
+            } catch (error) {
+                console.log(`   ❌ เกิดข้อผิดพลาด: ${error.message}`);
             }
-            
-            console.log(`   ✅ อัพเดท ${rows.length} แถว`);
-            
-        } catch (error) {
-            console.log(`   ❌ เกิดข้อผิดพลาด: ${error.message}`);
         }
     }
     
@@ -304,7 +342,10 @@ async function syncToSheets() {
                 ['วันที่/เวลา', timestamp],
                 [''],
                 ['📋 รายการ Sheets'],
-                ...Object.values(SHEET_CONFIGS).map((c, i) => [`${i + 1}. ${c.name}`])
+                ...Object.values(SHEET_CONFIGS).flatMap((c, i) => [
+                    [`${i + 1}.1 ${c.name}`],
+                    [`${i + 1}.2 ${c.name} - ครั้งที่ 2`]
+                ])
             ]
         }
     });
@@ -316,3 +357,4 @@ async function syncToSheets() {
 
 // Run
 syncToSheets().catch(console.error);
+

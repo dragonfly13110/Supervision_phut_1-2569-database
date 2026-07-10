@@ -2,8 +2,10 @@ import { useRef, useEffect, useState } from 'react'
 import { FiDollarSign, FiUsers, FiChevronDown, FiChevronsLeft, FiChevronsRight, FiChevronUp, FiChevronDown as FiScrollDown, FiEdit2, FiX, FiHome, FiCalendar } from 'react-icons/fi'
 import { FaGithub } from 'react-icons/fa'
 import { TbReportMoney } from "react-icons/tb";
-import { detailedBudgetProjects } from '../data/assetData'
+import { detailedBudgetProjects, detailedBudgetProjectsRound2 } from '../data/assetData'
 import { ThemeToggle } from './ThemeToggle'
+import { useRound } from './RoundContext'
+
 
 interface SidebarProps {
     sidebarOpen: boolean
@@ -24,14 +26,18 @@ export function Sidebar({ sidebarOpen, activeSection, expandedNav, onToggleNav, 
     const [showScrollUp, setShowScrollUp] = useState(false)
     const [showScrollDown, setShowScrollDown] = useState(false)
 
+    const { selectedRound, getRoundLabel } = useRound()
+    const activeProjectsData = selectedRound === 'round1' ? detailedBudgetProjects : detailedBudgetProjectsRound2
+
     // Reordering Logic
-    const [projects, setProjects] = useState(detailedBudgetProjects)
+    const [projects, setProjects] = useState(activeProjectsData)
     const [isEditMode, setIsEditMode] = useState(false)
 
-    // Sync projects if source changes (optional, but good practice if data was dynamic)
+    // Sync projects if source or round changes (optional, but good practice if data was dynamic)
     useEffect(() => {
-        setProjects(detailedBudgetProjects)
-    }, [])
+        setProjects(activeProjectsData)
+    }, [selectedRound])
+
 
     const moveProject = (index: number, direction: 'up' | 'down') => {
         const newProjects = [...projects]
@@ -47,12 +53,15 @@ export function Sidebar({ sidebarOpen, activeSection, expandedNav, onToggleNav, 
 
     // GitHub Config
     const [isSaving, setIsSaving] = useState(false)
-    const [githubConfig] = useState({
+    const githubConfig = {
         owner: localStorage.getItem('gh_owner') || 'dragonfly13110',
         repo: localStorage.getItem('gh_repo') || 'Supervision_phut_1-2569',
         token: localStorage.getItem('gh_token') || '',
-        path: 'src/data/detailedBudgetProjects.json'
-    });
+        path: selectedRound === 'round1'
+            ? 'src/data/detailedBudgetProjects.json'
+            : 'src/data/detailedBudgetProjects.round2.json'
+    };
+
 
     const handleSaveToGitHub = async () => {
         if (!githubConfig.token) {
@@ -125,9 +134,10 @@ export function Sidebar({ sidebarOpen, activeSection, expandedNav, onToggleNav, 
     }
 
     const handleCancelOrder = () => {
-        setProjects(detailedBudgetProjects)
+        setProjects(activeProjectsData)
         setIsEditMode(false)
     }
+
 
     // Resize Logic
     useEffect(() => {
@@ -191,9 +201,10 @@ export function Sidebar({ sidebarOpen, activeSection, expandedNav, onToggleNav, 
                 <div className="sidebar-logo">🌾</div>
                 <div className="sidebar-title">
                     <strong>แผนนิเทศงาน T&V System</strong>
-                    ปีงบประมาณ พ.ศ. 2569 ครั้งที่ 1
+                    ปีงบประมาณ พ.ศ. 2569 {getRoundLabel()}
                 </div>
             </div>
+
 
             <nav className="sidebar-nav" ref={navRef} style={{ height: 'calc(100vh - 220px)', overflowY: 'auto', paddingBottom: '16px' }}>
                 {/* Quick Access - Dashboard & Calendar */}

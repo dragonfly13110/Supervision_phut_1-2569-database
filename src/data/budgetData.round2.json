@@ -1,0 +1,58 @@
+{
+    "investment": {
+        "construction": {
+            "budget": "0",
+            "disbursed": "-"
+        }
+    },
+    "operation": {
+        "utilities": {
+            "budget": "10000",
+            "disbursed": "7054.03"
+        },
+        "officeSupplies": {
+            "budget": "0",
+            "disbursed": "-"
+        },
+        "service": {
+            "budget": "6000",
+            "disbursed": "6000"
+        },
+        "travel": {
+            "budget": "12900",
+            "disbursed": "12900"
+        }
+    },
+    "project": {
+        "project_info_sys": {
+            "name": "โครงการเพิ่มประสิทธิภาพการจัดทำสารสนเทศการเกษตรและการบริหารจัดการข้อมูลขนาดใหญ่",
+            "budget": "1890",
+            "disbursed": "1890"
+        },
+        "project_farmer_reg": {
+            "name": "โครงการทะเบียนเกษตรกรและบริหารจัดการสารสนเทศการเกษตรด้านพืช",
+            "budget": "518",
+            "disbursed": "518"
+        },
+        "project_supply_chain": {
+            "name": "โครงการส่งเสริมและพัฒนาเพื่อเข้าสู่ห่วงโซ่อุปทานและบริการมูลค่าสูง",
+            "budget": "750",
+            "disbursed": "750"
+        },
+        "project_eco_friendly": {
+            "name": "โครงการส่งเสริมการเกษตรที่เป็นมิตรกับสิ่งแวดล้อม",
+            "budget": "500",
+            "disbursed": "500"
+        },
+        "project_plant_health": {
+            "name": "โครงการส่งเสริมการจัดการสุขภาพพืชเพื่อเพิ่มประสิทธิภาพการผลิตสินค้าเกษตร",
+            "budget": "600",
+            "disbursed": "600"
+        },
+        "project_large_plot": {
+            "name": "โครงการระบบส่งเสริมเกษตรแบบแปลงใหญ่เพื่อปรับเพิ่มผลิตภาพการผลิต",
+            "budget": "1000",
+            "disbursed": "600"
+        }
+    }
+}

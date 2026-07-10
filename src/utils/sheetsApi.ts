@@ -11,12 +11,18 @@ export interface SheetResponse<T> {
     error?: string;
 }
 
+const getActiveRound = (): string => {
+    const saved = localStorage.getItem('selected_round');
+    return saved === 'round1' ? '1' : '2';
+}
+
 /**
  * Fetch data from a Google Sheet
  */
 export async function fetchSheetData<T>(sheetName: string): Promise<T[]> {
     try {
-        const response = await fetch(`${API_BASE}?sheet=${sheetName}`);
+        const round = getActiveRound();
+        const response = await fetch(`${API_BASE}?sheet=${sheetName}&round=${round}`);
         const result: SheetResponse<T[]> = await response.json();
 
         if (!result.success) {
@@ -35,12 +41,13 @@ export async function fetchSheetData<T>(sheetName: string): Promise<T[]> {
  */
 export async function updateSheetData<T>(sheetName: string, data: T[]): Promise<void> {
     try {
+        const round = getActiveRound();
         const response = await fetch(API_BASE, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ sheet: sheetName, data }),
+            body: JSON.stringify({ sheet: sheetName, data, round }),
         });
 
         const result: SheetResponse<void> = await response.json();
@@ -53,3 +60,4 @@ export async function updateSheetData<T>(sheetName: string, data: T[]): Promise<
         throw error;
     }
 }
+
