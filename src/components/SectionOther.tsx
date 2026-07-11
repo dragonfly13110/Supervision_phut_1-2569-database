@@ -3,12 +3,14 @@ import { FiAlertTriangle, FiEdit2, FiSave, FiPlus, FiTrash2, FiLoader } from 're
 import { fetchSheetData, updateSheetData } from '../utils/sheetsApi'
 import { useAuth } from './AuthContext'
 import { useRound } from './RoundContext'
+import { createUnits, type OtherIssueUnit } from '../utils/otherIssueUnits'
 
 
 interface OtherIssue {
     id: string
     title: string
     content: string
+    units?: OtherIssueUnit[]
 }
 
 export function SectionOther() {
@@ -46,11 +48,20 @@ export function SectionOther() {
         ))
     }
 
+    const updateUnit = (id: string, index: number, field: 'item1' | 'item2', value: string) => {
+        setIssues(prev => prev.map(issue => {
+            if (issue.id !== id) return issue
+            const units = issue.units || createUnits(issue.content)
+            return { ...issue, units: units.map((unit, unitIndex) => unitIndex === index ? { ...unit, [field]: value } : unit) }
+        }))
+    }
+
     const addIssue = () => {
         const newIssue: OtherIssue = {
             id: `issue-${Date.now()}`,
             title: 'ประเด็นใหม่',
-            content: ''
+            content: '',
+            units: createUnits('')
         }
         setIssues(prev => [...prev, newIssue])
     }
@@ -64,7 +75,7 @@ export function SectionOther() {
     const handleSave = async () => {
         setIsSaving(true)
         try {
-            await updateSheetData('otherIssues', issues)
+            await updateSheetData('otherIssues', issues.map(issue => ({ ...issue, units: issue.units || createUnits(issue.content) })))
             setIsEditing(false)
             alert('บันทึกข้อมูลไปยัง Google Sheets เรียบร้อยแล้ว!')
         } catch (err: any) {
@@ -163,7 +174,21 @@ export function SectionOther() {
                             <h3 className="card-title">{issue.title}</h3>
                         )}
                     </div>
-                    <div className="card-content">
+                    <div className="card-content" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px' }}>
+                        {(issue.units || createUnits(issue.content)).map((unit, index) => (
+                            <div key={unit.name} style={{ padding: '12px', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#f8fafc' }}>
+                                <strong style={{ display: 'block', marginBottom: '8px', color: '#334155' }}>{unit.name}</strong>
+                                {isEditing ? <>
+                                    <textarea value={unit.item1} onChange={(e) => updateUnit(issue.id, index, 'item1', e.target.value)} placeholder="ข้อ 1" style={{ width: '100%', minHeight: '64px', boxSizing: 'border-box', marginBottom: '8px', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', resize: 'vertical' }} />
+                                    <textarea value={unit.item2} onChange={(e) => updateUnit(issue.id, index, 'item2', e.target.value)} placeholder="ข้อ 2" style={{ width: '100%', minHeight: '64px', boxSizing: 'border-box', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', resize: 'vertical' }} />
+                                </> : <>
+                                    <div style={{ whiteSpace: 'pre-wrap', minHeight: '24px' }}><b>1.</b> {unit.item1 || '-'}</div>
+                                    <div style={{ whiteSpace: 'pre-wrap', minHeight: '24px' }}><b>2.</b> {unit.item2 || '-'}</div>
+                                </>}
+                            </div>
+                        ))}
+                    </div>
+                    <div style={{ display: 'none' }}>
                         {isEditing ? (
                             <textarea
                                 value={issue.content}

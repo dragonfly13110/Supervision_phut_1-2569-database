@@ -3,6 +3,7 @@ import { FiTool, FiEdit2, FiSave, FiLoader, FiAlertTriangle, FiImage, FiPlus, Fi
 import { fetchSheetData, updateSheetData } from '../utils/sheetsApi'
 import { useAuth } from './AuthContext'
 import { useRound } from './RoundContext'
+import { getEquipmentCardStatus, getEquipmentIssueDetails, isUnavailableEquipment } from '../utils/equipmentCard'
 
 interface ProjectAsset {
     id: number
@@ -225,23 +226,23 @@ export function SectionEquipment() {
             <div className="equipment-grid">
                 {assets.map((item) => (
                     <div 
-                        className={`equipment-card ${item.statusText === 'ไม่มีในระบบ' ? 'inactive-asset' : ''}`} 
+                        className={`equipment-card ${isUnavailableEquipment(item.status, item.statusText, selectedRound) ? 'inactive-asset' : ''}`} 
                         key={item.id} 
                         style={{ 
                             flexDirection: 'column', 
                             gap: '12px',
-                            opacity: item.statusText === 'ไม่มีในระบบ' ? 0.45 : 1,
-                            backgroundColor: item.statusText === 'ไม่มีในระบบ' ? '#f8fafc' : undefined,
-                            border: item.statusText === 'ไม่มีในระบบ' ? '1px dashed #cbd5e1' : undefined,
-                            boxShadow: item.statusText === 'ไม่มีในระบบ' ? 'none' : undefined,
-                            pointerEvents: item.statusText === 'ไม่มีในระบบ' && !isEditing ? 'none' : undefined,
+                            opacity: isUnavailableEquipment(item.status, item.statusText, selectedRound) ? 0.45 : 1,
+                            backgroundColor: isUnavailableEquipment(item.status, item.statusText, selectedRound) ? '#f8fafc' : undefined,
+                            border: isUnavailableEquipment(item.status, item.statusText, selectedRound) ? '1px dashed #cbd5e1' : undefined,
+                            boxShadow: isUnavailableEquipment(item.status, item.statusText, selectedRound) ? 'none' : undefined,
+                            pointerEvents: isUnavailableEquipment(item.status, item.statusText, selectedRound) && !isEditing ? 'none' : undefined,
                             transition: 'all 0.2s ease'
                         }}
                     >
                         <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                             <div 
                                 className="equipment-number"
-                                style={item.statusText === 'ไม่มีในระบบ' ? {
+                                style={isUnavailableEquipment(item.status, item.statusText, selectedRound) ? {
                                     background: '#e2e8f0',
                                     color: '#94a3b8',
                                     boxShadow: 'none'
@@ -305,15 +306,15 @@ export function SectionEquipment() {
                                 </select>
                             ) : (
                                 <span 
-                                    className={`status-badge ${item.status}`}
-                                    style={item.statusText === 'ไม่มีในระบบ' ? {
+                                    className={`status-badge ${selectedRound === 'round2' && item.status === 'active' ? 'good' : item.status}`}
+                                    style={isUnavailableEquipment(item.status, item.statusText, selectedRound) ? {
                                         background: '#f1f5f9',
                                         color: '#64748b',
                                         border: '1px solid #cbd5e1',
                                         fontWeight: 500
                                     } : undefined}
                                 >
-                                    {item.statusText}
+                                    {getEquipmentCardStatus(item.status, item.statusText, selectedRound)}
                                 </span>
                             )}
                         </div>
@@ -339,10 +340,11 @@ export function SectionEquipment() {
                                 </div>
                             </div>
                         )}
-                        {!isEditing && item.problem !== '-' && (
+                        {!isEditing && getEquipmentIssueDetails(item.problem, item.solution).length > 0 && (
                             <div style={{ marginLeft: '44px', fontSize: '13px', background: '#fef3c7', padding: '8px 12px', borderRadius: '6px', borderLeft: '3px solid #f59e0b' }}>
-                                <div style={{ color: '#92400e', marginBottom: '4px' }}><strong>ปัญหา:</strong> {item.problem}</div>
-                                <div style={{ color: '#166534' }}><strong>แนวทางแก้ไข:</strong> {item.solution}</div>
+                                {getEquipmentIssueDetails(item.problem, item.solution).map(detail => (
+                                    <div key={detail.label} style={{ color: detail.color, marginBottom: detail.label === 'ปัญหา:' ? '4px' : undefined }}><strong>{detail.label}</strong> {detail.value}</div>
+                                ))}
                             </div>
                         )}
 
