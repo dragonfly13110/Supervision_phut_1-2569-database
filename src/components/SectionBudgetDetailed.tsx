@@ -904,7 +904,7 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                     </div>
                                                 )}
 
-                                                <div className="feedback-row">
+                                                <div className="feedback-row presentation-problems">
                                                     <div className="feedback-item half">
                                                         <div className="feedback-label error">
                                                             <FaExclamationTriangle className="icon" /> ปัญหา/อุปสรรค
@@ -940,7 +940,7 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                 </div>
 
                                                 {/* Image Gallery */}
-                                                <div style={{ marginTop: '16px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+                                                <div className="presentation-gallery" style={{ marginTop: '16px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                                                         <div className="feedback-label" style={{ marginBottom: 0 }}>
                                                             <FaImage className="icon" /> รูปภาพประกอบ
@@ -1052,7 +1052,7 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                     )}
 
                                                     {project.images && project.images.length > 0 ? (
-                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                                                        <div className="presentation-image-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                                                             {project.images.map((img, imgIdx) => (
                                                                 <div
                                                                     key={imgIdx}
@@ -1068,12 +1068,10 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                                     onClick={() => !isEditing && setLightboxImage(img)}
                                                                     onMouseEnter={(e) => {
                                                                         if (!isEditing) {
-                                                                            e.currentTarget.style.transform = 'scale(1.02)';
                                                                             e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15)';
                                                                         }
                                                                     }}
                                                                     onMouseLeave={(e) => {
-                                                                        e.currentTarget.style.transform = 'scale(1)';
                                                                         e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)';
                                                                     }}
                                                                 >
@@ -1310,6 +1308,22 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                     display: flex;
                     gap: 16px;
                     flex-wrap: wrap;
+                }
+                .presentation-gallery {
+                    order: 2;
+                }
+                .presentation-problems {
+                    order: 3;
+                }
+                @media (max-width: 900px) {
+                    .presentation-image-grid {
+                        grid-template-columns: repeat(2, 1fr) !important;
+                    }
+                }
+                @media (max-width: 600px) {
+                    .presentation-image-grid {
+                        grid-template-columns: 1fr !important;
+                    }
                 }
                 .feedback-item {
                     flex: 1;
