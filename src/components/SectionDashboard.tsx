@@ -37,6 +37,17 @@ function formatNumber(num: number): string {
     return num.toLocaleString('th-TH');
 }
 
+const getOperationLabel = (key: string) => {
+    switch (key) {
+        case 'utilities': return 'ค่าสาธารณูปโภค';
+        case 'officeSupplies': return 'ค่าวัสดุสำนักงาน';
+        case 'houseRent': return 'ค่าเช่าบ้าน';
+        case 'service': return 'ค่าจ้างเหมาบริการ';
+        case 'travel': return 'ค่าใช้สอยและเดินทาง';
+        default: return key;
+    }
+};
+
 export function SectionDashboard() {
     const { selectedRound } = useRound();
     
@@ -345,84 +356,158 @@ export function SectionDashboard() {
                 </div>
             </div>
 
-            {/* Charts Row */}
-            <div className="dashboard-charts-row" style={{ display: 'flex', justifyContent: 'center' }}>
-                {/* Status Pie Chart */}
-                <div className="card dashboard-chart-card" style={{ maxWidth: '500px', width: '100%' }}>
-                    <div className="card-header">
-                        <div className="card-icon"><FiTrendingUp /></div>
-                        <h3 className="card-title">สถานะโครงการ</h3>
-                    </div>
-                    <div className="dashboard-pie-container">
-                        <div className="dashboard-pie" style={{
-                            background: `conic-gradient(
-                                #10b981 0deg ${(stats.completed / stats.totalProjects) * 360}deg,
-                                #3b82f6 ${(stats.completed / stats.totalProjects) * 360}deg ${((stats.completed + stats.inProgress) / stats.totalProjects) * 360}deg,
-                                #f59e0b ${((stats.completed + stats.inProgress) / stats.totalProjects) * 360}deg ${((stats.completed + stats.inProgress + stats.scheduled) / stats.totalProjects) * 360}deg,
-                                #6b7280 ${((stats.completed + stats.inProgress + stats.scheduled) / stats.totalProjects) * 360}deg 360deg
-                            )`
-                        }}>
-                            <div className="dashboard-pie-center">
-                                <span className="dashboard-pie-value">{stats.totalProjects}</span>
-                                <span className="dashboard-pie-label">กิจกรรม</span>
-                            </div>
+            {selectedRound === 'round2' ? (
+                /* Detailed Budget Breakdown for Round 2 */
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '24px', marginTop: '24px' }}>
+                    {/* 1.2 งบดำเนินงาน */}
+                    <div className="card" style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '20px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)' }}>
+                        <div className="card-header" style={{ padding: '0 0 12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div className="card-icon" style={{ background: '#eff6ff', color: '#3b82f6' }}><FiSettings size={18} /></div>
+                            <h3 className="card-title" style={{ fontSize: '1.15rem', fontWeight: 'bold', color: '#1f2937' }}>1.2 รายละเอียดงบดำเนินงาน</h3>
                         </div>
-                        <div className="dashboard-legend">
-                            <div className="dashboard-legend-item">
-                                <span className="dashboard-legend-color" style={{ background: '#10b981' }}></span>
-                                <span>เสร็จสิ้น ({stats.completed})</span>
-                            </div>
-                            <div className="dashboard-legend-item">
-                                <span className="dashboard-legend-color" style={{ background: '#3b82f6' }}></span>
-                                <span>กำลังดำเนินการ ({stats.inProgress})</span>
-                            </div>
-                            <div className="dashboard-legend-item">
-                                <span className="dashboard-legend-color" style={{ background: '#f59e0b' }}></span>
-                                <span>กำหนดวันแล้ว ({stats.scheduled})</span>
-                            </div>
-                            <div className="dashboard-legend-item">
-                                <span className="dashboard-legend-color" style={{ background: '#6b7280' }}></span>
-                                <span>รอดำเนินการ ({stats.pending})</span>
-                            </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+                            {Object.entries(budgetDataJson.operation || {}).map(([key, item]: [string, any]) => {
+                                const budget = parseBudget(item.budget);
+                                const disbursed = parseBudget(item.disbursed);
+                                if (budget === 0) return null;
+                                const percent = budget > 0 ? Math.round((disbursed / budget) * 100) : 0;
+                                
+                                return (
+                                    <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: '500', color: '#334155' }}>
+                                            <span>{getOperationLabel(key)}</span>
+                                            <span style={{ color: percent === 100 ? '#10b981' : '#3b82f6' }}>{percent}%</span>
+                                        </div>
+                                        <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+                                            <div style={{ width: `${percent}%`, height: '100%', background: percent === 100 ? 'linear-gradient(90deg, #10b981, #059669)' : 'linear-gradient(90deg, #3b82f6, #2563eb)', borderRadius: '4px', transition: 'width 0.5s ease-in-out' }}></div>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#64748b' }}>
+                                            <span>เบิกจ่าย: <strong>{formatNumber(disbursed)}</strong> บาท</span>
+                                            <span>งบประมาณ: {formatNumber(budget)} บาท</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {/* Recent Activities */}
-            <div className="card">
-                <div className="card-header">
-                    <div className="card-icon"><FiActivity /></div>
-                    <h3 className="card-title">กิจกรรมล่าสุด</h3>
+                    {/* 1.3 งบโครงการฯ */}
+                    <div className="card" style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '20px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)' }}>
+                        <div className="card-header" style={{ padding: '0 0 12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div className="card-icon" style={{ background: '#ecfdf5', color: '#10b981' }}><FiActivity size={18} /></div>
+                            <h3 className="card-title" style={{ fontSize: '1.15rem', fontWeight: 'bold', color: '#1f2937' }}>1.3 รายละเอียดงบโครงการฯ</h3>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
+                            {Object.entries(budgetDataJson.project || {}).map(([key, item]: [string, any]) => {
+                                const budget = parseBudget(item.budget);
+                                const disbursed = parseBudget(item.disbursed);
+                                if (budget === 0) return null;
+                                const percent = budget > 0 ? Math.round((disbursed / budget) * 100) : 0;
+                                
+                                return (
+                                    <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', fontSize: '0.9rem', fontWeight: '500', color: '#334155', gap: '2px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                <span style={{ fontSize: '0.85rem', lineHeight: '1.3', maxWidth: '85%' }}>{item.name || key}</span>
+                                                <span style={{ color: percent === 100 ? '#10b981' : '#3b82f6', fontWeight: 'bold' }}>{percent}%</span>
+                                            </div>
+                                        </div>
+                                        <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+                                            <div style={{ width: `${percent}%`, height: '100%', background: percent === 100 ? 'linear-gradient(90deg, #10b981, #059669)' : 'linear-gradient(90deg, #3b82f6, #2563eb)', borderRadius: '4px', transition: 'width 0.5s ease-in-out' }}></div>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#64748b' }}>
+                                            <span>เบิกจ่าย: <strong>{formatNumber(disbursed)}</strong> บาท</span>
+                                            <span>งบประมาณ: {formatNumber(budget)} บาท</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
-                <div className="dashboard-activities">
-                    {recentActivities.length > 0 ? (
-                        recentActivities.map((activity, index) => (
-                            <div key={index} className="dashboard-activity-item">
-                                <div
-                                    className="dashboard-activity-status"
-                                    style={{ background: getStatusColor(activity.status) }}
-                                    title={getStatusLabel(activity.status)}
-                                ></div>
-                                <div className="dashboard-activity-content">
-                                    <div className="dashboard-activity-title">{activity.subActivity || activity.name}</div>
-                                    <div className="dashboard-activity-desc">{activity.result}</div>
-                                    <div className="dashboard-activity-meta">
-                                        <span className="status-badge" style={{
-                                            background: `${getStatusColor(activity.status)}20`,
-                                            color: getStatusColor(activity.status)
-                                        }}>
-                                            {getStatusLabel(activity.status)}
-                                        </span>
+            ) : (
+                /* Original Layout for Round 1 */
+                <>
+                    {/* Charts Row */}
+                    <div className="dashboard-charts-row" style={{ display: 'flex', justifyContent: 'center' }}>
+                        {/* Status Pie Chart */}
+                        <div className="card dashboard-chart-card" style={{ maxWidth: '500px', width: '100%' }}>
+                            <div className="card-header">
+                                <div className="card-icon"><FiTrendingUp /></div>
+                                <h3 className="card-title">สถานะโครงการ</h3>
+                            </div>
+                            <div className="dashboard-pie-container">
+                                <div className="dashboard-pie" style={{
+                                    background: `conic-gradient(
+                                        #10b981 0deg ${(stats.completed / stats.totalProjects) * 360}deg,
+                                        #3b82f6 ${(stats.completed / stats.totalProjects) * 360}deg ${((stats.completed + stats.inProgress) / stats.totalProjects) * 360}deg,
+                                        #f59e0b ${((stats.completed + stats.inProgress) / stats.totalProjects) * 360}deg ${((stats.completed + stats.inProgress + stats.scheduled) / stats.totalProjects) * 360}deg,
+                                        #6b7280 ${((stats.completed + stats.inProgress + stats.scheduled) / stats.totalProjects) * 360}deg 360deg
+                                    )`
+                                }}>
+                                    <div className="dashboard-pie-center">
+                                        <span className="dashboard-pie-value">{stats.totalProjects}</span>
+                                        <span className="dashboard-pie-label">กิจกรรม</span>
+                                    </div>
+                                </div>
+                                <div className="dashboard-legend">
+                                    <div className="dashboard-legend-item">
+                                        <span className="dashboard-legend-color" style={{ background: '#10b981' }}></span>
+                                        <span>เสร็จสิ้น ({stats.completed})</span>
+                                    </div>
+                                    <div className="dashboard-legend-item">
+                                        <span className="dashboard-legend-color" style={{ background: '#3b82f6' }}></span>
+                                        <span>กำลังดำเนินการ ({stats.inProgress})</span>
+                                    </div>
+                                    <div className="dashboard-legend-item">
+                                        <span className="dashboard-legend-color" style={{ background: '#f59e0b' }}></span>
+                                        <span>กำหนดวันแล้ว ({stats.scheduled})</span>
+                                    </div>
+                                    <div className="dashboard-legend-item">
+                                        <span className="dashboard-legend-color" style={{ background: '#6b7280' }}></span>
+                                        <span>รอดำเนินการ ({stats.pending})</span>
                                     </div>
                                 </div>
                             </div>
-                        ))
-                    ) : (
-                        <p style={{ color: 'var(--text-light)', fontStyle: 'italic' }}>ยังไม่มีกิจกรรมที่มีผลลัพธ์</p>
-                    )}
-                </div>
-            </div>
+                        </div>
+                    </div>
+
+                    {/* Recent Activities */}
+                    <div className="card">
+                        <div className="card-header">
+                            <div className="card-icon"><FiActivity /></div>
+                            <h3 className="card-title">กิจกรรมล่าสุด</h3>
+                        </div>
+                        <div className="dashboard-activities">
+                            {recentActivities.length > 0 ? (
+                                recentActivities.map((activity, index) => (
+                                    <div key={index} className="dashboard-activity-item">
+                                        <div
+                                            className="dashboard-activity-status"
+                                            style={{ background: getStatusColor(activity.status) }}
+                                            title={getStatusLabel(activity.status)}
+                                        ></div>
+                                        <div className="dashboard-activity-content">
+                                            <div className="dashboard-activity-title">{activity.subActivity || activity.name}</div>
+                                            <div className="dashboard-activity-desc">{activity.result}</div>
+                                            <div className="dashboard-activity-meta">
+                                                <span className="status-badge" style={{
+                                                    background: `${getStatusColor(activity.status)}20`,
+                                                    color: getStatusColor(activity.status)
+                                                }}>
+                                                    {getStatusLabel(activity.status)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p style={{ color: 'var(--text-light)', fontStyle: 'italic' }}>ยังไม่มีกิจกรรมที่มีผลลัพธ์</p>
+                            )}
+                        </div>
+                    </div>
+                </>
+            )}
         </section>
     );
 }
