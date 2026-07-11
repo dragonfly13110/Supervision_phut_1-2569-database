@@ -122,3 +122,4 @@ scripts/credentials.json
 .env.local
 .env*.local
 .vercel
+.wrangler/
