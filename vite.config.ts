@@ -125,9 +125,58 @@ const apiMiddleware = () => ({
                 next();
             }
         });
+
+        // 3. Intercept image upload POST
+        server.middlewares.use('/api/upload-image', async (req, res, next) => {
+            if (req.method === 'POST') {
+                let body = '';
+                req.on('data', chunk => { body += chunk.toString(); });
+                req.on('end', () => {
+                    try {
+                        const { projectName, filename, fileData } = JSON.parse(body);
+                        if (!projectName || !filename || !fileData) {
+                            res.statusCode = 400;
+                            res.end(JSON.stringify({ error: 'Missing parameters' }));
+                            return;
+                        }
+
+                        // Clean project name to avoid path traversal and invalid characters
+                        const cleanProjectName = projectName.replace(/[\r\n\x00-\x1f\\/:*?"<>|]/g, '_').trim();
+
+                        // Create directory: public/project-images/<cleanProjectName>
+                        const dirPath = path.join(__dirname, 'public', 'project-images', cleanProjectName);
+                        fs.mkdirSync(dirPath, { recursive: true });
+
+                        // Write file from Base64 string
+                        const filePath = path.join(dirPath, filename);
+                        const buffer = Buffer.from(fileData, 'base64');
+                        fs.writeFileSync(filePath, buffer);
+
+                        console.log(`[Upload] Saved ${filename} for project ${projectName}`);
+
+                        // Return URL path relative to public root
+                        const url = `/project-images/${encodeURIComponent(cleanProjectName)}/${filename}`;
+                        res.setHeader('Content-Type', 'application/json');
+                        res.end(JSON.stringify({ success: true, url }));
+                    } catch (error) {
+                        console.error('[Upload Error]', error);
+                        res.statusCode = 500;
+                        res.end(JSON.stringify({ error: 'Internal Server Error' }));
+                    }
+                });
+            } else {
+                next();
+            }
+        });
     },
 });
 
 export default defineConfig({
     plugins: [react(), apiMiddleware()],
+    server: {
+        watch: {
+            ignored: ['**/รูปภาพโครงการ/**']
+        }
+    }
 })
+

@@ -72,9 +72,14 @@ export async function updateSheetData<T>(sheetName: string, data: T[]): Promise<
         const storageKey = `v3_${sheetName}_round_${round}`;
         localStorage.setItem(storageKey, JSON.stringify(data));
         
-        // In local development, write to disk
+        // In local development, write to disk when the Vite API is available.
+        // localStorage remains the source of truth if the optional disk sync is unavailable.
         const filename = getFilename(sheetName, round);
-        await saveToDiskAndSync(filename, data);
+        try {
+            await saveToDiskAndSync(filename, data);
+        } catch (syncError) {
+            console.warn('[SheetsAPI] Disk sync unavailable; kept changes in localStorage.', syncError);
+        }
     } catch (error) {
         console.error(`[SheetsAPI] Error updating data for ${sheetName}:`, error);
         throw error;

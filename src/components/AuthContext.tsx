@@ -9,8 +9,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 // Credentials (ในการใช้งานจริงควรเก็บใน environment variables หรือ backend)
-const ADMIN_USERNAME = 'phuttha'
-const ADMIN_PASSWORD = 'phuttha123123'
+const ADMIN_USERNAME = 'adminadmin'
+const ADMIN_PASSWORD = '123456'
+
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [isLoggedIn, setIsLoggedIn] = useState(false)

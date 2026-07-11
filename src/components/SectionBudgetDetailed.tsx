@@ -4,6 +4,7 @@ import { FaEdit, FaSave, FaChartLine, FaExclamationTriangle, FaLightbulb, FaImag
 import { FiLoader, FiAlertTriangle } from 'react-icons/fi';
 import { useAuth } from './AuthContext';
 import { useRound } from './RoundContext';
+import { isImageUrl } from '../utils/imageUrl';
 
 
 interface DetailedProject {
@@ -78,6 +79,65 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const [uploadingStatus, setUploadingStatus] = useState<{[key: string]: boolean}>({});
+
+    const uploadFile = (file: File, projectName: string, groupId: string, projectIndex: number) => {
+        const key = `${groupId}-${projectIndex}`;
+        setUploadingStatus(prev => ({ ...prev, [key]: true }));
+        
+        const reader = new FileReader();
+        reader.onload = async () => {
+            try {
+                const base64Data = (reader.result as string).split(',')[1];
+                const response = await fetch('/api/upload-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        projectName,
+                        filename: file.name,
+                        fileData: base64Data
+                    })
+                });
+                const data = await response.json();
+                if (data.success && data.url) {
+                    setBudgetGroups(prevGroups => {
+                        return prevGroups.map(group => {
+                            if (group.id !== groupId) return group;
+                            const newProjects = [...group.projects];
+                            const currentImages = newProjects[projectIndex].images || [];
+                            newProjects[projectIndex] = {
+                                ...newProjects[projectIndex],
+                                images: [...currentImages, { url: data.url, caption: '' }]
+                            };
+                            return { ...group, projects: newProjects };
+                        });
+                    });
+                } else {
+                    alert('อัปโหลดล้มเหลว: ' + (data.error || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ'));
+                }
+            } catch (err: any) {
+                console.error(err);
+                if (import.meta.env.DEV && typeof reader.result === 'string') {
+                    setBudgetGroups(prevGroups => prevGroups.map(group => {
+                        if (group.id !== groupId) return group;
+                        const newProjects = [...group.projects];
+                        const currentImages = newProjects[projectIndex].images || [];
+                        newProjects[projectIndex] = {
+                            ...newProjects[projectIndex],
+                            images: [...currentImages, { url: reader.result as string, caption: '' }]
+                        };
+                        return { ...group, projects: newProjects };
+                    }));
+                } else {
+                    alert('อัปโหลดล้มเหลว: ' + err.message);
+                }
+            } finally {
+                setUploadingStatus(prev => ({ ...prev, [key]: false }));
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
     // Collapsed Projects State (key: groupId-projectIndex) - Default: all collapsed
     const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
 
@@ -102,6 +162,7 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
     const [imageModal, setImageModal] = useState<{ groupId: string; projectIndex: number } | null>(null);
     const [newImageUrl, setNewImageUrl] = useState('');
     const [newImageCaption, setNewImageCaption] = useState('');
+    const [imageUrl, setImageUrl] = useState('');
 
     // Lightbox State for viewing images in full screen
     const [lightboxImage, setLightboxImage] = useState<{ url: string; caption?: string } | null>(null);
@@ -166,6 +227,17 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
         }
     };
 
+    const handleAddImageUrl = (groupId: string, projectIndex: number) => {
+        if (!isImageUrl(imageUrl)) {
+            alert('กรุณาใส่ URL รูปภาพที่ขึ้นต้นด้วย http:// หรือ https://');
+            return;
+        }
+        const group = budgetGroups.find(item => item.id === groupId);
+        const images = group?.projects[projectIndex]?.images || [];
+        handleChange(groupId, projectIndex, 'images', [...images, { url: imageUrl.trim(), caption: '' }]);
+        setImageUrl('');
+    };
+
     const handleRemoveImage = (groupId: string, projectIndex: number, imgIndex: number) => {
         const group = budgetGroups.find(g => g.id === groupId);
         if (group) {
@@ -211,7 +283,7 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
         try {
             await updateSheetData('detailedBudgetProjects', budgetGroups);
             setIsEditing(false);
-            alert('บันทึกข้อมูลไปยัง Google Sheets เรียบร้อยแล้ว!');
+            alert('บันทึกข้อมูลเรียบร้อยแล้ว!');
         } catch (err: any) {
             console.error('Error saving:', err);
             alert('เกิดข้อผิดพลาด: ' + (err.message || 'ไม่สามารถบันทึกได้'));
@@ -233,7 +305,7 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
             <div className="section-container fade-in">
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '60px', gap: '12px' }}>
                     <FiLoader className="spin" style={{ fontSize: '24px', color: '#3b82f6' }} />
-                    <span style={{ fontSize: '1.1rem', color: '#64748b' }}>กำลังโหลดข้อมูลจาก Google Sheets...</span>
+                    <span style={{ fontSize: '1.1rem', color: '#64748b' }}>กำลังโหลดข้อมูล...</span>
                 </div>
             </div>
         );
@@ -875,13 +947,109 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                         </div>
                                                         {isEditing && (
                                                             <button
-                                                                onClick={() => setImageModal({ groupId: group.id, projectIndex: index })}
+                                                                onClick={() => {
+                                                                    const input = document.createElement('input');
+                                                                    input.type = 'file';
+                                                                    input.accept = 'image/*';
+                                                                    input.onchange = (event: any) => {
+                                                                        if (event.target.files && event.target.files[0]) {
+                                                                            uploadFile(event.target.files[0], project.name, group.id, index);
+                                                                        }
+                                                                    };
+                                                                    input.click();
+                                                                }}
                                                                 style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
                                                             >
-                                                                <FaPlus size={12} /> เพิ่มรูปภาพ
+                                                                <FaPlus size={12} /> อัปโหลดรูปภาพ
                                                             </button>
                                                         )}
                                                     </div>
+
+                                                    {isEditing && (
+                                                        <div
+                                                            onDragOver={(e) => {
+                                                                e.preventDefault();
+                                                                e.currentTarget.style.borderColor = '#059669';
+                                                                e.currentTarget.style.background = '#f0fdf4';
+                                                            }}
+                                                            onDragLeave={(e) => {
+                                                                e.preventDefault();
+                                                                e.currentTarget.style.borderColor = '#cbd5e1';
+                                                                e.currentTarget.style.background = '#f8fafc';
+                                                            }}
+                                                            onDrop={(e) => {
+                                                                e.preventDefault();
+                                                                e.currentTarget.style.borderColor = '#cbd5e1';
+                                                                e.currentTarget.style.background = '#f8fafc';
+                                                                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                                                                    const file = e.dataTransfer.files[0];
+                                                                    if (file.type.startsWith('image/')) {
+                                                                        uploadFile(file, project.name, group.id, index);
+                                                                    } else {
+                                                                        alert('กรุณาอัปโหลดไฟล์รูปภาพเท่านั้น');
+                                                                    }
+                                                                }
+                                                            }}
+                                                            onClick={() => {
+                                                                const input = document.createElement('input');
+                                                                input.type = 'file';
+                                                                input.accept = 'image/*';
+                                                                input.onchange = (event: any) => {
+                                                                    if (event.target.files && event.target.files[0]) {
+                                                                        uploadFile(event.target.files[0], project.name, group.id, index);
+                                                                    }
+                                                                };
+                                                                input.click();
+                                                            }}
+                                                            style={{
+                                                                border: '2px dashed #cbd5e1',
+                                                                borderRadius: '8px',
+                                                                padding: '20px',
+                                                                textAlign: 'center',
+                                                                background: '#f8fafc',
+                                                                cursor: 'pointer',
+                                                                transition: 'border-color 0.2s, background 0.2s',
+                                                                marginBottom: '16px'
+                                                            }}
+                                                        >
+                                                            {uploadingStatus[`${group.id}-${index}`] ? (
+                                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#059669' }}>
+                                                                    <FiLoader className="spin" size={18} />
+                                                                    <span>กำลังอัปโหลดรูปภาพ...</span>
+                                                                </div>
+                                                            ) : (
+                                                                <div>
+                                                                    <FaImage style={{ fontSize: '24px', color: '#94a3b8', marginBottom: '6px' }} />
+                                                                    <div style={{ fontSize: '0.9rem', color: '#475569', fontWeight: 500 }}>
+                                                                        ลากรูปภาพมาวางที่นี่ หรือคลิกเพื่ออัปโหลดไฟล์จากเครื่อง
+                                                                    </div>
+                                                                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px' }}>
+                                                                        รองรับไฟล์ PNG, JPG, JPEG
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {isEditing && (
+                                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                                                            <input
+                                                                aria-label="URL รูปภาพ"
+                                                                type="url"
+                                                                value={imageUrl}
+                                                                onChange={(e) => setImageUrl(e.target.value)}
+                                                                placeholder="https://example.com/image.jpg"
+                                                                style={{ flex: 1, padding: '9px 10px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleAddImageUrl(group.id, index)}
+                                                                style={{ padding: '8px 12px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', borderRadius: '6px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                            >
+                                                                เพิ่มจาก URL
+                                                            </button>
+                                                        </div>
+                                                    )}
 
                                                     {project.images && project.images.length > 0 ? (
                                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
@@ -921,16 +1089,44 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                                             }}
                                                                         />
                                                                     </div>
-                                                                    {img.caption && (
+                                                                    {isEditing ? (
                                                                         <div style={{
-                                                                            padding: '10px 12px',
-                                                                            fontSize: '0.9rem',
-                                                                            color: '#475569',
-                                                                            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                                                                            padding: '10px',
+                                                                            background: '#f8fafc',
                                                                             borderTop: '1px solid #e2e8f0'
                                                                         }}>
-                                                                            {img.caption}
+                                                                            <input
+                                                                                type="text"
+                                                                                value={img.caption || ''}
+                                                                                placeholder="พิมพ์คำอธิบายรูปภาพ..."
+                                                                                onChange={(e) => {
+                                                                                    const newImages = [...(project.images || [])];
+                                                                                    newImages[imgIdx] = { ...newImages[imgIdx], caption: e.target.value };
+                                                                                    handleChange(group.id, index, 'images', newImages);
+                                                                                }}
+                                                                                style={{
+                                                                                    width: '100%',
+                                                                                    padding: '6px 8px',
+                                                                                    border: '1px solid #cbd5e1',
+                                                                                    borderRadius: '6px',
+                                                                                    fontSize: '0.85rem',
+                                                                                    color: '#334155',
+                                                                                    boxSizing: 'border-box'
+                                                                                }}
+                                                                            />
                                                                         </div>
+                                                                    ) : (
+                                                                        img.caption && (
+                                                                            <div style={{
+                                                                                padding: '10px 12px',
+                                                                                fontSize: '0.9rem',
+                                                                                color: '#475569',
+                                                                                background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                                                                                borderTop: '1px solid #e2e8f0'
+                                                                            }}>
+                                                                                {img.caption}
+                                                                            </div>
+                                                                        )
                                                                     )}
                                                                     {!isEditing && (
                                                                         <div style={{
@@ -981,7 +1177,7 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                         </div>
                                                     ) : (
                                                         <div style={{ fontSize: '0.95rem', color: '#94a3b8', fontStyle: 'italic', padding: '20px', textAlign: 'center', background: '#f8fafc', borderRadius: '8px' }}>
-                                                            {isEditing ? 'กด "เพิ่มรูปภาพ" เพื่อใส่รูปประกอบ' : 'ไม่มีรูปภาพประกอบ'}
+                                                            {isEditing ? 'อัปโหลดรูปภาพเพื่อใส่รูปประกอบ' : 'ไม่มีรูปภาพประกอบ'}
                                                         </div>
                                                     )}
                                                 </div>
