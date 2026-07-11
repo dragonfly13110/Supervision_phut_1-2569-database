@@ -1075,7 +1075,7 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                                         e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)';
                                                                     }}
                                                                 >
-                                                                    <div style={{ aspectRatio: '16/10', overflow: 'hidden' }}>
+                                                                    <div style={{ position: 'relative', aspectRatio: '16/10', overflow: 'hidden' }}>
                                                                         <img
                                                                             src={img.url}
                                                                             alt={img.caption || 'Project Image'}
@@ -1086,6 +1086,24 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                                                 transition: 'transform 0.3s'
                                                                             }}
                                                                         />
+                                                                        {!isEditing && (
+                                                                            <div style={{
+                                                                                position: 'absolute',
+                                                                                bottom: '8px',
+                                                                                right: '8px',
+                                                                                background: 'rgba(0, 0, 0, 0.6)',
+                                                                                color: 'white',
+                                                                                padding: '4px 8px',
+                                                                                borderRadius: '4px',
+                                                                                fontSize: '0.75rem',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '4px',
+                                                                                opacity: 0.8
+                                                                            }}>
+                                                                                🔍 คลิกเพื่อขยาย
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                     {isEditing ? (
                                                                         <div style={{
@@ -1125,24 +1143,6 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                                                                                 {img.caption}
                                                                             </div>
                                                                         )
-                                                                    )}
-                                                                    {!isEditing && (
-                                                                        <div style={{
-                                                                            position: 'absolute',
-                                                                            bottom: img.caption ? '40px' : '8px',
-                                                                            right: '8px',
-                                                                            background: 'rgba(0, 0, 0, 0.6)',
-                                                                            color: 'white',
-                                                                            padding: '4px 8px',
-                                                                            borderRadius: '4px',
-                                                                            fontSize: '0.75rem',
-                                                                            display: 'flex',
-                                                                            alignItems: 'center',
-                                                                            gap: '4px',
-                                                                            opacity: 0.8
-                                                                        }}>
-                                                                            🔍 คลิกเพื่อขยาย
-                                                                        </div>
                                                                     )}
                                                                     {isEditing && (
                                                                         <button
