@@ -1356,6 +1356,7 @@ export function SectionBudgetDetailed({ activeSection }: SectionBudgetDetailedPr
                     border-radius: 6px;
                     color: #1e293b;
                     font-size: 0.95rem;
+                    font-weight: 600;
                     min-height: 48px;
                     white-space: pre-wrap;
                     line-height: 1.6;
