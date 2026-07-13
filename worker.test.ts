@@ -42,7 +42,7 @@ test('loads a missing project image from GitHub', async () => {
     try {
         const response = await worker.fetch(
             new Request('https://example.com/project-images/project/photo.jpg'),
-            { ASSETS: { fetch: async () => new Response(null, { status: 404 }) } },
+            { ASSETS: { fetch: async () => { throw new Error('project images must bypass assets'); } } },
         );
 
         assert.equal(response.status, 200);

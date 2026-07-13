@@ -29,10 +29,12 @@ export default {
             }
             return json({ success: true });
         }
+        if (url.pathname.startsWith('/project-images/')) {
+            return fetch(`https://raw.githubusercontent.com/dragonfly13110/Supervision_phut_1-2569-database/main/public${url.pathname}`);
+        }
         if (url.pathname !== '/api/upload-image') {
             const asset = await env.ASSETS.fetch(request);
-            if (asset.status !== 404 || !url.pathname.startsWith('/project-images/')) return asset;
-            return fetch(`https://raw.githubusercontent.com/dragonfly13110/Supervision_phut_1-2569-database/main/public${url.pathname}`);
+            return asset;
         }
         if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 

@@ -11,7 +11,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - run: git clone --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" .
+      - run: git clone --depth 1 --filter=blob:none --no-checkout "https://github.com/${GITHUB_REPOSITORY}.git" .
+      - run: git sparse-checkout set --no-cone '/*' '!/public/project-images/'
+      - run: git checkout
       - run: npm ci
       - run: npm run build
       - run: npx wrangler deploy
