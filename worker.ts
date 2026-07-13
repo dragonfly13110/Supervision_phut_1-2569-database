@@ -2,10 +2,33 @@ type Env = { ASSETS: { fetch(request: Request): Promise<Response> }; GITHUB_TOKE
 
 const json = (body: object, status = 200) => Response.json(body, { status });
 const clean = (value: string) => value.replace(/[\r\n\x00-\x1f\\/:*?"<>|]/g, '_').trim();
+const dataFiles = new Set(['detailedBudgetProjects.json', 'detailedBudgetProjects.round2.json', 'budgetData.json', 'budgetData.round2.json', 'generalAssets.json', 'generalAssets.round2.json', 'projectAssets.json', 'projectAssets.round2.json', 'otherIssues.json', 'otherIssues.round2.json']);
+const base64 = (value: unknown) => btoa(Array.from(new TextEncoder().encode(JSON.stringify(value, null, 2)), byte => String.fromCharCode(byte)).join(''));
 
 export default {
     async fetch(request: Request, env: Env) {
         const url = new URL(request.url);
+        if (url.pathname === '/api/save-data') {
+            if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+            const { filename, content } = await request.json().catch(() => ({})) as { filename?: string; content?: unknown };
+            if (!filename || content === undefined || !dataFiles.has(filename)) return json({ error: 'Invalid data file' }, 400);
+            if (!env.GITHUB_TOKEN) return json({ error: 'GITHUB_TOKEN is not configured' }, 500);
+
+            const path = `src/data/${filename}`;
+            const apiUrl = `https://api.github.com/repos/dragonfly13110/Supervision_phut_1-2569-database/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
+            const headers = { accept: 'application/vnd.github+json', authorization: `Bearer ${env.GITHUB_TOKEN}`, 'user-agent': 'supervision-phut-1-2569', 'x-github-api-version': '2022-11-28' };
+            const existingResponse = await fetch(apiUrl, { headers });
+            const existing = existingResponse.ok ? await existingResponse.json() as { sha: string } : null;
+            const response = await fetch(apiUrl, {
+                method: 'PUT', headers: { ...headers, 'content-type': 'application/json' },
+                body: JSON.stringify({ message: `data: update ${filename}`, content: base64(content), branch: 'main', ...(existing && { sha: existing.sha }) }),
+            });
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({})) as { message?: string };
+                return json({ error: error.message || 'Failed to save data to GitHub' }, response.status);
+            }
+            return json({ success: true });
+        }
         if (url.pathname !== '/api/upload-image') {
             const asset = await env.ASSETS.fetch(request);
             if (asset.status !== 404 || !url.pathname.startsWith('/project-images/')) return asset;

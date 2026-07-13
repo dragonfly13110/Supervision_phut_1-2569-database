@@ -51,3 +51,35 @@ test('loads a missing project image from GitHub', async () => {
         globalThis.fetch = originalFetch;
     }
 });
+
+test('saves an allowed data file to GitHub', async () => {
+    const originalFetch = globalThis.fetch;
+    const requests: { input: string; init: RequestInit }[] = [];
+    globalThis.fetch = async (input, init = {}) => {
+        requests.push({ input: String(input), init });
+        return init.method === 'PUT' ? Response.json({}) : Response.json({ sha: 'existing-sha' });
+    };
+    try {
+        const response = await worker.fetch(new Request('https://example.com/api/save-data', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ filename: 'budgetData.round2.json', content: [{ total: 1 }] }),
+        }), { ASSETS: { fetch: () => { throw new Error('assets should not handle saves'); } }, GITHUB_TOKEN: 'token' });
+
+        assert.equal(response.status, 200);
+        assert.match(requests[1].input, /contents\/src\/data\/budgetData.round2.json/);
+        assert.equal(JSON.parse(requests[1].init.body as string).sha, 'existing-sha');
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+});
+
+test('rejects a data file outside the allowlist', async () => {
+    const response = await worker.fetch(new Request('https://example.com/api/save-data', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ filename: '../secret.json', content: [] }),
+    }), { ASSETS: { fetch: () => { throw new Error('assets should not handle saves'); } }, GITHUB_TOKEN: 'token' });
+
+    assert.equal(response.status, 400);
+});
