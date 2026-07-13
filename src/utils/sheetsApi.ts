@@ -48,12 +48,45 @@ export async function fetchSheetData<T>(sheetName: string): Promise<T[]> {
         const round = getActiveRound();
         const storageKey = `v3_${sheetName}_round_${round}`;
         const saved = localStorage.getItem(storageKey);
-        if (saved) {
-            return JSON.parse(saved) as T[];
-        }
         
         // Fallback to static JSON file
         const staticData = getStaticData(sheetName, round);
+        
+        if (saved) {
+            const savedData = JSON.parse(saved) as T[];
+            // Auto-merge images from staticData to savedData to ensure pulled images show up
+            if (sheetName === 'detailedBudgetProjects' || sheetName === 'projectAssets' || sheetName === 'generalAssets') {
+                let merged = false;
+                const updatedData = savedData.map((item: any) => {
+                    const staticItem = (staticData as any[]).find((s: any) => s.id === item.id || String(s.id) === String(item.id));
+                    if (staticItem) {
+                        if (sheetName === 'detailedBudgetProjects') {
+                            const updatedProjects = item.projects.map((proj: any) => {
+                                const staticProj = staticItem.projects?.find((sp: any) => sp.name === proj.name);
+                                if (staticProj && JSON.stringify(proj.images || []) !== JSON.stringify(staticProj.images || [])) {
+                                    merged = true;
+                                    return { ...proj, images: staticProj.images || [] };
+                                }
+                                return proj;
+                            });
+                            return { ...item, projects: updatedProjects };
+                        } else {
+                            if (JSON.stringify(item.images || []) !== JSON.stringify(staticItem.images || [])) {
+                                merged = true;
+                                return { ...item, images: staticItem.images || [] };
+                            }
+                        }
+                    }
+                    return item;
+                });
+                if (merged) {
+                    localStorage.setItem(storageKey, JSON.stringify(updatedData));
+                    return updatedData as T[];
+                }
+            }
+            return savedData;
+        }
+        
         // Save to localStorage as the initial version
         localStorage.setItem(storageKey, JSON.stringify(staticData));
         return staticData as T[];
